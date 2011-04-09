@@ -18,9 +18,9 @@ int main(int argv, char**argc)
 
   SmartPtr<IpoptApplication> app_ipopt = new IpoptApplication();
 
-  SmartPtr<SensApplication> app_sens = new SensApplication(app_ipopt->Jnlst(),
-							   app_ipopt->Options(),
-							   app_ipopt->RegOptions());
+  //SmartPtr<SensApplication> app_sens = new SensApplication(app_ipopt->Jnlst(),
+  //app_ipopt->Options(),
+  //app_ipopt->RegOptions());
 
   // Register sIPOPT options
   RegisterOptions_sIPOPT(app_ipopt->RegOptions());
@@ -39,17 +39,5 @@ int main(int argv, char**argc)
   // create AmplSensTNLP from argc. This is an nlp because we are using our own TNLP Adapter
   SmartPtr<TNLP> sens_tnlp = new ParametricTNLP();
 
-  app_ipopt->Options()->SetStringValueIfUnset("run_sens", "yes");
-  app_ipopt->Options()->SetIntegerValueIfUnset("n_sens_steps", 1);
-
-  app_sens->Initialize();
-
   retval = app_ipopt->OptimizeTNLP(sens_tnlp);
-
-  /* give pointers to Ipopt algorithm objects to Sens Application */
-  app_sens->SetIpoptAlgorithmObjects(app_ipopt, retval);
-
-  app_sens->Run();
-
-
 }
