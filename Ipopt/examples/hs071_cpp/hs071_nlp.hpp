@@ -101,6 +101,12 @@ public:
                       bool new_lambda, Index nele_hess, Index* iRow,
                       Index* jCol, Number* values);
 
+  virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
+			 Index np, const Number* p, bool new_p,
+			 Number obj_factor, Index m,
+			 const Number* lambda, bool new_lambda,
+			 Index nele_hess_p, Index* iRow, Index* jCol,
+			 Number* values);
   //@}
 
   /** @name Solution Methods */

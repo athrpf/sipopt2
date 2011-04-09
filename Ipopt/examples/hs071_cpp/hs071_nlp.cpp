@@ -282,6 +282,23 @@ bool HS071_NLP::eval_h(Index n, const Number* x, bool new_x,
   return true;
 }
 
+bool HS071_NLP::eval_L_xp(Index n, const Number* x, bool new_x,
+			  Index np, const Number* p, bool new_p,
+			  Number obj_factor, Index m,
+			  const Number* lambda, bool new_lambda,
+			  Index nele_hess_p, Index* iRow, Index* jCol,
+			  Number* values)
+{
+  assert(nele_hess_p == 1);
+  if (values == NULL) {
+    iRow[0] = 3;
+    jCol[0] = 0;
+  } else {
+    values[0] = 1.0;
+  }
+  return true;
+}
+
 void HS071_NLP::finalize_solution(SolverReturn status,
                                   Index n, const Number* x, const Number* z_L, const Number* z_U,
                                   Index m, const Number* g, const Number* lambda,
