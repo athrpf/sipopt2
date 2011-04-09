@@ -240,9 +240,11 @@ namespace Ipopt
                                  x_u_space_, px_u_space_,
                                  d_l_space_, pd_l_space_,
                                  d_u_space_, pd_u_space_,
-				                 p_space_,
+				 p_space_,
                                  jac_c_space_, jac_d_space_,
-                                 h_space_);
+                                 h_space_,
+				 jac_c_p_space_, jac_d_p_space_,
+				 h_p_space_);
 
       if (!retValue) {
         jnlst_->Printf(J_WARNING, J_INITIALIZATION,

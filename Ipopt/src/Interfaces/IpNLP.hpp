@@ -76,7 +76,32 @@ namespace Ipopt
                            SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
-                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)=0;
+                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
+    {
+      return false;
+    }
+
+    virtual bool GetSpaces(SmartPtr<const VectorSpace>& x_space,
+                           SmartPtr<const VectorSpace>& c_space,
+                           SmartPtr<const VectorSpace>& d_space,
+                           SmartPtr<const VectorSpace>& x_l_space,
+                           SmartPtr<const MatrixSpace>& px_l_space,
+                           SmartPtr<const VectorSpace>& x_u_space,
+                           SmartPtr<const MatrixSpace>& px_u_space,
+                           SmartPtr<const VectorSpace>& d_l_space,
+                           SmartPtr<const MatrixSpace>& pd_l_space,
+                           SmartPtr<const VectorSpace>& d_u_space,
+                           SmartPtr<const MatrixSpace>& pd_u_space,
+                           SmartPtr<const VectorSpace>& p_space,
+                           SmartPtr<const MatrixSpace>& Jac_c_space,
+                           SmartPtr<const MatrixSpace>& Jac_d_space,
+                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                           SmartPtr<const MatrixSpace>& Jac_d_p_space,
+                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space)
+    {
+      return false;
+    }
 
     /** Method for obtaining the bounds information */
     virtual bool GetBoundsInformation(const Matrix& Px_L,

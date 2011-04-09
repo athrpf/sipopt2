@@ -67,7 +67,10 @@ namespace Ipopt
                            SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
-                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space);
+                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                           SmartPtr<const MatrixSpace>& Jac_d_p_space,
+			   SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space);
 
     /** Method for obtaining the bounds information */
     virtual bool GetBoundsInformation(const Matrix& Px_L,
@@ -316,6 +319,16 @@ namespace Ipopt
     Index nz_full_h_;
     /** number of non-zeros in the non-fixed-size Hessian */
     Index nz_h_;
+    /** number of non-zeros in full-size Hessian w.r.t. parameters */
+    Index nz_full_h_p_;
+    /** number of non-zeros in full-size Jacobian of g w.r.t. parameters */
+    Index nz_full_jac_g_p_;
+    /** number of non-zeros in jacobian of c w.r.t. parameters */
+    Index nz_jac_c_p_;
+    /** number of non-zeros in jacobian of d w.r.t. parameters */
+    Index nz_jac_d_p_;
+    /** number of non-zeros in non-fixed-size x-p part of Hessian */
+    Index nz_h_p_;
     /** Number of fixed variables */
     Index n_x_fixed_;
     //@}
@@ -340,6 +353,9 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> Jac_c_space_;
     SmartPtr<const MatrixSpace> Jac_d_space_;
     SmartPtr<const SymMatrixSpace> Hess_lagrangian_space_;
+    SmartPtr<const MatrixSpace> Jac_c_p_space_;
+    SmartPtr<const MatrixSpace> Jac_d_p_space_;
+    SmartPtr<const SymMatrixSpace> Hess_lagrangian_p_space_;
     //@}
 
     /**@name Local Copy of the Data */
@@ -350,6 +366,7 @@ namespace Ipopt
     Number* full_lambda_; /** copy of lambda (yc & yd) */
     Number* full_g_; /** copy of g (c & d) */
     Number* jac_g_; /** the values for the full jacobian of g */
+    Number* jac_g_p_; /** the values for the full jacobian of g wrt parameters */
     Number* c_rhs_; /** the rhs values of c */
     //@}
 
@@ -410,6 +427,7 @@ namespace Ipopt
     SmartPtr<ExpansionMatrix> P_d_g_;
 
     Index* jac_idx_map_;
+    Index* jac_g_p_idx_map_;
     Index* h_idx_map_;
 
     /** Position of fixed variables. This is required for a warm start */

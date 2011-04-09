@@ -78,6 +78,7 @@ namespace Ipopt
       p_tag_for_g_(0),
       x_tag_for_jac_g_(0),
       jac_idx_map_(NULL),
+      jac_g_p_idx_map_(NULL),
       h_idx_map_(NULL),
       x_fixed_map_(NULL),
       findiff_jac_ia_(NULL),
@@ -101,6 +102,7 @@ namespace Ipopt
     delete [] jac_g_;
     delete [] c_rhs_;
     delete [] jac_idx_map_;
+    delete [] jac_g_p_idx_map_;
     delete [] h_idx_map_;
     delete [] x_fixed_map_;
     delete [] findiff_jac_ia_;
@@ -342,7 +344,10 @@ namespace Ipopt
                               SmartPtr<const VectorSpace>& p_space,
                               SmartPtr<const MatrixSpace>& Jac_c_space,
                               SmartPtr<const MatrixSpace>& Jac_d_space,
-                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
+                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+			      SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                              SmartPtr<const MatrixSpace>& Jac_d_p_space,
+                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space)
   {
     DBG_START_METH("TNLPAdapter::GetSpaces", dbg_verbosity);
 
@@ -381,6 +386,8 @@ namespace Ipopt
       c_rhs_ = NULL;
       delete [] jac_idx_map_;
       jac_idx_map_ = NULL;
+      delete [] jac_g_p_idx_map_;
+      jac_g_p_idx_map_ = NULL;
       delete [] h_idx_map_;
       h_idx_map_ = NULL;
       delete [] x_fixed_map_;
@@ -388,16 +395,19 @@ namespace Ipopt
     }
 
     // Get the full dimensions of the problem
-    Index n_full_x, n_full_p, n_full_g, nz_full_jac_g, nz_full_h;
+    Index n_full_x, n_full_p, n_full_g, nz_full_jac_g, nz_full_h, nz_full_jac_g_p, nz_full_h_p;
     bool retval = tnlp_->get_nlp_info(n_full_x, n_full_p, n_full_g, nz_full_jac_g,
-                                      nz_full_h, index_style_);
+                                      nz_full_h, nz_full_jac_g_p,
+				      nz_full_h_p, index_style_);
     ASSERT_EXCEPTION(retval, INVALID_TNLP, "get_nlp_info returned false");
     ASSERT_EXCEPTION(!warm_start_same_structure_ ||
                      (n_full_x == n_full_x_ &&
                       n_full_p == n_full_p_ &&
                       n_full_g == n_full_g_ &&
                       nz_full_jac_g == nz_full_jac_g_ &&
-                      nz_full_h == nz_full_h_),
+                      nz_full_h == nz_full_h_ &&
+		      nz_full_jac_g_p == nz_full_jac_g_p_ &&
+		      nz_full_h_p == nz_full_h_p_),
                      INVALID_WARMSTART,
                      "warm_start_same_structure chosen, but problem dimensions are different.");
     n_full_x_ = n_full_x;
@@ -405,6 +415,8 @@ namespace Ipopt
     n_full_g_ = n_full_g;
     nz_full_jac_g_ = nz_full_jac_g;
     nz_full_h_ = nz_full_h;
+    nz_full_jac_g_p_ = nz_full_jac_g_p;
+    nz_full_h_p_ = nz_full_h_p;
 
     if (!warm_start_same_structure_) {
       // create space to store vectors that are the full length of x
@@ -437,6 +449,7 @@ namespace Ipopt
 
       // allocate internal space to store the full jacobian
       jac_g_ = new Number[nz_full_jac_g_];
+      jac_g_p_ = new Number[nz_full_jac_g_p_];
 
       /* Spaces for bounds. We need to remove the fixed variables
        * and find out which bounds do not exist. */
@@ -1267,6 +1280,67 @@ namespace Ipopt
         nz_h_ = 0;
         Hess_lagrangian_space_ = NULL;
       }
+
+      /// @TODO: What to do with fixed variable treatment == MAKE_PARAMETERS? Should those be added to the parameter vector?
+      /** Create the matrix spaces for the parameter jacobians */
+      // Get the Nonzero structure
+      Index* g_p_iRow = new Index[nz_full_jac_g_p_];
+      Index* g_p_jCol = new Index[nz_full_jac_g_p_];
+      tnlp_->eval_jac_g_p(n_full_x_, NULL, false,
+			  n_full_p_, NULL, false,
+			  n_full_g_, nz_full_jac_g_p_,
+			  g_p_iRow, g_p_jCol, NULL);
+
+      if (index_style_ != TNLP::FORTRAN_STYLE) {
+	for (Index i=0; i<nz_full_jac_g_p_; ++i) {
+	  g_p_iRow[i] += 1;
+	  g_p_jCol[i] += 1;
+	}
+      }
+
+      // build matrix space for jac_c wrt parameters
+      Index* jac_c_p_iRow = new Index[nz_full_jac_g_p_];
+      Index* jac_c_p_jCol = new Index[nz_full_jac_g_p_];
+      jac_g_p_idx_map_ = new Index[nz_full_jac_g_p_];
+      current_nz = 0;
+      for (Index i=0; i<nz_full_jac_g_p_; ++i) {
+	const Index& c_row = c_row_pos[g_p_iRow[i]-1];
+	if (c_row != -1) {
+	  jac_g_p_idx_map_[current_nz] = i;
+	  jac_c_p_iRow[current_nz] = c_row + 1;
+	  jac_c_p_jCol[current_nz] = g_p_jCol[i]-1;
+	  current_nz++;
+	}
+      }
+      nz_jac_c_p_ = current_nz;
+      Jac_c_p_space_ = new GenTMatrixSpace(n_c, n_full_p_, nz_jac_c_p_, jac_c_p_iRow, jac_c_p_jCol);
+      delete[] jac_c_p_iRow;
+      jac_c_p_iRow = NULL;
+      delete[] jac_c_p_jCol;
+      jac_c_p_jCol = NULL;
+
+      // build matrix space for jac_d wrt parameters
+      Index* jac_d_p_iRow = new Index[nz_full_jac_g_p_];
+      Index* jac_d_p_jCol = new Index[nz_full_jac_g_p_];
+      current_nz = 0;
+      for (Index i=0; i<nz_full_jac_g_p_; ++i) {
+	const Index& d_row = d_row_pos[g_p_iRow[i]-1];
+	if (d_row != -1) {
+	  jac_g_p_idx_map_[current_nz] = i;
+	  jac_d_p_iRow[current_nz] = d_row + 1;
+	  jac_d_p_jCol[current_nz] = g_p_jCol[i]-1;
+	  current_nz++;
+	}
+      }
+      nz_jac_d_p_ = current_nz;
+      Jac_d_p_space_ = new GenTMatrixSpace(n_d, n_full_p_, nz_jac_d_p_, jac_d_p_iRow, jac_d_p_jCol);
+      delete[] jac_d_iRow;
+      jac_d_iRow = NULL;
+      delete[] jac_d_jCol;
+      jac_d_jCol = NULL;
+
+      // build matrix space for hessian of Lagrangean wrt parameters
+
     } /* if (warm_start_same_structure_) { */
 
     // Assign the spaces to the returned pointers
@@ -1284,6 +1358,9 @@ namespace Ipopt
     Jac_c_space = Jac_c_space_;
     Jac_d_space = Jac_d_space_;
     Hess_lagrangian_space = Hess_lagrangian_space_;
+    Jac_c_p_space = Jac_c_space_;
+    Jac_d_p_space = Jac_d_space_;
+    Hess_lagrangian_p_space = Hess_lagrangian_p_space_;
 
     if (IsValid(jnlst_)) {
       jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
@@ -1292,6 +1369,14 @@ namespace Ipopt
                      "Number of nonzeros in inequality constraint Jacobian.:%9d\n", nz_jac_d_);
       jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
                      "Number of nonzeros in Lagrangian Hessian.............:%9d\n\n", nz_h_);
+      if (n_full_p_>0) {
+	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+		       "Number of nonzeros in equality parameter Jacobian..:%9d\n", nz_jac_c_p_);
+	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+		       "Number of nonzeros in inequality parameter Jacobian:%9d\n", nz_jac_d_p_);
+	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+		       "Number of nonzeros in parameter Lagrangian Hessian.:%9d\n\n", nz_h_p_);
+      }
     }
 
     return true;

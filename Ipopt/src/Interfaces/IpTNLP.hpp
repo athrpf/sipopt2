@@ -86,11 +86,14 @@ namespace Ipopt
     }
 
     virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style)
+                              Index& nnz_h_lag, Index& nnz_jac_g_p,
+			      Index& nnz_h_lag_p, IndexStyleEnum& index_style)
     {
       bool retval;
       retval = get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
       np = 0;
+      nnz_jac_g_p = 0;
+      nnz_h_lag_p = 0;
       return retval;
     }
 
@@ -252,7 +255,8 @@ namespace Ipopt
       return eval_jac_g(n, x, new_x, m, nele_jac, iRow, jCol, values);
     }
 
-    virtual bool eval_jac_g_xp(Index n, const Number* x, bool new_x,
+    /** Jacobian of constraints w.r.t. parameters */
+    virtual bool eval_jac_g_p(Index n, const Number* x, bool new_x,
 			       Index np, const Number* p, bool new_p,
 			       Index m, Index nele_jac, Index* iRow,
 			       Index *jCol, Number* values)
@@ -281,13 +285,14 @@ namespace Ipopt
      *  order derivative of the lagrangian w.r.t. to the parameters.
      *  As with the other functions for getting second order derivatives,
      *  The function works in the same way as eval_h.
+     *  The row corresponds to x, the column to p.
      */
     virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
-				Index np, const Number* p, bool new_p,
-				Number obj_factor, Index m,
-				const Number* lambda, bool new_lambda,
-				Index nele_hess_p, Index* iRow, Index* jCol,
-				Number* values)
+			   Index np, const Number* p, bool new_p,
+			   Number obj_factor, Index m,
+			   const Number* lambda, bool new_lambda,
+			   Index nele_hess_p, Index* iRow, Index* jCol,
+			   Number* values)
     {
       return false;
     }
