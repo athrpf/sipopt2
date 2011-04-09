@@ -69,6 +69,7 @@ namespace Ipopt
       full_lambda_(NULL),
       full_g_(NULL),
       jac_g_(NULL),
+      jac_g_p_(NULL),
       c_rhs_(NULL),
       x_tag_for_iterates_(0),
       p_tag_for_iterates_(0),
@@ -101,6 +102,7 @@ namespace Ipopt
     delete [] full_lambda_;
     delete [] full_g_;
     delete [] jac_g_;
+    delete [] jac_g_p_;
     delete [] c_rhs_;
     delete [] jac_idx_map_;
     delete [] jac_g_p_idx_map_;
@@ -384,6 +386,8 @@ namespace Ipopt
       full_g_ = NULL;
       delete [] jac_g_;
       jac_g_ = NULL;
+      delete [] jac_g_p_;
+      jac_g_p_ = NULL;
       delete [] c_rhs_;
       c_rhs_ = NULL;
       delete [] jac_idx_map_;
@@ -1340,10 +1344,15 @@ namespace Ipopt
       }
       nz_jac_d_p_ = current_nz;
       Jac_d_p_space_ = new GenTMatrixSpace(n_d, n_full_p_, nz_jac_d_p_, jac_d_p_iRow, jac_d_p_jCol);
-      delete[] jac_d_iRow;
+      delete[] jac_d_p_iRow;
       jac_d_iRow = NULL;
-      delete[] jac_d_jCol;
+      delete[] jac_d_p_jCol;
       jac_d_jCol = NULL;
+
+      delete [] g_p_iRow;
+      g_p_iRow = NULL;
+      delete [] g_p_jCol;
+      g_p_jCol = NULL;
 
       // build matrix space for hessian of Lagrangean wrt parameters
       Index* full_h_p_iRow = new Index[nz_full_h_p_];
