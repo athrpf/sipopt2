@@ -98,7 +98,7 @@ namespace Ipopt
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
 			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
                            SmartPtr<const MatrixSpace>& Jac_d_p_space,
-                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space)
+                           SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
     {
       return false;
     }

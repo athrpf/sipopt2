@@ -80,6 +80,7 @@ namespace Ipopt
       jac_idx_map_(NULL),
       jac_g_p_idx_map_(NULL),
       h_idx_map_(NULL),
+      h_p_idx_map_(NULL),
       x_fixed_map_(NULL),
       findiff_jac_ia_(NULL),
       findiff_jac_ja_(NULL),
@@ -104,6 +105,7 @@ namespace Ipopt
     delete [] jac_idx_map_;
     delete [] jac_g_p_idx_map_;
     delete [] h_idx_map_;
+    delete [] h_p_idx_map_;
     delete [] x_fixed_map_;
     delete [] findiff_jac_ia_;
     delete [] findiff_jac_ja_;
@@ -347,7 +349,7 @@ namespace Ipopt
                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
 			      SmartPtr<const MatrixSpace>& Jac_c_p_space,
                               SmartPtr<const MatrixSpace>& Jac_d_p_space,
-                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space)
+                              SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
     DBG_START_METH("TNLPAdapter::GetSpaces", dbg_verbosity);
 
@@ -390,6 +392,8 @@ namespace Ipopt
       jac_g_p_idx_map_ = NULL;
       delete [] h_idx_map_;
       h_idx_map_ = NULL;
+      delete [] h_p_idx_map_;
+      h_p_idx_map_ = NULL;
       delete [] x_fixed_map_;
       x_fixed_map_ = NULL;
     }
@@ -1340,7 +1344,62 @@ namespace Ipopt
       jac_d_jCol = NULL;
 
       // build matrix space for hessian of Lagrangean wrt parameters
+      Index* full_h_p_iRow = new Index[nz_full_h_p_];
+      Index* full_h_p_jCol = new Index[nz_full_h_p_];
+      Index* h_p_iRow = new Index[nz_full_h_p_];
+      Index* h_p_jCol = new Index[nz_full_h_p_];
+      retval = tnlp_->eval_L_xp(n_full_x_, NULL, false,
+				n_full_p_, NULL, false,
+				0.0, n_full_g_, NULL, false,
+				nz_full_h_p_, full_h_p_iRow,
+				full_h_p_jCol, NULL);
+      if (!retval && nz_full_h_p_>0) { // If we have parameters, we need this function!
+	delete[] full_h_p_iRow;
+	delete[] full_h_p_jCol;
+	delete[] h_p_iRow;
+	delete[] h_p_jCol;
+	jnlst_->Printf(J_ERROR, J_INITIALIZATION,
+		       "Problem has parameters, but eval_L_xp is not implemented.\n");
+	THROW_EXCEPTION(INVALID_TNLP, "Number of parameters is greater than zero, but eval_h_xp is not implemented.\n");
+      }
+      if (index_style_ != TNLP::FORTRAN_STYLE) {
+	for (Index i=0; i<nz_full_h_p_; ++i) {
+	  full_h_p_iRow[i] += 1;
+	  full_h_p_jCol[i] += 1;
+	}
+      }
 
+      current_nz = 0;
+      if (IsValid(P_x_full_x_)) {
+	h_p_idx_map_ = new Index[nz_full_h_p_];
+	const Index* h_p_pos = P_x_full_x_->CompressedPosIndices();
+	for (Index i=0; i<nz_full_h_p_; ++i) {
+	  const Index& h_p_row = h_p_pos[full_h_p_iRow[i]-1];
+	  if (h_p_row != -1) {
+	    h_p_idx_map_[current_nz] = i;
+	    h_p_iRow[current_nz] = h_p_row +1;
+	    h_p_jCol[current_nz] = full_h_p_jCol[i];
+	    current_nz++;
+	  }
+	}
+      } else {
+	h_p_idx_map_ = NULL;
+	for (Index i=0; i<nz_full_h_p_; ++i) {
+	  h_p_iRow[i] = full_h_p_iRow[i];
+	  h_p_jCol[i] = full_h_p_jCol[i];
+	}
+	current_nz = nz_full_h_p_;
+      }
+      nz_h_p_ = current_nz;
+      Hess_lagrangian_p_space_ = new GenTMatrixSpace(n_x_var, n_full_p_, nz_h_p_, h_p_iRow, h_p_jCol);
+      delete[] full_h_p_iRow;
+      full_h_p_iRow = NULL;
+      delete[] full_h_p_jCol;
+      full_h_p_jCol = NULL;
+      delete[] h_p_iRow;
+      h_p_iRow = NULL;
+      delete[] h_p_jCol;
+      h_p_jCol = NULL;
     } /* if (warm_start_same_structure_) { */
 
     // Assign the spaces to the returned pointers

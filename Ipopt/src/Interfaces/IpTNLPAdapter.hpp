@@ -70,7 +70,7 @@ namespace Ipopt
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
 			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
                            SmartPtr<const MatrixSpace>& Jac_d_p_space,
-			   SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space);
+			   SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space);
 
     /** Method for obtaining the bounds information */
     virtual bool GetBoundsInformation(const Matrix& Px_L,
@@ -355,7 +355,7 @@ namespace Ipopt
     SmartPtr<const SymMatrixSpace> Hess_lagrangian_space_;
     SmartPtr<const MatrixSpace> Jac_c_p_space_;
     SmartPtr<const MatrixSpace> Jac_d_p_space_;
-    SmartPtr<const SymMatrixSpace> Hess_lagrangian_p_space_;
+    SmartPtr<const MatrixSpace> Hess_lagrangian_p_space_;
     //@}
 
     /**@name Local Copy of the Data */
@@ -429,6 +429,7 @@ namespace Ipopt
     Index* jac_idx_map_;
     Index* jac_g_p_idx_map_;
     Index* h_idx_map_;
+    Index* h_p_idx_map_;
 
     /** Position of fixed variables. This is required for a warm start */
     Index* x_fixed_map_;

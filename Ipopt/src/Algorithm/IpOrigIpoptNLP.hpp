@@ -193,7 +193,7 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
-			               SmartPtr<const VectorSpace>& p_space,
+			   SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space);
@@ -306,7 +306,7 @@ namespace Ipopt
     SmartPtr<const SymMatrixSpace> h_space_;
     SmartPtr<const MatrixSpace> jac_c_p_space_;
     SmartPtr<const MatrixSpace> jac_d_p_space_;
-    SmartPtr<const SymMatrixSpace> h_p_space_;
+    SmartPtr<const MatrixSpace> h_p_space_;
 
     SmartPtr<const MatrixSpace> scaled_jac_c_space_;
     SmartPtr<const MatrixSpace> scaled_jac_d_space_;
