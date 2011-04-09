@@ -158,6 +158,9 @@ bool HS071_NLP::eval_jac_g(Index n, const Number* x, bool new_x,
                            Index m, Index nele_jac, Index* iRow, Index *jCol,
                            Number* values)
 {
+  assert(n==4);
+  assert(m==2);
+  assert(np==1);
   if (values == NULL) {
     // return the structure of the jacobian
 
