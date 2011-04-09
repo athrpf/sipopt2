@@ -1641,10 +1641,7 @@ namespace Ipopt
   bool TNLPAdapter::Eval_c(const Vector& x, const Vector& p, Vector& c)
   {
     DBG_START_METH("TNLPAdapter::Eval_c", dbg_verbosity);
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
+    bool new_x = update_local_x(x);
     bool new_p = update_local_p(p);
 
     if (internal_eval_g(new_x, new_p)) {
