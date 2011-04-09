@@ -97,6 +97,7 @@ public:
    *   2) The values of the hessian of the lagrangian (if "values" is not NULL)
    */
   virtual bool eval_h(Index n, const Number* x, bool new_x,
+		      Index np, const Number* p, bool new_p,
                       Number obj_factor, Index m, const Number* lambda,
                       bool new_lambda, Index nele_hess, Index* iRow,
                       Index* jCol, Number* values);

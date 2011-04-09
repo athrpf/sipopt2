@@ -219,6 +219,7 @@ bool HS071_NLP::eval_jac_g_p(Index n, const Number* x, bool new_x,
 
 //return the structure or values of the hessian
 bool HS071_NLP::eval_h(Index n, const Number* x, bool new_x,
+		       Index np, const Number* p, bool new_p,
                        Number obj_factor, Index m, const Number* lambda,
                        bool new_lambda, Index nele_hess, Index* iRow,
                        Index* jCol, Number* values)
