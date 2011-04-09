@@ -1223,9 +1223,11 @@ namespace Ipopt
         Index* full_h_jCol = new Index[nz_full_h_];
         Index* h_iRow = new Index[nz_full_h_];
         Index* h_jCol = new Index[nz_full_h_];
-        bool retval =tnlp_->eval_h(n_full_x_, NULL, false, 0, n_full_g_,
-                                   NULL, false,
-                                   nz_full_h_, full_h_iRow, full_h_jCol, NULL);
+        bool retval = tnlp_->eval_h(n_full_x_, NULL, false,
+				    n_full_p_, NULL, false,
+				    0, n_full_g_,
+				    NULL, false,
+				    nz_full_h_, full_h_iRow, full_h_jCol, NULL);
         if (!retval) {
           delete [] full_h_iRow;
           delete [] full_h_jCol;
@@ -1873,6 +1875,7 @@ namespace Ipopt
   }
 
   bool TNLPAdapter::Eval_h(const Vector& x,
+			   const Vector& p,
                            Number obj_factor,
                            const Vector& yc,
                            const Vector& yd,
@@ -1893,14 +1896,9 @@ namespace Ipopt
     }
 
     bool retval = false;
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
-    bool new_y = false;
-    if (update_local_lambda(yc, yd)) {
-      new_y = true;
-    }
+    bool new_x = update_local_x(x);
+    bool new_y = update_local_lambda(yc, yd);
+    bool new_p = update_local_p(p);
 
     SymTMatrix* st_h = static_cast<SymTMatrix*>(&h);
     DBG_ASSERT(dynamic_cast<SymTMatrix*>(&h));
@@ -1909,7 +1907,9 @@ namespace Ipopt
     if (h_idx_map_) {
       Number* full_h = new Number[nz_full_h_];
 
-      if (tnlp_->eval_h(n_full_x_, full_x_, new_x, obj_factor, n_full_g_,
+      if (tnlp_->eval_h(n_full_x_, full_x_, new_x,
+			n_full_p_, full_p_, new_p,
+			obj_factor, n_full_g_,
                         full_lambda_, new_y, nz_full_h_, NULL, NULL, full_h)) {
         for (Index i=0; i<nz_h_; i++) {
           values[i] = full_h[h_idx_map_[i]];
@@ -1919,7 +1919,9 @@ namespace Ipopt
       delete [] full_h;
     }
     else {
-      retval = tnlp_->eval_h(n_full_x_, full_x_, new_x, obj_factor, n_full_g_,
+      retval = tnlp_->eval_h(n_full_x_, full_x_, new_x,
+			     n_full_p_, full_p_, new_p,
+			     obj_factor, n_full_g_,
                              full_lambda_, new_y, nz_full_h_, NULL, NULL,
                              values);
     }
@@ -2509,6 +2511,7 @@ namespace Ipopt
 
   bool TNLPAdapter::update_local_lambda(const Vector& y_c, const Vector& y_d)
   {
+    DBG_START_METH("TNLPAdapter::update_local_lambda", dbg_verbosity);
     if (y_c.GetTag() == y_c_tag_for_iterates_
         && y_d.GetTag() == y_d_tag_for_iterates_) {
       return false;
@@ -2524,6 +2527,7 @@ namespace Ipopt
 
   bool TNLPAdapter::internal_eval_g(bool new_x, bool new_p)
   {
+    DBG_START_METH("TNLPAdapter::internal_eval_g", dbg_verbosity);
     if (x_tag_for_g_ == x_tag_for_iterates_ && p_tag_for_g_ == p_tag_for_iterates_) {
       // already calculated!
       return true;
@@ -2545,6 +2549,7 @@ namespace Ipopt
 
   bool TNLPAdapter::internal_eval_jac_g(bool new_x, bool new_p)
   {
+    DBG_START_METH("TNLPAdapter::internal_eval_jac_g", dbg_verbosity);
     if (x_tag_for_jac_g_ == x_tag_for_iterates_ && p_tag_for_jac_g_ == p_tag_for_iterates_) {
       // already calculated!
       return true;

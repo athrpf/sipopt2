@@ -24,7 +24,7 @@
 namespace Ipopt
 {
 #if COIN_IPOPT_VERBOSITY > 0
-  static const Index dbg_verbosity = 0;
+  static const Index dbg_verbosity = 1;
 #endif
 
   OrigIpoptNLP::OrigIpoptNLP(const SmartPtr<const Journalist>& jnlst,
@@ -142,6 +142,7 @@ namespace Ipopt
                                 const OptionsList& options,
                                 const std::string& prefix)
   {
+    DBG_START_METH("OrigIpoptNLP::Initialize", dbg_verbosity);
     options.GetNumericValue("bound_relax_factor", bound_relax_factor_, prefix);
     options.GetBoolValue("honor_original_bounds",
                          honor_original_bounds_, prefix);
@@ -523,6 +524,7 @@ namespace Ipopt
 
   SmartPtr<const Vector> OrigIpoptNLP::grad_f(const Vector& x)
   {
+    DBG_START_METH("OrigIpoptNLP::grad_f", dbg_verbosity);
     SmartPtr<Vector> unscaled_grad_f;
     SmartPtr<const Vector> retValue;
     if (!grad_f_cache_.GetCachedResult2Dep(retValue, &x, GetRawPtr(p_))) {
@@ -552,6 +554,7 @@ namespace Ipopt
   /** Equality constraint residual */
   SmartPtr<const Vector> OrigIpoptNLP::c(const Vector& x)
   {
+    DBG_START_METH("OrigIpoptNLP::c", dbg_verbosity);
     SmartPtr<const Vector> retValue;
     if (c_space_->Dim()==0) {
       // We do this caching of an empty vector so that the returned
@@ -632,6 +635,7 @@ namespace Ipopt
 
   SmartPtr<const Matrix> OrigIpoptNLP::jac_c(const Vector& x)
   {
+    DBG_START_METH("OrigIpoptNLP::jac_c", dbg_verbosity);
     SmartPtr<const Matrix> retValue;
     if (c_space_->Dim()==0) {
       // We do this caching of an empty vector so that the returned
@@ -676,6 +680,7 @@ namespace Ipopt
 
   SmartPtr<const Matrix> OrigIpoptNLP::jac_d(const Vector& x)
   {
+    DBG_START_METH("OrigIpoptNLP::jac_d", dbg_verbosity);
     SmartPtr<const Matrix> retValue;
     if (d_space_->Dim()==0) {
       // We do this caching of an empty vector so that the returned
@@ -722,6 +727,7 @@ namespace Ipopt
 
   SmartPtr<const SymMatrix> OrigIpoptNLP::uninitialized_h()
   {
+    DBG_START_METH("OrigIpoptNLP::unitialized_h", dbg_verbosity);
     return h_space_->MakeNewSymMatrix();
   }
 
@@ -730,6 +736,7 @@ namespace Ipopt
       const Vector& yc,
       const Vector& yd)
   {
+    DBG_START_METH("OrigIpoptNLP::h", dbg_verbosity);
     SmartPtr<SymMatrix> unscaled_h;
     SmartPtr<const SymMatrix> retValue;
 
@@ -756,7 +763,7 @@ namespace Ipopt
       SmartPtr<const Vector> unscaled_yd = NLP_scaling()->apply_vector_scaling_d(&yd);
       Number scaled_obj_factor = NLP_scaling()->apply_obj_scaling(obj_factor);
       h_eval_time_.Start();
-      bool success = nlp_->Eval_h(*unscaled_x, scaled_obj_factor, *unscaled_yc, *unscaled_yd, *unscaled_h);
+      bool success = nlp_->Eval_h(*unscaled_x, *p_, scaled_obj_factor, *unscaled_yc, *unscaled_yd, *unscaled_h);
       h_eval_time_.End();
       ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the hessian of the lagrangian");
       if (check_derivatives_for_naninf_) {
@@ -942,6 +949,7 @@ namespace Ipopt
   void OrigIpoptNLP::AdjustVariableBounds(const Vector& new_x_L, const Vector& new_x_U,
                                           const Vector& new_d_L, const Vector& new_d_U)
   {
+    DBG_START_METH("OrigIpoptNLP::AdjustVariableBounds", dbg_verbosity);
     x_L_ = new_x_L.MakeNewCopy();
     x_U_ = new_x_U.MakeNewCopy();
     d_L_ = new_d_L.MakeNewCopy();

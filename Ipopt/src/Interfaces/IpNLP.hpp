@@ -210,7 +210,20 @@ namespace Ipopt
                         Number obj_factor,
                         const Vector& yc,
                         const Vector& yd,
-                        SymMatrix& h) = 0;
+                        SymMatrix& h)
+    {
+      return false;
+    }
+
+    virtual bool Eval_h(const Vector& x,
+			const Vector& p,
+                        Number obj_factor,
+                        const Vector& yc,
+                        const Vector& yd,
+                        SymMatrix& h)
+    {
+      return false;
+    }
     //@}
 
     /** @name NLP solution routines. Have default dummy

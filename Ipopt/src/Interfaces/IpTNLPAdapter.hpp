@@ -119,6 +119,7 @@ namespace Ipopt
     virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d);
 
     virtual bool Eval_h(const Vector& x,
+			const Vector& p,
                         Number obj_factor,
                         const Vector& yc,
                         const Vector& yd,

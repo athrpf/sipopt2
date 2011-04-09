@@ -281,6 +281,19 @@ namespace Ipopt
       return false;
     }
 
+    virtual bool eval_h(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
+                        Number obj_factor, Index m, const Number* lambda,
+                        bool new_lambda, Index nele_hess,
+                        Index* iRow, Index* jCol, Number* values)
+    {
+      if (np==0) {
+	return eval_h(n, x, new_x, obj_factor, m, lambda, new_lambda, nele_hess,
+		      iRow, jCol, values);
+      }
+      return false;
+    }
+
     /** overload this method to return the sensitivity of the first
      *  order derivative of the lagrangian w.r.t. to the parameters.
      *  As with the other functions for getting second order derivatives,
