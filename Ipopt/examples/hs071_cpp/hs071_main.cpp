@@ -8,6 +8,7 @@
 
 #include "IpIpoptApplication.hpp"
 #include "hs071_nlp.hpp"
+#include "IpOrigIpoptNLP.hpp"
 
 #include <iostream>
 
@@ -52,6 +53,11 @@ int main(int argv, char* argc[])
   else {
     std::cout << std::endl << std::endl << "*** The problem FAILED!" << std::endl;
   }
+
+  // Test the parametric capabilities
+  SmartPtr<IpoptNLP> nlp = app->IpoptNLPObject();
+  SmartPtr<OrigIpoptNLP> onlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(nlp));
+
 
   // As the SmartPtrs go out of scope, the reference count
   // will be decremented and the objects will automatically

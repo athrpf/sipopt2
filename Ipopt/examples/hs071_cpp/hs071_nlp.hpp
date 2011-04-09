@@ -21,7 +21,7 @@ using namespace Ipopt;
  *
  * Problem hs071 looks like this
  *
- *     min   x1*x4*(x1 + x2 + x3)  +  x3
+ *     min   x1*x4*(x1 + x2 + x3)  +  x3*p1
  *     s.t.  x1*x2*x3*x4                   >=  25
  *           x1**2 + x2**2 + x3**2 + x4**2  =  40
  *           1 <=  x1,x2,x3,x4  <= 5
@@ -47,7 +47,9 @@ public:
   //@{
   /** Method to return some info about the nlp */
   virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
-                            Index& nnz_h_lag, IndexStyleEnum& index_style);
+                            Index& nnz_h_lag, Index& nnz_jac_g_p,
+			    Index& nnz_h_lag_p,
+			    IndexStyleEnum& index_style);
 
   /** Method to return the bounds for my problem */
   virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
@@ -84,6 +86,11 @@ public:
 			  Index np, const Number* p, bool new_p,
                           Index m, Index nele_jac, Index* iRow, Index *jCol,
                           Number* values);
+
+  virtual bool eval_jac_g_p(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
+			    Index m, Index nele_jac, Index* iRow, Index *jCol,
+			    Number* values);
 
   /** Method to return:
    *   1) The structure of the hessian of the lagrangian (if "values" is NULL)
