@@ -64,6 +64,7 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
+                           SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space);
@@ -92,6 +93,8 @@ namespace Ipopt
       SmartPtr<Vector> z_U,
       bool need_z_U
     );
+
+    virtual bool GetParameters(SmartPtr<Vector> p);
 
     /** Method for obtaining an entire iterate as a warmstart point.
      *  The incoming IteratesVector has to be filled. */
@@ -296,6 +299,8 @@ namespace Ipopt
     /** full dimension of x (fixed + non-fixed) */
     Index n_full_x_;
     /** full dimension of g (c + d) */
+    Index n_full_p_;
+    /** full dimension of g (c + d) */
     Index n_full_g_;
     /** non-zeros of the jacobian of c */
     Index nz_jac_c_;
@@ -330,6 +335,7 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> pd_l_space_;
     SmartPtr<const VectorSpace> d_u_space_;
     SmartPtr<const MatrixSpace> pd_u_space_;
+    SmartPtr<const VectorSpace> p_space_;
     SmartPtr<const MatrixSpace> Jac_c_space_;
     SmartPtr<const MatrixSpace> Jac_d_space_;
     SmartPtr<const SymMatrixSpace> Hess_lagrangian_space_;
@@ -338,6 +344,8 @@ namespace Ipopt
     /**@name Local Copy of the Data */
     //@{
     Number* full_x_; /** copy of the full x vector (fixed & non-fixed) */
+    /** Copy of the full parameter vector */
+    Number* full_p_;
     Number* full_lambda_; /** copy of lambda (yc & yd) */
     Number* full_g_; /** copy of g (c & d) */
     Number* jac_g_; /** the values for the full jacobian of g */

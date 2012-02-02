@@ -73,6 +73,7 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
+                           SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)=0;
@@ -102,6 +103,11 @@ namespace Ipopt
       SmartPtr<Vector> z_U,
       bool need_z_U
     )=0;
+
+    virtual bool GetParameters(SmartPtr<Vector> p)
+    {
+      return false;
+    }
 
     /** Method for obtaining an entire iterate as a warmstart point.
      *  The incoming IteratesVector has to be filled.  The default

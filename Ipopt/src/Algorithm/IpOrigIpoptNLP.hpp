@@ -170,6 +170,11 @@ namespace Ipopt
       return Pd_U_;
     }
 
+    virtual SmartPtr<const Vector> p() const
+    {
+      return p_;
+    }
+
     virtual SmartPtr<const SymMatrixSpace> HessianMatrixSpace() const
     {
       return h_space_;
@@ -188,6 +193,7 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
+			               SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space);
@@ -294,6 +300,7 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> pd_l_space_;
     SmartPtr<const VectorSpace> d_u_space_;
     SmartPtr<const MatrixSpace> pd_u_space_;
+    SmartPtr<const VectorSpace> p_space_;
     SmartPtr<const MatrixSpace> jac_c_space_;
     SmartPtr<const MatrixSpace> jac_d_space_;
     SmartPtr<const SymMatrixSpace> h_space_;
@@ -361,6 +368,9 @@ namespace Ipopt
 
     /** Original unmodified upper bounds on x */
     SmartPtr<const Vector> orig_x_U_;
+
+    /** Parameters */
+    SmartPtr<const Vector> p_;
     //@}
 
     /**@name Default Compiler Generated Methods

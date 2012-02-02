@@ -763,6 +763,9 @@ namespace Ipopt
     Jnlst().Printf(J_SUMMARY, J_STATISTICS,
                    "        inequality constraints with only upper bounds: %8d\n\n",
                    ns_only_upper);
+    Jnlst().Printf(J_SUMMARY, J_STATISTICS,
+                   "Total number of parameters...........................: %8d\n\n",
+                   IpNLP().p()->Dim());
   }
 
   void IpoptAlgorithm::ComputeFeasibilityMultipliers()

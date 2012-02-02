@@ -40,6 +40,7 @@ namespace Ipopt
                               SmartPtr<const MatrixSpace>& pd_l_space,
                               SmartPtr<const VectorSpace>& d_u_space,
                               SmartPtr<const MatrixSpace>& pd_u_space,
+			                  SmartPtr<const VectorSpace>& p_space,
                               SmartPtr<const MatrixSpace>& Jac_c_space,
                               SmartPtr<const MatrixSpace>& Jac_d_space,
                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
@@ -61,6 +62,7 @@ namespace Ipopt
                                   x_u_space_orig, px_u_space_orig,
                                   d_l_space_orig, pd_l_space_orig,
                                   d_u_space_orig, pd_u_space_orig,
+				                  p_space,
                                   Jac_c_space, Jac_d_space_orig,
                                   Hess_lagrangian_space);
     if (!retval) {

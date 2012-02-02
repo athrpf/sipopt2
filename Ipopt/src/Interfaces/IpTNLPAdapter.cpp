@@ -65,6 +65,7 @@ namespace Ipopt
       tnlp_(tnlp),
       jnlst_(jnlst),
       full_x_(NULL),
+      full_p_(NULL),
       full_lambda_(NULL),
       full_g_(NULL),
       jac_g_(NULL),
@@ -83,13 +84,16 @@ namespace Ipopt
       findiff_x_l_(NULL),
       findiff_x_u_(NULL)
   {
+    DBG_START_METH("TNLPAdapter::TNLPAdapter", dbg_verbosity);
     ASSERT_EXCEPTION(IsValid(tnlp_), INVALID_TNLP,
                      "The TNLP passed to TNLPAdapter is NULL. This MUST be a valid TNLP!");
   }
 
   TNLPAdapter::~TNLPAdapter()
   {
+    DBG_START_METH("TNLPAdapter::~TNLPAdapter", dbg_verbosity);
     delete [] full_x_;
+    delete [] full_p_;
     delete [] full_lambda_;
     delete [] full_g_;
     delete [] jac_g_;
@@ -333,6 +337,7 @@ namespace Ipopt
                               SmartPtr<const MatrixSpace>& pd_l_space,
                               SmartPtr<const VectorSpace>& d_u_space,
                               SmartPtr<const MatrixSpace>& pd_u_space,
+                              SmartPtr<const VectorSpace>& p_space,
                               SmartPtr<const MatrixSpace>& Jac_c_space,
                               SmartPtr<const MatrixSpace>& Jac_d_space,
                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
@@ -362,6 +367,8 @@ namespace Ipopt
       // memory
       delete [] full_x_;
       full_x_ = NULL;
+      delete [] full_p_;
+      full_p_ = NULL;
       delete [] full_lambda_;
       full_lambda_ = NULL;
       delete [] full_g_;
@@ -379,18 +386,20 @@ namespace Ipopt
     }
 
     // Get the full dimensions of the problem
-    Index n_full_x, n_full_g, nz_full_jac_g, nz_full_h;
-    bool retval = tnlp_->get_nlp_info(n_full_x, n_full_g, nz_full_jac_g,
+    Index n_full_x, n_full_p, n_full_g, nz_full_jac_g, nz_full_h;
+    bool retval = tnlp_->get_nlp_info(n_full_x, n_full_p, n_full_g, nz_full_jac_g,
                                       nz_full_h, index_style_);
     ASSERT_EXCEPTION(retval, INVALID_TNLP, "get_nlp_info returned false");
     ASSERT_EXCEPTION(!warm_start_same_structure_ ||
                      (n_full_x == n_full_x_ &&
+                      n_full_p == n_full_p_ &&
                       n_full_g == n_full_g_ &&
                       nz_full_jac_g == nz_full_jac_g_ &&
                       nz_full_h == nz_full_h_),
                      INVALID_WARMSTART,
                      "warm_start_same_structure chosen, but problem dimensions are different.");
     n_full_x_ = n_full_x;
+    n_full_p_ = n_full_p;
     n_full_g_ = n_full_g;
     nz_full_jac_g_ = nz_full_jac_g;
     nz_full_h_ = nz_full_h;
@@ -398,6 +407,9 @@ namespace Ipopt
     if (!warm_start_same_structure_) {
       // create space to store vectors that are the full length of x
       full_x_ = new Number[n_full_x_];
+
+      // create space to store vectors that area the full length of lambda
+      full_p_ = new Number[n_full_p_];
 
       // create space to store vectors that area the full length of lambda
       full_lambda_ = new Number[n_full_g_];
@@ -888,6 +900,10 @@ namespace Ipopt
       x_u_map = NULL;
 
       // create the required c_space
+      SmartPtr<DenseVectorSpace> dp_space = new DenseVectorSpace(n_full_p_);
+      p_space = GetRawPtr(dp_space);
+
+      // create the required c_space
 
       SmartPtr<DenseVectorSpace> dc_space;
       if (n_x_fixed_==0 || fixed_variable_treatment_==MAKE_PARAMETER) {
@@ -1285,6 +1301,7 @@ namespace Ipopt
                                          const Matrix& Pd_U,
                                          Vector& d_U)
   {
+    DBG_START_METH("TNLPAdapter::GetBoundsInformation", dbg_verbosity);
     // This could be done more efficiently, I have already called this method
     // once to setup the structure for the problem, I could store the values
     // and use them here ?
@@ -1438,6 +1455,7 @@ namespace Ipopt
                                      bool need_z_U
                                     )
   {
+    DBG_START_METH("TNLPAdapter::GetStartingPoint", dbg_verbosity);
     Number* full_x = new Number[n_full_x_];
     Number* full_z_l = new Number[n_full_x_];
     Number* full_z_u = new Number[n_full_x_];
@@ -1555,13 +1573,26 @@ namespace Ipopt
     return true;
   }
 
+  bool TNLPAdapter::GetParameters(SmartPtr<Vector> p)
+  {
+    DBG_START_METH("TNLPAdapter::GetParameters", dbg_verbosity);
+    if (n_full_p_>0) {
+      SmartPtr<DenseVector> dp = dynamic_cast<DenseVector*>(GetRawPtr(p));
+      Number* p_values = dp->Values();
+      return tnlp_->get_parameters(n_full_p_, p_values);
+    }
+    return true;
+  }
+
   bool TNLPAdapter::GetWarmStartIterate(IteratesVector& warm_start_iterate)
   {
+    DBG_START_METH("TNLPAdapter::GetWarmStartIterate", dbg_verbosity);
     return tnlp_->get_warm_start_iterate(warm_start_iterate);
   }
 
   bool TNLPAdapter::Eval_f(const Vector& x, Number& f)
   {
+    DBG_START_METH("TNLPAdapter::Eval_f", dbg_verbosity);
     bool new_x = false;
     if (update_local_x(x)) {
       new_x = true;
@@ -1571,6 +1602,7 @@ namespace Ipopt
 
   bool TNLPAdapter::Eval_grad_f(const Vector& x, Vector& g_f)
   {
+    DBG_START_METH("TNLPAdapter::Eval_grad_f", dbg_verbosity);
     bool retvalue = false;
     bool new_x = false;
     if (update_local_x(x)) {
@@ -1600,6 +1632,7 @@ namespace Ipopt
 
   bool TNLPAdapter::Eval_c(const Vector& x, Vector& c)
   {
+    DBG_START_METH("TNLPAdapter::Eval_c", dbg_verbosity);
     bool new_x = false;
     if (update_local_x(x)) {
       new_x = true;
@@ -1629,6 +1662,7 @@ namespace Ipopt
 
   bool TNLPAdapter::Eval_jac_c(const Vector& x, Matrix& jac_c)
   {
+    DBG_START_METH("TNLPAdapter::Eval_jac_c", dbg_verbosity);
     bool new_x = false;
     if (update_local_x(x)) {
       new_x = true;

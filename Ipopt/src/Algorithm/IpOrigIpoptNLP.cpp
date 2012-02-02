@@ -240,6 +240,7 @@ namespace Ipopt
                                  x_u_space_, px_u_space_,
                                  d_l_space_, pd_l_space_,
                                  d_u_space_, pd_u_space_,
+				                 p_space_,
                                  jac_c_space_, jac_d_space_,
                                  h_space_);
 
@@ -248,6 +249,16 @@ namespace Ipopt
                        "GetSpaces method for the NLP returns false.\n");
         return false;
       }
+
+      // get parameters
+      SmartPtr<Vector> p = p_space_->MakeNew();
+      retValue = nlp_->GetParameters(p);
+      if (!retValue) {
+        jnlst_->Printf(J_WARNING, J_INITIALIZATION,
+                       "GetParameters method for the NLP returns false.\n");
+        return false;
+      }
+      p_ = GetRawPtr(p);
 
       // Check if the Hessian space is actually a limited-memory
       // approximation.  If so, get the required information from the
@@ -786,10 +797,12 @@ namespace Ipopt
                                SmartPtr<const MatrixSpace>& pd_l_space,
                                SmartPtr<const VectorSpace>& d_u_space,
                                SmartPtr<const MatrixSpace>& pd_u_space,
+			                   SmartPtr<const VectorSpace>& p_space,
                                SmartPtr<const MatrixSpace>& Jac_c_space,
                                SmartPtr<const MatrixSpace>& Jac_d_space,
                                SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
   {
+    DBG_START_METH("OrigIpoptNLP::GetSpaces", dbg_verbosity);
     // Make sure that we already have all the pointers
     DBG_ASSERT(IsValid(x_space_) &&
                IsValid(c_space_) &&
@@ -802,6 +815,7 @@ namespace Ipopt
                IsValid(pd_l_space_) &&
                IsValid(d_u_space_) &&
                IsValid(pd_u_space_) &&
+	           IsValid(p_space_) &&
                IsValid(scaled_jac_c_space_) &&
                IsValid(scaled_jac_d_space_) &&
                IsValid(scaled_h_space_));
@@ -819,6 +833,7 @@ namespace Ipopt
     pd_l_space = pd_l_space_;
     d_u_space = d_u_space_;
     pd_u_space = pd_u_space_;
+    p_space = p_space_;
     Jac_c_space = scaled_jac_c_space_;
     Jac_d_space = scaled_jac_d_space_;
     Hess_lagrangian_space = scaled_h_space_;

@@ -79,7 +79,19 @@ namespace Ipopt
      */
     enum IndexStyleEnum { C_STYLE=0, FORTRAN_STYLE=1 };
     virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style)=0;
+                              Index& nnz_h_lag, IndexStyleEnum& index_style)
+    {
+      return false;
+    }
+
+    virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
+                              Index& nnz_h_lag, IndexStyleEnum& index_style)
+    {
+      bool retval;
+      retval = get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
+      np = 0;
+      return retval;
+    }
 
     typedef std::map<std::string, std::vector<std::string> > StringMetaDataMapType;
     typedef std::map<std::string, std::vector<Index> > IntegerMetaDataMapType;
@@ -108,6 +120,11 @@ namespace Ipopt
      *  1e19. (see TNLPAdapter) */
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
                                  Index m, Number* g_l, Number* g_u)=0;
+
+    virtual bool get_parameters(Index np, Number* p)
+    {
+      return false;
+    }
 
     /** overload this method to return scaling parameters. This is
      *  only called if the options are set to retrieve user scaling.

@@ -126,6 +126,7 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> orig_pd_l_space;
     SmartPtr<const VectorSpace> orig_d_u_space;
     SmartPtr<const MatrixSpace> orig_pd_u_space;
+    SmartPtr<const VectorSpace> orig_p_space;
     SmartPtr<const MatrixSpace> orig_jac_c_space;
     SmartPtr<const MatrixSpace> orig_jac_d_space;
     SmartPtr<const SymMatrixSpace> orig_h_space;
@@ -135,6 +136,7 @@ namespace Ipopt
                             orig_x_u_space, orig_px_u_space,
                             orig_d_l_space, orig_pd_l_space,
                             orig_d_u_space, orig_pd_u_space,
+			                orig_p_space,
                             orig_jac_c_space, orig_jac_d_space,
                             orig_h_space);
 
@@ -151,6 +153,9 @@ namespace Ipopt
     x_space_->SetCompSpace(2, *orig_c_space); // p_c
     x_space_->SetCompSpace(3, *orig_d_space); // n_d
     x_space_->SetCompSpace(4, *orig_d_space); // p_d
+
+    // parameter vector
+    p_space_ = orig_p_space;
 
     DBG_PRINT((1, "Setting the c_space_\n"));
     // vector c
@@ -349,6 +354,9 @@ namespace Ipopt
 
     // Pd_U
     Pd_U_ = orig_ip_nlp_->Pd_U();
+
+    // Getting the NLP scaling
+    p_ = orig_ip_nlp_->p();
 
     // Getting the NLP scaling
 
@@ -681,6 +689,7 @@ namespace Ipopt
                                 SmartPtr<const MatrixSpace>& pd_l_space,
                                 SmartPtr<const VectorSpace>& d_u_space,
                                 SmartPtr<const MatrixSpace>& pd_u_space,
+                                SmartPtr<const VectorSpace>& p_space,
                                 SmartPtr<const MatrixSpace>& Jac_c_space,
                                 SmartPtr<const MatrixSpace>& Jac_d_space,
                                 SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
@@ -696,6 +705,7 @@ namespace Ipopt
     pd_l_space = GetRawPtr(pd_l_space_);
     d_u_space = GetRawPtr(d_u_space_);
     pd_u_space = GetRawPtr(pd_u_space_);
+    p_space = GetRawPtr(p_space_);
     Jac_c_space = GetRawPtr(jac_c_space_);
     Jac_d_space = GetRawPtr(jac_d_space_);
     Hess_lagrangian_space = GetRawPtr(h_space_);

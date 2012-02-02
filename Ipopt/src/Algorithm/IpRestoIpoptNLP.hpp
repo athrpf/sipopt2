@@ -184,6 +184,11 @@ namespace Ipopt
       return GetRawPtr(Pd_U_);
     }
 
+    virtual SmartPtr<const Vector> p() const
+    {
+      return GetRawPtr(p_);
+    }
+
     virtual SmartPtr<const SymMatrixSpace> HessianMatrixSpace() const
     {
       return GetRawPtr(h_space_);
@@ -202,6 +207,7 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
+                           SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space);
@@ -332,6 +338,8 @@ namespace Ipopt
 
     SmartPtr<const MatrixSpace> pd_u_space_;
 
+    SmartPtr<const VectorSpace> p_space_;
+
     SmartPtr<CompoundMatrixSpace> jac_c_space_;
 
     SmartPtr<CompoundMatrixSpace> jac_d_space_;
@@ -364,6 +372,9 @@ namespace Ipopt
 
     /** Permutation matrix (d_U_ -> d */
     SmartPtr<const Matrix> Pd_U_;
+
+    /** Parameter vector */
+    SmartPtr<const Vector> p_;
     //@}
 
     /** @name Values particular to the restoration phase problem statement */
