@@ -121,7 +121,12 @@ namespace Ipopt
     /** @name NLP evaluation routines (overload
      *  in derived classes. */
     //@{
-    virtual bool Eval_f(const Vector& x, Number& f) = 0;
+    virtual bool Eval_f(const Vector& x, Number& f){}
+
+    virtual bool Eval_f(const Vector& x, const Vector& p, Number& f)
+    {
+      return Eval_f(x, f);
+    }
 
     virtual bool Eval_grad_f(const Vector& x, Vector& g_f) = 0;
 
@@ -230,7 +235,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

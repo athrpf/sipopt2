@@ -105,6 +105,8 @@ namespace Ipopt
     //@{
     virtual bool Eval_f(const Vector& x, Number& f);
 
+    virtual bool Eval_f(const Vector& x, const Vector& p, Number& f);
+
     virtual bool Eval_grad_f(const Vector& x, Vector& g_f);
 
     virtual bool Eval_c(const Vector& x, Vector& c);
@@ -204,6 +206,7 @@ namespace Ipopt
     //@{
     /** Sort the primal variables, and add the fixed values in x */
     void ResortX(const Vector& x, Number* x_orig);
+    void ResortP(const Vector& p, Number* p_orig);
     void ResortG(const Vector& c, const Vector& d, Number *g_orig);
     void ResortBnds(const Vector& x_L, Number* x_L_orig,
                     const Vector& x_U, Number* x_U_orig);
@@ -212,7 +215,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -355,6 +358,7 @@ namespace Ipopt
     /**@name Tags for deciding when to update internal copies of vectors */
     //@{
     TaggedObject::Tag x_tag_for_iterates_;
+    TaggedObject::Tag p_tag_for_iterates_;
     TaggedObject::Tag y_c_tag_for_iterates_;
     TaggedObject::Tag y_d_tag_for_iterates_;
     TaggedObject::Tag x_tag_for_g_;
@@ -364,6 +368,7 @@ namespace Ipopt
     /**@name Methods to update the values in the local copies of vectors */
     //@{
     bool update_local_x(const Vector& x);
+    bool update_local_p(const Vector& p);
     bool update_local_lambda(const Vector& y_c, const Vector& y_d);
     //@}
 

@@ -56,7 +56,7 @@
 namespace Ipopt
 {
 #if COIN_IPOPT_VERBOSITY > 0
-  static const Index dbg_verbosity = 0;
+  static const Index dbg_verbosity = 1;
 #endif
 
   TNLPAdapter::TNLPAdapter(const SmartPtr<TNLP> tnlp,
@@ -1600,6 +1600,19 @@ namespace Ipopt
     return tnlp_->eval_f(n_full_x_, full_x_, new_x, f);
   }
 
+  bool TNLPAdapter::Eval_f(const Vector& x, const Vector& p, Number& f)
+  {
+    DBG_START_METH("TNLPAdapter::Eval_f(x,p,f)", dbg_verbosity);
+    bool new_x = false, new_p = false;
+    if (update_local_x(x)) {
+      new_x = true;
+    }
+    if (update_local_p(p)) {
+      new_p = true;
+    }
+    return tnlp_->eval_f(n_full_x_, full_x_, new_x, n_full_p_, full_p_, new_p, f);
+  }
+
   bool TNLPAdapter::Eval_grad_f(const Vector& x, Vector& g_f)
   {
     DBG_START_METH("TNLPAdapter::Eval_grad_f", dbg_verbosity);
@@ -2197,8 +2210,21 @@ namespace Ipopt
     }
   }
 
+  void TNLPAdapter::ResortP(const Vector& p, Number* p_orig)
+  {
+    DBG_START_METH("TNLPAdapter::ResortP", dbg_verbosity);
+    const DenseVector* dp = static_cast<const DenseVector*>(&p);
+    DBG_ASSERT(dynamic_cast<const DenseVector*>(&p));
+    DBG_ASSERT(p.Dim()==n_full_p_);
+    const Number* p_val = dp->Values();
+    for (Index i=0; i<p.Dim(); ++i) {
+      p_orig[i] = p_val[i];
+    }
+  }
+
   void TNLPAdapter::ResortG(const Vector& c, const Vector& d, Number* g_orig)
   {
+    DBG_START_METH("TNLPAdapter::ResortG", dbg_verbosity);
     const DenseVector* dc = static_cast<const DenseVector*>(&c);
     DBG_ASSERT(dynamic_cast<const DenseVector*>(&c));
 
@@ -2335,6 +2361,17 @@ namespace Ipopt
 
     x_tag_for_iterates_ = x.GetTag();
 
+    return true;
+  }
+
+  bool TNLPAdapter::update_local_p(const Vector& p)
+  {
+    DBG_START_METH("TNLPAdapter::update_local_p", dbg_verbosity);
+    if (p.GetTag() ==p_tag_for_iterates_) {
+      return false;
+    }
+    ResortP(p, full_p_);
+    p_tag_for_iterates_ = p.GetTag();
     return true;
   }
 

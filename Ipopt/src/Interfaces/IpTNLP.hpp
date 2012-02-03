@@ -32,7 +32,7 @@ namespace Ipopt
    *  ipopt.
    *
    *  This interface presents the problem form:
-   *  
+   *
    *     min f(x)
    *
    *     s.t. gL <= g(x) <= gU
@@ -182,7 +182,18 @@ namespace Ipopt
 
     /** overload this method to return the value of the objective function */
     virtual bool eval_f(Index n, const Number* x, bool new_x,
-                        Number& obj_value)=0;
+                        Number& obj_value)
+    {
+      return false;
+    }
+
+    virtual bool eval_f(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
+                        Number& obj_value)
+    {
+      DBG_ASSERT(np==0);
+      return eval_f(n, x, new_x, obj_value);
+    }
 
     /** overload this method to return the vector of the gradient of
      *  the objective w.r.t. x */
@@ -296,7 +307,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
