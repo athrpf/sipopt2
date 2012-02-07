@@ -507,7 +507,7 @@ namespace Ipopt
       ASSERT_EXCEPTION(success && IsFiniteNumber(ret), Eval_Error,
                        "Error evaluating the objective function");
       ret = NLP_scaling()->apply_obj_scaling(ret);
-      f_cache_.AddCachedResult1Dep(ret, &x);
+      f_cache_.AddCachedResult2Dep(ret, &x, GetRawPtr(p_));
     }
 
     return ret;
@@ -523,18 +523,18 @@ namespace Ipopt
   {
     SmartPtr<Vector> unscaled_grad_f;
     SmartPtr<const Vector> retValue;
-    if (!grad_f_cache_.GetCachedResult1Dep(retValue, &x)) {
+    if (!grad_f_cache_.GetCachedResult2Dep(retValue, &x, GetRawPtr(p_))) {
       grad_f_evals_++;
       unscaled_grad_f = x_space_->MakeNew();
 
       SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
       grad_f_eval_time_.Start();
-      bool success = nlp_->Eval_grad_f(*unscaled_x, *unscaled_grad_f);
+      bool success = nlp_->Eval_grad_f(*unscaled_x, *p_, *unscaled_grad_f);
       grad_f_eval_time_.End();
       ASSERT_EXCEPTION(success && IsFiniteNumber(unscaled_grad_f->Nrm2()),
                        Eval_Error, "Error evaluating the gradient of the objective function");
       retValue = NLP_scaling()->apply_grad_obj_scaling(ConstPtr(unscaled_grad_f));
-      grad_f_cache_.AddCachedResult1Dep(retValue, &x);
+      grad_f_cache_.AddCachedResult2Dep(retValue, &x, GetRawPtr(p_));
     }
 
     return retValue;

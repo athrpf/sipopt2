@@ -67,7 +67,9 @@ public:
 		      Number& obj_value);
 
   /** Method to return the gradient of the objective */
-  virtual bool eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f);
+  virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
+			   Index np, const Number* p, bool new_p,
+			   Number* grad_f);
 
   /** Method to return the constraint residuals */
   virtual bool eval_g(Index n, const Number* x, bool new_x, Index m, Number* g);

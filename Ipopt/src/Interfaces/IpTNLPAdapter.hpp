@@ -109,6 +109,8 @@ namespace Ipopt
 
     virtual bool Eval_grad_f(const Vector& x, Vector& g_f);
 
+    virtual bool Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f);
+
     virtual bool Eval_c(const Vector& x, Vector& c);
 
     virtual bool Eval_jac_c(const Vector& x, Matrix& jac_c);

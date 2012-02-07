@@ -1647,6 +1647,39 @@ namespace Ipopt
     return retvalue;
   }
 
+  bool TNLPAdapter::Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f)
+  {
+    DBG_START_METH("TNLPAdapter::Eval_grad_f", dbg_verbosity);
+    bool retvalue = false;
+    bool new_x = false;
+    if (update_local_x(x)) {
+      new_x = true;
+    }
+    bool new_p = update_local_p(p);
+
+    DenseVector* dg_f = static_cast<DenseVector*>(&g_f);
+    DBG_ASSERT(dynamic_cast<DenseVector*>(&g_f));
+    Number* values = dg_f->Values();
+    if (IsValid(P_x_full_x_)) {
+      Number* full_grad_f = new Number[n_full_x_];
+      if (tnlp_->eval_grad_f(n_full_x_, full_x_, new_x,
+			     n_full_p_, full_p_, new_p, full_grad_f)) {
+        const Index* x_pos = P_x_full_x_->ExpandedPosIndices();
+        for (Index i=0; i<g_f.Dim(); i++) {
+          values[i] = full_grad_f[x_pos[i]];
+        }
+        retvalue = true;
+      }
+      delete [] full_grad_f;
+    }
+    else {
+      retvalue = tnlp_->eval_grad_f(n_full_x_, full_x_, new_x,
+				    n_full_p_, full_p_, new_p, values);
+    }
+
+    return retvalue;
+  }
+
   bool TNLPAdapter::Eval_c(const Vector& x, Vector& c)
   {
     DBG_START_METH("TNLPAdapter::Eval_c", dbg_verbosity);

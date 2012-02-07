@@ -121,13 +121,16 @@ bool HS071_NLP::eval_f(Index n, const Number* x, bool new_x,
 }
 
 // return the gradient of the objective function grad_{x} f(x)
-bool HS071_NLP::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
+bool HS071_NLP::eval_grad_f(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
+			    Number* grad_f)
 {
   assert(n == 4);
+  assert(np == 1);
 
   grad_f[0] = x[0] * x[3] + x[3] * (x[0] + x[1] + x[2]);
   grad_f[1] = x[0] * x[3];
-  grad_f[2] = x[0] * x[3] + 1;
+  grad_f[2] = x[0] * x[3] + p[0];
   grad_f[3] = x[0] * (x[0] + x[1] + x[2]);
 
   return true;
