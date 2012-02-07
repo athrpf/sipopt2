@@ -17,7 +17,7 @@ using namespace Ipopt;
  *  HS071_NLP implements a C++ example of problem 71 of the
  *  Hock-Schittkowski test suite. This example is designed to go
  *  along with the tutorial document and show how to interface
- *  with IPOPT through the TNLP interface. 
+ *  with IPOPT through the TNLP interface.
  *
  * Problem hs071 looks like this
  *
@@ -46,7 +46,7 @@ public:
   /**@name Overloaded from TNLP */
   //@{
   /** Method to return some info about the nlp */
-  virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
+  virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                             Index& nnz_h_lag, IndexStyleEnum& index_style);
 
   /** Method to return the bounds for my problem */
@@ -59,8 +59,12 @@ public:
                                   Index m, bool init_lambda,
                                   Number* lambda);
 
+  virtual bool get_parameters(Index np, Number* p);
+
   /** Method to return the objective value */
-  virtual bool eval_f(Index n, const Number* x, bool new_x, Number& obj_value);
+  virtual bool eval_f(Index n, const Number* x, bool new_x,
+		      Index np, const Number* p, bool new_p,
+		      Number& obj_value);
 
   /** Method to return the gradient of the objective */
   virtual bool eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f);
@@ -102,12 +106,12 @@ private:
   /**@name Methods to block default compiler methods.
    * The compiler automatically generates the following three methods.
    *  Since the default compiler implementation is generally not what
-   *  you want (for all but the most simple classes), we usually 
+   *  you want (for all but the most simple classes), we usually
    *  put the declarations of these methods in the private section
    *  and never implement them. This prevents the compiler from
    *  implementing an incorrect "default" behavior without us
    *  knowing. (See Scott Meyers book, "Effective C++")
-   *  
+   *
    */
   //@{
   //  HS071_NLP();

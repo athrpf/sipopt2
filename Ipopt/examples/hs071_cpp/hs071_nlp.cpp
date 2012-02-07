@@ -22,11 +22,14 @@ HS071_NLP::~HS071_NLP()
 {}
 
 // returns the size of the problem
-bool HS071_NLP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
+bool HS071_NLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                              Index& nnz_h_lag, IndexStyleEnum& index_style)
 {
   // The problem described in HS071_NLP.hpp has 4 variables, x[0] through x[3]
   n = 4;
+
+  // number of parameters 1
+  np = 1;
 
   // one equality constraint and one inequality constraint
   m = 2;
@@ -100,12 +103,19 @@ bool HS071_NLP::get_starting_point(Index n, bool init_x, Number* x,
   return true;
 }
 
+bool HS071_NLP::get_parameters(Index np, Number* p)
+{
+  p[0] = 1.;
+  return true;
+}
+
 // returns the value of the objective function
-bool HS071_NLP::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
+bool HS071_NLP::eval_f(Index n, const Number* x, bool new_x,
+		       Index np, const Number* p, bool new_p,
+		       Number& obj_value)
 {
   assert(n == 4);
-
-  obj_value = x[0] * x[3] * (x[0] + x[1] + x[2]) + x[2];
+  obj_value = x[0] * x[3] * (x[0] + x[1] + x[2]) + x[2]*p[0];
 
   return true;
 }

@@ -71,6 +71,7 @@ namespace Ipopt
       jac_g_(NULL),
       c_rhs_(NULL),
       x_tag_for_iterates_(0),
+      p_tag_for_iterates_(0),
       y_c_tag_for_iterates_(0),
       y_d_tag_for_iterates_(0),
       x_tag_for_g_(0),
@@ -643,7 +644,7 @@ namespace Ipopt
         }
 
         Number obj_value;
-        bool retval = tnlp_->eval_f(n_full_x_, full_x_, false, obj_value);
+        bool retval = tnlp_->eval_f(n_full_x_, full_x_, false, n_full_p_, full_p_, false, obj_value);
         ASSERT_EXCEPTION(retval, IpoptNLP::Eval_Error,
                          "All variables are fixed, but objective cannot be evaluated at fixed point.");
         // Call finalize_solution so that user has required information
@@ -1596,6 +1597,9 @@ namespace Ipopt
     bool new_x = false;
     if (update_local_x(x)) {
       new_x = true;
+    }
+    if (n_full_p_>0) {
+      return tnlp_->eval_f(n_full_x_, full_x_, new_x, n_full_p_, full_p_, false, f);
     }
     return tnlp_->eval_f(n_full_x_, full_x_, new_x, f);
   }

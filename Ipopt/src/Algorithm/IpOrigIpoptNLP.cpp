@@ -497,11 +497,11 @@ namespace Ipopt
     DBG_START_METH("OrigIpoptNLP::f", dbg_verbosity);
     Number ret = 0.0;
     DBG_PRINT((2, "x.Tag = %d\n", x.GetTag()));
-    if (!f_cache_.GetCachedResult1Dep(ret, &x)) {
+    if (!f_cache_.GetCachedResult2Dep(ret, &x, GetRawPtr(p_))) {
       f_evals_++;
       SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
       f_eval_time_.Start();
-      bool success = nlp_->Eval_f(*unscaled_x, ret);
+      bool success = nlp_->Eval_f(*unscaled_x, *p_, ret);
       f_eval_time_.End();
       DBG_PRINT((1, "success = %d ret = %e\n", success, ret));
       ASSERT_EXCEPTION(success && IsFiniteNumber(ret), Eval_Error,

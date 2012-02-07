@@ -191,14 +191,29 @@ namespace Ipopt
 			Index np, const Number* p, bool new_p,
                         Number& obj_value)
     {
-      DBG_ASSERT(np==0);
+      if (!np==0) {
+	return false;
+      }
       return eval_f(n, x, new_x, obj_value);
     }
 
     /** overload this method to return the vector of the gradient of
      *  the objective w.r.t. x */
     virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
-                             Number* grad_f)=0;
+                             Number* grad_f)
+    {
+      return false;
+    }
+
+    virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
+			     Index np, const Number* p, bool new_p,
+			     Number* grad_f)
+    {
+      if (np>0) {
+	return false;
+      }
+      return eval_grad_f(n,x,new_x, grad_f);
+    }
 
     /** overload this method to return the vector of constraint values */
     virtual bool eval_g(Index n, const Number* x, bool new_x,
