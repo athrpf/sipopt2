@@ -567,7 +567,7 @@ namespace Ipopt
         c_evals_++;
         SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
         c_eval_time_.Start();
-        bool success = nlp_->Eval_c(*unscaled_x, *unscaled_c);
+        bool success = nlp_->Eval_c(*unscaled_x, *p_, *unscaled_c);
         c_eval_time_.End();
         if (!success || !IsFiniteNumber(unscaled_c->Nrm2())) {
           if (check_derivatives_for_naninf_ && !IsFiniteNumber(unscaled_c->Nrm2())) {
@@ -608,7 +608,7 @@ namespace Ipopt
         DBG_PRINT_VECTOR(2, "scaled_x", x);
         SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
         d_eval_time_.Start();
-        bool success = nlp_->Eval_d(*unscaled_x, *unscaled_d);
+        bool success = nlp_->Eval_d(*unscaled_x, *p_, *unscaled_d);
         d_eval_time_.End();
         DBG_PRINT_VECTOR(2, "unscaled_d", *unscaled_d);
         if (!success || !IsFiniteNumber(unscaled_d->Nrm2())) {
@@ -652,7 +652,7 @@ namespace Ipopt
 
         SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
         jac_c_eval_time_.Start();
-        bool success = nlp_->Eval_jac_c(*unscaled_x, *unscaled_jac_c);
+        bool success = nlp_->Eval_jac_c(*unscaled_x, *p_, *unscaled_jac_c);
         jac_c_eval_time_.End();
         ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the jacobian of the equality constraints");
         if (check_derivatives_for_naninf_) {
@@ -697,7 +697,7 @@ namespace Ipopt
 
         SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
         jac_d_eval_time_.Start();
-        bool success = nlp_->Eval_jac_d(*unscaled_x, *unscaled_jac_d);
+        bool success = nlp_->Eval_jac_d(*unscaled_x, *p_, *unscaled_jac_d);
         jac_d_eval_time_.End();
         ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the jacobian of the inequality constraints");
         if (check_derivatives_for_naninf_) {

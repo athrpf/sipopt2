@@ -141,13 +141,45 @@ namespace Ipopt
       return Eval_grad_f(x, g_f);
     }
 
-    virtual bool Eval_c(const Vector& x, Vector& c) = 0;
+    virtual bool Eval_c(const Vector& x, Vector& c)
+    {
+      return false;
+    }
 
-    virtual bool Eval_jac_c(const Vector& x, Matrix& jac_c) = 0;
+    virtual bool Eval_c(const Vector& x, const Vector& p, Vector& c)
+    {
+      return false;
+    }
 
-    virtual bool Eval_d(const Vector& x, Vector& d) = 0;
+    virtual bool Eval_jac_c(const Vector& x, Matrix& jac_c)
+    {
+      return false;
+    }
 
-    virtual bool Eval_jac_d(const Vector& x, Matrix& jac_d) = 0;
+    virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c)
+    {
+      return false;
+    }
+
+    virtual bool Eval_d(const Vector& x, Vector& d)
+    {
+      return false;
+    }
+
+    virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d)
+    {
+      return false;
+    }
+
+    virtual bool Eval_jac_d(const Vector& x, Matrix& jac_d)
+    {
+      return false;
+    }
+
+    virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d)
+    {
+      return false;
+    }
 
     virtual bool Eval_h(const Vector& x,
                         Number obj_factor,

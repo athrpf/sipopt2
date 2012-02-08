@@ -115,6 +115,7 @@ bool HS071_NLP::eval_f(Index n, const Number* x, bool new_x,
 		       Number& obj_value)
 {
   assert(n == 4);
+  assert(np == 1);
   obj_value = x[0] * x[3] * (x[0] + x[1] + x[2]) + x[2]*p[0];
 
   return true;
@@ -137,10 +138,13 @@ bool HS071_NLP::eval_grad_f(Index n, const Number* x, bool new_x,
 }
 
 // return the value of the constraints: g(x)
-bool HS071_NLP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
+bool HS071_NLP::eval_g(Index n, const Number* x, bool new_x,
+		       Index np, const Number* p, bool new_p,
+		       Index m, Number* g)
 {
   assert(n == 4);
   assert(m == 2);
+  assert(np == 1);
 
   g[0] = x[0] * x[1] * x[2] * x[3];
   g[1] = x[0]*x[0] + x[1]*x[1] + x[2]*x[2] + x[3]*x[3];
@@ -150,6 +154,7 @@ bool HS071_NLP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
 
 // return the structure or values of the jacobian
 bool HS071_NLP::eval_jac_g(Index n, const Number* x, bool new_x,
+			   Index np, const Number* p, bool new_p,
                            Index m, Index nele_jac, Index* iRow, Index *jCol,
                            Number* values)
 {

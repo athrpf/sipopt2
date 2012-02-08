@@ -73,6 +73,7 @@ public:
 
   /** Method to return the constraint residuals */
   virtual bool eval_g(Index n, const Number* x, bool new_x,
+		      Index np, const Number* p, bool new_p,
 		      Index m, Number* g);
 
   /** Method to return:
@@ -80,6 +81,7 @@ public:
    *   2) The values of the jacobian (if "values" is not NULL)
    */
   virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
+			  Index np, const Number* p, bool new_p,
                           Index m, Index nele_jac, Index* iRow, Index *jCol,
                           Number* values);
 

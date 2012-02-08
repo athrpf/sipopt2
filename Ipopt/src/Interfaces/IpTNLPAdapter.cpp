@@ -75,6 +75,7 @@ namespace Ipopt
       y_c_tag_for_iterates_(0),
       y_d_tag_for_iterates_(0),
       x_tag_for_g_(0),
+      p_tag_for_g_(0),
       x_tag_for_jac_g_(0),
       jac_idx_map_(NULL),
       h_idx_map_(NULL),
@@ -1591,19 +1592,6 @@ namespace Ipopt
     return tnlp_->get_warm_start_iterate(warm_start_iterate);
   }
 
-  bool TNLPAdapter::Eval_f(const Vector& x, Number& f)
-  {
-    DBG_START_METH("TNLPAdapter::Eval_f", dbg_verbosity);
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
-    if (n_full_p_>0) {
-      return tnlp_->eval_f(n_full_x_, full_x_, new_x, n_full_p_, full_p_, false, f);
-    }
-    return tnlp_->eval_f(n_full_x_, full_x_, new_x, f);
-  }
-
   bool TNLPAdapter::Eval_f(const Vector& x, const Vector& p, Number& f)
   {
     DBG_START_METH("TNLPAdapter::Eval_f(x,p,f)", dbg_verbosity);
@@ -1617,44 +1605,11 @@ namespace Ipopt
     return tnlp_->eval_f(n_full_x_, full_x_, new_x, n_full_p_, full_p_, new_p, f);
   }
 
-  bool TNLPAdapter::Eval_grad_f(const Vector& x, Vector& g_f)
-  {
-    DBG_START_METH("TNLPAdapter::Eval_grad_f", dbg_verbosity);
-    bool retvalue = false;
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
-
-    DenseVector* dg_f = static_cast<DenseVector*>(&g_f);
-    DBG_ASSERT(dynamic_cast<DenseVector*>(&g_f));
-    Number* values = dg_f->Values();
-    if (IsValid(P_x_full_x_)) {
-      Number* full_grad_f = new Number[n_full_x_];
-      if (tnlp_->eval_grad_f(n_full_x_, full_x_, new_x, full_grad_f)) {
-        const Index* x_pos = P_x_full_x_->ExpandedPosIndices();
-        for (Index i=0; i<g_f.Dim(); i++) {
-          values[i] = full_grad_f[x_pos[i]];
-        }
-        retvalue = true;
-      }
-      delete [] full_grad_f;
-    }
-    else {
-      retvalue = tnlp_->eval_grad_f(n_full_x_, full_x_, new_x, values);
-    }
-
-    return retvalue;
-  }
-
   bool TNLPAdapter::Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f)
   {
     DBG_START_METH("TNLPAdapter::Eval_grad_f", dbg_verbosity);
     bool retvalue = false;
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
+    bool new_x = update_local_x(x);
     bool new_p = update_local_p(p);
 
     DenseVector* dg_f = static_cast<DenseVector*>(&g_f);
@@ -1680,15 +1635,16 @@ namespace Ipopt
     return retvalue;
   }
 
-  bool TNLPAdapter::Eval_c(const Vector& x, Vector& c)
+  bool TNLPAdapter::Eval_c(const Vector& x, const Vector& p, Vector& c)
   {
     DBG_START_METH("TNLPAdapter::Eval_c", dbg_verbosity);
     bool new_x = false;
     if (update_local_x(x)) {
       new_x = true;
     }
+    bool new_p = update_local_p(p);
 
-    if (internal_eval_g(new_x)) {
+    if (internal_eval_g(new_x, new_p)) {
       DenseVector* dc = static_cast<DenseVector*>(&c);
       DBG_ASSERT(dynamic_cast<DenseVector*>(&c));
       Number* values = dc->Values();
@@ -1710,15 +1666,13 @@ namespace Ipopt
     return false;
   }
 
-  bool TNLPAdapter::Eval_jac_c(const Vector& x, Matrix& jac_c)
+  bool TNLPAdapter::Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c)
   {
     DBG_START_METH("TNLPAdapter::Eval_jac_c", dbg_verbosity);
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
+    bool new_x = update_local_x(x);
+    bool new_p = update_local_p(p);
 
-    if (internal_eval_jac_g(new_x)) {
+    if (internal_eval_jac_g(new_x, new_p)) {
       GenTMatrix* gt_jac_c = static_cast<GenTMatrix*>(&jac_c);
       DBG_ASSERT(dynamic_cast<GenTMatrix*>(&jac_c));
       Number* values = gt_jac_c->Values();
@@ -1736,17 +1690,15 @@ namespace Ipopt
     return false;
   }
 
-  bool TNLPAdapter::Eval_d(const Vector& x, Vector& d)
+  bool TNLPAdapter::Eval_d(const Vector& x, const Vector& p, Vector& d)
   {
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
+    bool new_x = update_local_x(x);
+    bool new_p = update_local_p(p);
 
     DenseVector* dd = static_cast<DenseVector*>(&d);
     DBG_ASSERT(dynamic_cast<DenseVector*>(&d));
     Number* values = dd->Values();
-    if (internal_eval_g(new_x)) {
+    if (internal_eval_g(new_x, new_p)) {
       const Index* d_pos = P_d_g_->ExpandedPosIndices();
       for (Index i=0; i<d.Dim(); i++) {
         values[i] = full_g_[d_pos[i]];
@@ -1757,14 +1709,12 @@ namespace Ipopt
     return false;
   }
 
-  bool TNLPAdapter::Eval_jac_d(const Vector& x, Matrix& jac_d)
+  bool TNLPAdapter::Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d)
   {
-    bool new_x = false;
-    if (update_local_x(x)) {
-      new_x = true;
-    }
+    bool new_x = update_local_x(x);
+    bool new_p = update_local_p(p);
 
-    if (internal_eval_jac_g(new_x)) {
+    if (internal_eval_jac_g(new_x, new_p)) {
       GenTMatrix* gt_jac_d = static_cast<GenTMatrix*>(&jac_d);
       DBG_ASSERT(dynamic_cast<GenTMatrix*>(&jac_d));
       Number* values = gt_jac_d->Values();
@@ -2390,6 +2340,7 @@ namespace Ipopt
 
   bool TNLPAdapter::update_local_x(const Vector& x)
   {
+    DBG_START_METH("TNLPAdapter::update_local_x", dbg_verbosity);
     if (x.GetTag() == x_tag_for_iterates_) {
       return false;
     }
@@ -2427,41 +2378,47 @@ namespace Ipopt
     return true;
   }
 
-  bool TNLPAdapter::internal_eval_g(bool new_x)
+  bool TNLPAdapter::internal_eval_g(bool new_x, bool new_p)
   {
-    if (x_tag_for_g_ == x_tag_for_iterates_) {
+    if (x_tag_for_g_ == x_tag_for_iterates_ && p_tag_for_g_ == p_tag_for_iterates_) {
       // already calculated!
       return true;
     }
 
     x_tag_for_g_ = x_tag_for_iterates_;
 
-    bool retval = tnlp_->eval_g(n_full_x_, full_x_, new_x, n_full_g_, full_g_);
+    bool retval = tnlp_->eval_g(n_full_x_, full_x_, new_x,
+				n_full_p_, full_p_, new_p,
+				n_full_g_, full_g_);
 
     if (!retval) {
       x_tag_for_jac_g_ = 0;
+      p_tag_for_jac_g_ = 0;
     }
 
     return retval;
   }
 
-  bool TNLPAdapter::internal_eval_jac_g(bool new_x)
+  bool TNLPAdapter::internal_eval_jac_g(bool new_x, bool new_p)
   {
-    if (x_tag_for_jac_g_ == x_tag_for_iterates_) {
+    if (x_tag_for_jac_g_ == x_tag_for_iterates_ && p_tag_for_jac_g_ == p_tag_for_iterates_) {
       // already calculated!
       return true;
     }
 
     x_tag_for_jac_g_ = x_tag_for_iterates_;
+    p_tag_for_jac_g_ = p_tag_for_iterates_;
 
     bool retval;
     if (jacobian_approximation_ == JAC_EXACT) {
-      retval = tnlp_->eval_jac_g(n_full_x_, full_x_, new_x, n_full_g_,
+      retval = tnlp_->eval_jac_g(n_full_x_, full_x_, new_x,
+				 n_full_p_, full_p_, new_p,
+				 n_full_g_,
                                  nz_full_jac_g_, NULL, NULL, jac_g_);
     }
     else {
       // make sure we have the value of the constraints at the point
-      retval = internal_eval_g(new_x);
+      retval = internal_eval_g(new_x, new_p);
       if (retval) {
         Number* full_g_pert = new Number[n_full_g_];
         Number* full_x_pert = new Number[n_full_x_];
@@ -2476,8 +2433,9 @@ namespace Ipopt
             if (full_x_pert[ivar] > findiff_x_u_[ivar]) {
               full_x_pert[ivar] = xorig - this_perturbation;
             }
-            retval = tnlp_->eval_g(n_full_x_, full_x_pert, true, n_full_g_,
-                                   full_g_pert);
+            retval = tnlp_->eval_g(n_full_x_, full_x_pert, true,
+				   n_full_p_, full_p_, false,
+				   n_full_g_, full_g_pert);
             if (!retval) break;
             for (Index i=findiff_jac_ia_[ivar]; i<findiff_jac_ia_[ivar+1]; i++) {
               const Index& icon = findiff_jac_ja_[i];
@@ -2495,6 +2453,7 @@ namespace Ipopt
 
     if (!retval) {
       x_tag_for_jac_g_ = 0;
+      p_tag_for_jac_g_ = 0;
     }
 
     return retval;

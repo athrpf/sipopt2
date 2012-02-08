@@ -103,21 +103,17 @@ namespace Ipopt
 
     /** @name TNLPAdapter evaluation routines. */
     //@{
-    virtual bool Eval_f(const Vector& x, Number& f);
-
     virtual bool Eval_f(const Vector& x, const Vector& p, Number& f);
-
-    virtual bool Eval_grad_f(const Vector& x, Vector& g_f);
 
     virtual bool Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f);
 
-    virtual bool Eval_c(const Vector& x, Vector& c);
+    virtual bool Eval_c(const Vector& x, const Vector& p, Vector& c);
 
-    virtual bool Eval_jac_c(const Vector& x, Matrix& jac_c);
+    virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c);
 
-    virtual bool Eval_d(const Vector& x, Vector& d);
+    virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d);
 
-    virtual bool Eval_jac_d(const Vector& x, Matrix& jac_d);
+    virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d);
 
     virtual bool Eval_h(const Vector& x,
                         Number obj_factor,
@@ -364,7 +360,9 @@ namespace Ipopt
     TaggedObject::Tag y_c_tag_for_iterates_;
     TaggedObject::Tag y_d_tag_for_iterates_;
     TaggedObject::Tag x_tag_for_g_;
+    TaggedObject::Tag p_tag_for_g_;
     TaggedObject::Tag x_tag_for_jac_g_;
+    TaggedObject::Tag p_tag_for_jac_g_;
     //@}
 
     /**@name Methods to update the values in the local copies of vectors */
@@ -377,8 +375,8 @@ namespace Ipopt
     /**@name Internal routines for evaluating g and jac_g (values stored since
      * they are used in both c and d routines */
     //@{
-    bool internal_eval_g(bool new_x);
-    bool internal_eval_jac_g(bool new_x);
+    bool internal_eval_g(bool new_x, bool new_p);
+    bool internal_eval_jac_g(bool new_x, bool new_p);
     //@}
 
     /** @name Internal methods for dealing with finite difference

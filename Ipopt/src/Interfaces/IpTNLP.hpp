@@ -68,6 +68,7 @@ namespace Ipopt
     //@}
 
     DECLARE_STD_EXCEPTION(INVALID_TNLP);
+    DECLARE_STD_EXCEPTION(TNLP_IS_PARAMETRIC);
 
     /**@name methods to gather information about the NLP */
     //@{
@@ -191,9 +192,8 @@ namespace Ipopt
 			Index np, const Number* p, bool new_p,
                         Number& obj_value)
     {
-      if (!np==0) {
-	return false;
-      }
+      ASSERT_EXCEPTION(np==0, TNLP_IS_PARAMETRIC,
+		       "The TNLP is parametric, but you did not overload the parametric objective function evalutation!");
       return eval_f(n, x, new_x, obj_value);
     }
 
@@ -209,9 +209,8 @@ namespace Ipopt
 			     Index np, const Number* p, bool new_p,
 			     Number* grad_f)
     {
-      if (np>0) {
-	return false;
-      }
+      ASSERT_EXCEPTION(np==0, TNLP_IS_PARAMETRIC,
+		       "The TNLP is parametric, but you did not overload the parametric gradient function evalutation!");
       return eval_grad_f(n,x,new_x, grad_f);
     }
 
@@ -226,9 +225,8 @@ namespace Ipopt
 			Index np, const Number* p, bool new_p,
                         Index m, Number* g)
     {
-      if (np>0) {
-	return false;
-      }
+      ASSERT_EXCEPTION(np==0, TNLP_IS_PARAMETRIC,
+		       "The TNLP is parametric, but you did not overload the parametric constraint function evalutation!");
       return eval_g(n, x, new_x, m, g);
     }
 
@@ -249,9 +247,8 @@ namespace Ipopt
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values)
     {
-      if (np>0) {
-	return false;
-      }
+      ASSERT_EXCEPTION(np==0, TNLP_IS_PARAMETRIC,
+		       "The TNLP is parametric, but you did not overload the parametric constraint jacobian evalutation!");
       return eval_jac_g(n, x, new_x, m, nele_jac, iRow, jCol, values);
     }
 
