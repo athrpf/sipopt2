@@ -217,7 +217,21 @@ namespace Ipopt
 
     /** overload this method to return the vector of constraint values */
     virtual bool eval_g(Index n, const Number* x, bool new_x,
-                        Index m, Number* g)=0;
+                        Index m, Number* g)
+    {
+      return false;
+    }
+
+    virtual bool eval_g(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
+                        Index m, Number* g)
+    {
+      if (np>0) {
+	return false;
+      }
+      return eval_g(n, x, new_x, m, g);
+    }
+
     /** overload this method to return the jacobian of the
      *  constraints. The vectors iRow and jCol only need to be set
      *  once. The first call is used to set the structure only (iRow
@@ -225,7 +239,29 @@ namespace Ipopt
      *  subsequent calls, iRow and jCol will be NULL. */
     virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
                             Index m, Index nele_jac, Index* iRow,
-                            Index *jCol, Number* values)=0;
+                            Index *jCol, Number* values)
+    {
+      return false;
+    }
+
+    virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
+                            Index m, Index nele_jac, Index* iRow,
+                            Index *jCol, Number* values)
+    {
+      if (np>0) {
+	return false;
+      }
+      return eval_jac_g(n, x, new_x, m, nele_jac, iRow, jCol, values);
+    }
+
+    virtual bool eval_jac_g_xp(Index n, const Number* x, bool new_x,
+			       Index np, const Number* p, bool new_p,
+			       Index m, Index nele_jac, Index* iRow,
+			       Index *jCol, Number* values)
+    {
+      return false;
+    }
 
     /** overload this method to return the hessian of the
      *  lagrangian. The vectors iRow and jCol only need to be set once
@@ -240,6 +276,21 @@ namespace Ipopt
                         Number obj_factor, Index m, const Number* lambda,
                         bool new_lambda, Index nele_hess,
                         Index* iRow, Index* jCol, Number* values)
+    {
+      return false;
+    }
+
+    /** overload this method to return the sensitivity of the first
+     *  order derivative of the lagrangian w.r.t. to the parameters.
+     *  As with the other functions for getting second order derivatives,
+     *  The function works in the same way as eval_h.
+     */
+    virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
+				Index np, const Number* p, bool new_p,
+				Number obj_factor, Index m,
+				const Number* lambda, bool new_lambda,
+				Index nele_hess_p, Index* iRow, Index* jCol,
+				Number* values)
     {
       return false;
     }

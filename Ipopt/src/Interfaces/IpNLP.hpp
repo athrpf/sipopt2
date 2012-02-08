@@ -121,14 +121,20 @@ namespace Ipopt
     /** @name NLP evaluation routines (overload
      *  in derived classes. */
     //@{
-    virtual bool Eval_f(const Vector& x, Number& f){}
+    virtual bool Eval_f(const Vector& x, Number& f)
+    {
+      return false;
+    }
 
     virtual bool Eval_f(const Vector& x, const Vector& p, Number& f)
     {
       return Eval_f(x, f);
     }
 
-    virtual bool Eval_grad_f(const Vector& x, Vector& g_f) {};
+    virtual bool Eval_grad_f(const Vector& x, Vector& g_f)
+    {
+      return false;
+    }
 
     virtual bool Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f)
     {

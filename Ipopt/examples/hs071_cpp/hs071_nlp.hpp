@@ -72,7 +72,8 @@ public:
 			   Number* grad_f);
 
   /** Method to return the constraint residuals */
-  virtual bool eval_g(Index n, const Number* x, bool new_x, Index m, Number* g);
+  virtual bool eval_g(Index n, const Number* x, bool new_x,
+		      Index m, Number* g);
 
   /** Method to return:
    *   1) The structure of the jacobian (if "values" is NULL)
