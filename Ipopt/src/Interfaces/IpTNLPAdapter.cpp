@@ -625,6 +625,7 @@ namespace Ipopt
           DBG_ASSERT(x_l[i]==x_u[i]);
           full_x_[i] = x_l[i];
           bool retval = tnlp_->eval_g(n_full_x_, full_x_, true,
+				      n_full_p_, full_p_, true,
                                       n_full_g_, full_g_);
           ASSERT_EXCEPTION(retval, IpoptNLP::Eval_Error,
                            "All variables are fixed, but constraints cannot be evaluated at fixed point.");
@@ -1074,7 +1075,9 @@ namespace Ipopt
       // Get the non zero structure
       Index* g_iRow = new Index[nz_full_jac_g_];
       Index* g_jCol = new Index[nz_full_jac_g_];
-      tnlp_->eval_jac_g(n_full_x_, NULL, false, n_full_g_, nz_full_jac_g_,
+      tnlp_->eval_jac_g(n_full_x_, NULL, false,
+			n_full_p_, NULL, false,
+			n_full_g_, nz_full_jac_g_,
                         g_iRow, g_jCol, NULL);
 
       if (index_style_ != TNLP::FORTRAN_STYLE) {
