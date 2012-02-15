@@ -25,8 +25,8 @@ int main(int argv, char**argc)
   //app_ipopt->RegOptions());
 
   // Register sIPOPT options
-  RegisterOptions_sIPOPT(app_ipopt->RegOptions());
-  app_ipopt->Options()->SetRegisteredOptions(app_ipopt->RegOptions());
+  //RegisterOptions_sIPOPT(app_ipopt->RegOptions());
+  //app_ipopt->Options()->SetRegisteredOptions(app_ipopt->RegOptions());
 
   // Call Initialize the first time to create a journalist, but ignore
   // any options file

@@ -78,6 +78,9 @@ namespace Ipopt
       x_tag_for_g_(0),
       p_tag_for_g_(0),
       x_tag_for_jac_g_(0),
+      p_tag_for_jac_g_(0),
+      x_tag_for_jac_g_p_(0),
+      p_tag_for_jac_g_p_(0),
       jac_idx_map_(NULL),
       jac_g_p_idx_map_(NULL),
       h_idx_map_(NULL),
@@ -1428,8 +1431,8 @@ namespace Ipopt
     Jac_c_space = Jac_c_space_;
     Jac_d_space = Jac_d_space_;
     Hess_lagrangian_space = Hess_lagrangian_space_;
-    Jac_c_p_space = Jac_c_space_;
-    Jac_d_p_space = Jac_d_space_;
+    Jac_c_p_space = Jac_c_p_space_;
+    Jac_d_p_space = Jac_d_p_space_;
     Hess_lagrangian_p_space = Hess_lagrangian_p_space_;
 
     if (IsValid(jnlst_)) {
@@ -2651,10 +2654,15 @@ namespace Ipopt
     x_tag_for_jac_g_p_ = x_tag_for_iterates_;
     p_tag_for_jac_g_p_ = p_tag_for_iterates_;
 
-    return tnlp_->eval_jac_g_p(n_full_x_, full_x_, new_x,
-			       n_full_p_, full_p_, new_p,
-			       n_full_g_, nz_full_jac_g_p_,
-			       NULL, NULL, jac_g_p_);
+    bool retval = tnlp_->eval_jac_g_p(n_full_x_, full_x_, new_x,
+				      n_full_p_, full_p_, new_p,
+				      n_full_g_, nz_full_jac_g_p_,
+				      NULL, NULL, jac_g_p_);
+    if (!retval) {
+      x_tag_for_jac_g_p_ = 0;
+      p_tag_for_jac_g_p_ = 0;
+    }
+    return retval;
   }
 
   void

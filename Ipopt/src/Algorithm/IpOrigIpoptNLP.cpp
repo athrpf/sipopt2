@@ -818,7 +818,7 @@ namespace Ipopt
       SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
       bool success = nlp_->Eval_jac_c_p(*unscaled_x, *p_, *unscaled_jac_c_p);
       ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the jacobian of the equality constraints w.r.t. the parameters.");
-      retValue = NLP_scaling()->apply_jac_c_scaling(ConstPtr(unscaled_jac_c_p));
+      retValue = NLP_scaling()->apply_jac_c_p_scaling(ConstPtr(unscaled_jac_c_p));
     }
     return retValue;
   }
