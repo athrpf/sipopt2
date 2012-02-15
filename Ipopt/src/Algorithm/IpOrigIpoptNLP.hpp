@@ -352,6 +352,10 @@ namespace Ipopt
      *  (current iteration) */
     CachedResults<SmartPtr<const Matrix> > jac_d_cache_;
 
+    /** Jacobian Matrix for inequality constraints
+	w.r.t. parameters */
+    CachedResults<SmartPtr<const Matrix> > jac_d_p_cache_;
+
     /** Hessian of the lagrangian
      *  (current iteration) */
     CachedResults<SmartPtr<const SymMatrix> > h_cache_;

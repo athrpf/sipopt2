@@ -42,6 +42,7 @@ namespace Ipopt
       jac_c_p_cache_(1),
       d_cache_(1),
       jac_d_cache_(1),
+      jac_d_p_cache_(1),
       h_cache_(1),
       unscaled_x_cache_(1),
       initialized_(false)
@@ -826,6 +827,23 @@ namespace Ipopt
   SmartPtr<const Matrix> OrigIpoptNLP::jac_d_p(const Vector& x)
   {
     DBG_START_METH("OrigIpoptNLP::jac_d_p", dbg_verbosity);
+    SmartPtr<const Matrix> retValue;
+    if (d_space_->Dim()==0) {
+      SmartPtr<const Vector> dep = NULL;
+      if (!jac_d_p_cache_.GetCachedResult1Dep(retValue, GetRawPtr(dep))) {
+	SmartPtr<Matrix> unscaled_jac_d_p = jac_d_p_space_->MakeNew();
+	retValue = NLP_scaling()->apply_jac_d_p_scaling(ConstPtr(unscaled_jac_d_p));
+	jac_d_p_cache_.AddCachedResult1Dep(retValue, GetRawPtr(dep));
+      }
+    }
+    else {
+      SmartPtr<Matrix> unscaled_jac_d_p = jac_d_p_space_->MakeNew();
+      SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
+      bool success = nlp_->Eval_jac_d_p(*unscaled_x, *p_, *unscaled_jac_d_p);
+      ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the jacobian of the inequality constraint w.r.t. the parameters.");
+      retValue = NLP_scaling()->apply_jac_d_p_scaling(ConstPtr(unscaled_jac_d_p));
+    }
+    return retValue;
   }
 
   SmartPtr<const Matrix> OrigIpoptNLP::h_p(const Vector& x)
