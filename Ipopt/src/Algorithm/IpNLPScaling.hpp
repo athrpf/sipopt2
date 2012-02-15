@@ -23,11 +23,11 @@ namespace Ipopt
   class SymMatrixSpace;
   class ScaledMatrixSpace;
   class SymScaledMatrixSpace;
-  
+
   /** This is the abstract base class for problem scaling.
    *  It is repsonsible for determining the scaling factors
    *  and mapping quantities in and out of scaled and unscaled
-   *  versions 
+   *  versions
    */
   class NLPScalingObject : public ReferencedObject
   {
@@ -97,12 +97,20 @@ namespace Ipopt
      */
     virtual SmartPtr<const Matrix>
     apply_jac_c_scaling(SmartPtr<const Matrix> matrix)=0;
+    /** Returns a scaled version of the jacobian for c w.r.t. parameters
+     */
+    virtual SmartPtr<const Matrix>
+    apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix) { return NULL;}
     /** Returns a scaled version of the jacobian for d If the
      *  overloaded method does not create a new matrix, make sure to
      *  set the matrix ptr passed in to NULL.
      */
     virtual SmartPtr<const Matrix>
     apply_jac_d_scaling(SmartPtr<const Matrix> matrix)=0;
+    /** Returns a scaled version of the jacobian for d w.r.t. parameters
+     */
+    virtual SmartPtr<const Matrix>
+    apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix) { return NULL;}
     /** Returns a scaled version of the hessian of the lagrangian If
      *  the overloaded method does not create a new matrix, make sure
      *  to set the matrix ptr passed in to NULL.
@@ -177,7 +185,7 @@ namespace Ipopt
     //@}
 
     /** This method is called by the IpoptNLP's at a convenient time to
-     *  compute and/or read scaling factors 
+     *  compute and/or read scaling factors
      */
     virtual void DetermineScaling(const SmartPtr<const VectorSpace> x_space,
                                   const SmartPtr<const VectorSpace> c_space,
@@ -185,9 +193,15 @@ namespace Ipopt
                                   const SmartPtr<const MatrixSpace> jac_c_space,
                                   const SmartPtr<const MatrixSpace> jac_d_space,
                                   const SmartPtr<const SymMatrixSpace> h_space,
+                                  const SmartPtr<const MatrixSpace> jac_c_p_space,
+                                  const SmartPtr<const MatrixSpace> jac_d_p_space,
+                                  const SmartPtr<const MatrixSpace> h_p_space,
                                   SmartPtr<const MatrixSpace>& new_jac_c_space,
                                   SmartPtr<const MatrixSpace>& new_jac_d_space,
                                   SmartPtr<const SymMatrixSpace>& new_h_space,
+                                  SmartPtr<const MatrixSpace>& new_jac_c_p_space,
+                                  SmartPtr<const MatrixSpace>& new_jac_d_p_space,
+                                  SmartPtr<const MatrixSpace>& new_h_p_space,
                                   const Matrix& Px_L, const Vector& x_L,
                                   const Matrix& Px_U, const Vector& x_U)=0;
   protected:
@@ -205,7 +219,7 @@ namespace Ipopt
 
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -285,12 +299,16 @@ namespace Ipopt
      */
     virtual SmartPtr<const Matrix>
     apply_jac_c_scaling(SmartPtr<const Matrix> matrix);
+    virtual SmartPtr<const Matrix>
+    apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix);
     /** Returns a scaled version of the jacobian for d If the
      *  overloaded method does not create a new matrix, make sure to
      *  set the matrix ptr passed in to NULL.
      */
     virtual SmartPtr<const Matrix>
     apply_jac_d_scaling(SmartPtr<const Matrix> matrix);
+    virtual SmartPtr<const Matrix>
+    apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix);
     /** Returns a scaled version of the hessian of the lagrangian If
      *  the overloaded method does not create a new matrix, make sure
      *  to set the matrix ptr passed in to NULL.
@@ -308,7 +326,7 @@ namespace Ipopt
     //@}
 
     /** This method is called by the IpoptNLP's at a convenient time to
-     *  compute and/or read scaling factors 
+     *  compute and/or read scaling factors
      */
     virtual void DetermineScaling(const SmartPtr<const VectorSpace> x_space,
                                   const SmartPtr<const VectorSpace> c_space,
@@ -316,9 +334,15 @@ namespace Ipopt
                                   const SmartPtr<const MatrixSpace> jac_c_space,
                                   const SmartPtr<const MatrixSpace> jac_d_space,
                                   const SmartPtr<const SymMatrixSpace> h_space,
+                                  const SmartPtr<const MatrixSpace> jac_c_p_space,
+                                  const SmartPtr<const MatrixSpace> jac_d_p_space,
+                                  const SmartPtr<const MatrixSpace> h_p_space,
                                   SmartPtr<const MatrixSpace>& new_jac_c_space,
                                   SmartPtr<const MatrixSpace>& new_jac_d_space,
                                   SmartPtr<const SymMatrixSpace>& new_h_space,
+                                  SmartPtr<const MatrixSpace>& new_jac_c_p_space,
+                                  SmartPtr<const MatrixSpace>& new_jac_d_p_space,
+                                  SmartPtr<const MatrixSpace>& new_h_p_space,
                                   const Matrix& Px_L, const Vector& x_L,
                                   const Matrix& Px_U, const Vector& x_U);
 
@@ -354,7 +378,7 @@ namespace Ipopt
 
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -383,10 +407,16 @@ namespace Ipopt
     //@{
     /** Scaled jacobian of c space */
     SmartPtr<ScaledMatrixSpace> scaled_jac_c_space_;
+    /** Scaled jacobian of c_p space */
+    SmartPtr<ScaledMatrixSpace> scaled_jac_c_p_space_;
     /** Scaled jacobian of d space */
     SmartPtr<ScaledMatrixSpace> scaled_jac_d_space_;
-    /** Scaled hessian of lagrangian spacea */
+    /** Scaled jacobian of d_p space */
+    SmartPtr<ScaledMatrixSpace> scaled_jac_d_p_space_;
+    /** Scaled hessian of lagrangian space */
     SmartPtr<SymScaledMatrixSpace> scaled_h_space_;
+    /** Scaled d^L(dxdp) */
+    SmartPtr<ScaledMatrixSpace> scaled_h_p_space_;
     //@}
 
     /** @name Algorithmic parameters */
@@ -431,7 +461,7 @@ namespace Ipopt
 
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

@@ -20,7 +20,7 @@ namespace Ipopt
 
   /** Class for a Matrix in conjunction with its scaling factors for
    *  row and column scaling. Operations on the matrix are performed using
-   *  the scaled matrix. You can pull out the pointer to the 
+   *  the scaled matrix. You can pull out the pointer to the
    *  unscaled matrix for unscaled calculations.
    */
   class ScaledMatrix : public Matrix
@@ -98,7 +98,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -131,7 +131,7 @@ namespace Ipopt
     /** @name Constructors / Destructors */
     //@{
     /** Constructor, given the number of row and columns blocks, as
-     *  well as the totel number of rows and columns.
+     *  well as the total number of rows and columns.
      */
     ScaledMatrixSpace(const SmartPtr<const Vector>& row_scaling,
                       bool row_scaling_reciprocal,
@@ -183,7 +183,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

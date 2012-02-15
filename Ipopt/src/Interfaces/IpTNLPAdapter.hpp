@@ -114,6 +114,8 @@ namespace Ipopt
 
     virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c);
 
+    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c);
+
     virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d);
 
     virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d);
@@ -381,6 +383,8 @@ namespace Ipopt
     TaggedObject::Tag p_tag_for_g_;
     TaggedObject::Tag x_tag_for_jac_g_;
     TaggedObject::Tag p_tag_for_jac_g_;
+    TaggedObject::Tag x_tag_for_jac_g_p_;
+    TaggedObject::Tag p_tag_for_jac_g_p_;
     //@}
 
     /**@name Methods to update the values in the local copies of vectors */
@@ -395,6 +399,7 @@ namespace Ipopt
     //@{
     bool internal_eval_g(bool new_x, bool new_p);
     bool internal_eval_jac_g(bool new_x, bool new_p);
+    bool internal_eval_jac_g_p(bool new_x, bool new_p);
     //@}
 
     /** @name Internal methods for dealing with finite difference

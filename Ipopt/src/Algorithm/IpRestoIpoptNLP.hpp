@@ -345,6 +345,11 @@ namespace Ipopt
     SmartPtr<CompoundMatrixSpace> jac_d_space_;
 
     SmartPtr<CompoundSymMatrixSpace> h_space_;
+
+    /** Unused, for now ... */
+    SmartPtr<const MatrixSpace> jac_c_p_space_;
+    SmartPtr<const MatrixSpace> jac_d_p_space_;
+    SmartPtr<const MatrixSpace> h_p_space_;
     //@}
 
     /**@name Storage for Model Quantities */
@@ -396,7 +401,7 @@ namespace Ipopt
 
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

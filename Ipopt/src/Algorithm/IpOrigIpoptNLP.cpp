@@ -315,8 +315,12 @@ namespace Ipopt
                                       c_space_, d_space_,
                                       jac_c_space_, jac_d_space_,
                                       h_space_,
+				      jac_c_p_space_, jac_d_p_space_,
+				      h_p_space_,
                                       scaled_jac_c_space_, scaled_jac_d_space_,
                                       scaled_h_space_,
+				      scaled_jac_c_p_space_, scaled_jac_d_p_space_,
+				      scaled_h_p_space_,
                                       *Px_L, *x_L, *Px_U, *x_U);
 
       if (x_space_->Dim() < c_space_->Dim()) {
@@ -794,6 +798,39 @@ namespace Ipopt
     return NULL;
   }
 
+  SmartPtr<const Matrix> OrigIpoptNLP::jac_c_p(const Vector& x)
+  {
+    DBG_START_METH("OrigIpoptNLP::jac_c_p", dbg_verbosity);
+    SmartPtr<const Matrix> retValue;
+    if (c_space_->Dim()==0) {
+      // We do this caching of an empty vector so that the returned
+      // Matrix has always the same tag
+      SmartPtr<const Vector> dep = NULL;
+      if (!jac_c_p_cache_.GetCachedResult1Dep(retValue, GetRawPtr(dep))) {
+        SmartPtr<Matrix> unscaled_jac_c_p = jac_c_p_space_->MakeNew();
+        retValue = NLP_scaling()->apply_jac_c_p_scaling(ConstPtr(unscaled_jac_c_p));
+        jac_c_p_cache_.AddCachedResult1Dep(retValue, GetRawPtr(dep));
+      }
+    }
+    else {
+      SmartPtr<Matrix> unscaled_jac_c_p = jac_c_p_space_->MakeNew();
+      SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
+      bool success = nlp_->Eval_jac_c_p(*unscaled_x, *p_, *unscaled_jac_c_p);
+      ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the jacobian of the equality constraints w.r.t. the parameters.");
+      retValue = NLP_scaling()->apply_jac_c_scaling(ConstPtr(unscaled_jac_c_p));
+    }
+    return retValue;
+  }
+
+  SmartPtr<const Matrix> OrigIpoptNLP::jac_d_p(const Vector& x)
+  {
+    DBG_START_METH("OrigIpoptNLP::jac_d_p", dbg_verbosity);
+  }
+
+  SmartPtr<const Matrix> OrigIpoptNLP::h_p(const Vector& x)
+  {
+    DBG_START_METH("OrigIpoptNLP::h_p", dbg_verbosity);
+  }
 
   void OrigIpoptNLP::GetSpaces(SmartPtr<const VectorSpace>& x_space,
                                SmartPtr<const VectorSpace>& c_space,
@@ -806,7 +843,7 @@ namespace Ipopt
                                SmartPtr<const MatrixSpace>& pd_l_space,
                                SmartPtr<const VectorSpace>& d_u_space,
                                SmartPtr<const MatrixSpace>& pd_u_space,
-			                   SmartPtr<const VectorSpace>& p_space,
+			       SmartPtr<const VectorSpace>& p_space,
                                SmartPtr<const MatrixSpace>& Jac_c_space,
                                SmartPtr<const MatrixSpace>& Jac_d_space,
                                SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)

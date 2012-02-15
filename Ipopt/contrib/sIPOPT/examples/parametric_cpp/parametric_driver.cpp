@@ -11,6 +11,8 @@
 #include "IpPDSearchDirCalc.hpp"
 #include "IpIpoptAlg.hpp"
 #include "SensRegOp.hpp"
+#include "IpOrigIpoptNLP.hpp"
+
 
 int main(int argv, char**argc)
 {
@@ -40,4 +42,8 @@ int main(int argv, char**argc)
   SmartPtr<TNLP> sens_tnlp = new ParametricTNLP();
 
   retval = app_ipopt->OptimizeTNLP(sens_tnlp);
+
+  SmartPtr<IpoptNLP> ipopt_nlp = app_ipopt->IpoptNLPObject();
+  SmartPtr<const Matrix> opt_jac = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_c_p(*app_ipopt->IpoptDataObject()->curr()->x());
+  opt_jac->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_p");
 }

@@ -1845,6 +1845,30 @@ namespace Ipopt
     return false;
   }
 
+  bool TNLPAdapter::Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c_p)
+  {
+    DBG_START_METH("TNLPAdapter::Eval_jac_c_p", dbg_verbosity);
+    bool new_x = update_local_x(x);
+    bool new_p = update_local_p(p);
+
+    if (internal_eval_jac_g_p(new_x, new_p)) {
+      GenTMatrix* gt_jac_c_p = static_cast<GenTMatrix*>(&jac_c_p);
+      DBG_ASSERT(dynamic_cast<GenTMatrix*>(&jac_c_p));
+      Number* values = gt_jac_c_p->Values();
+
+      for (Index i=0; i<nz_jac_c_p_; i++) {
+        // Assume the same structure as initially given
+        values[i] = jac_g_p_[jac_g_p_idx_map_[i]];
+      }
+      //if (fixed_variable_treatment_==MAKE_CONSTRAINT) {
+      //  const Number one = 1.;
+      //  IpBlasDcopy(n_x_fixed_, &one, 0, &values[nz_jac_c_no_extra_], 1);
+      //}
+      return true;
+    }
+    return false;
+  }
+
   bool TNLPAdapter::Eval_d(const Vector& x, const Vector& p, Vector& d)
   {
     bool new_x = update_local_x(x);
@@ -2615,6 +2639,22 @@ namespace Ipopt
     }
 
     return retval;
+  }
+
+  bool TNLPAdapter::internal_eval_jac_g_p(bool new_x, bool new_p)
+  {
+    DBG_START_METH("TNLPAdapter::internal_eval_jac_g_p", dbg_verbosity);
+    if (x_tag_for_jac_g_p_ == x_tag_for_iterates_ && p_tag_for_jac_g_p_ == p_tag_for_iterates_) {
+      return true;
+    }
+
+    x_tag_for_jac_g_p_ = x_tag_for_iterates_;
+    p_tag_for_jac_g_p_ = p_tag_for_iterates_;
+
+    return tnlp_->eval_jac_g_p(n_full_x_, full_x_, new_x,
+			       n_full_p_, full_p_, new_p,
+			       n_full_g_, nz_full_jac_g_p_,
+			       NULL, NULL, jac_g_p_);
   }
 
   void

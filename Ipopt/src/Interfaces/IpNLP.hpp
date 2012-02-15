@@ -186,6 +186,11 @@ namespace Ipopt
       return false;
     }
 
+    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c)
+    {
+      return false;
+    }
+
     virtual bool Eval_d(const Vector& x, Vector& d)
     {
       return false;

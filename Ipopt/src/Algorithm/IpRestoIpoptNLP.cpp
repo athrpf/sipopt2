@@ -363,13 +363,21 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> scaled_jac_c_space;
     SmartPtr<const MatrixSpace> scaled_jac_d_space;
     SmartPtr<const SymMatrixSpace> scaled_h_space;
+    SmartPtr<const MatrixSpace> scaled_jac_c_p_space;
+    SmartPtr<const MatrixSpace> scaled_jac_d_p_space;
+    SmartPtr<const MatrixSpace> scaled_h_p_space;
     NLP_scaling()->DetermineScaling(GetRawPtr(x_space_),
                                     c_space_, d_space_,
                                     GetRawPtr(jac_c_space_),
                                     GetRawPtr(jac_d_space_),
                                     GetRawPtr(h_space_),
+				    jac_c_p_space_,
+				    jac_d_p_space_,
+				    h_p_space_,
                                     scaled_jac_c_space, scaled_jac_d_space,
                                     scaled_h_space,
+				    scaled_jac_c_p_space, scaled_jac_d_p_space,
+				    scaled_h_p_space,
                                     *Px_L_, *x_L_, *Px_U_, *x_U_);
     // For now we assume that no scaling is done inside the NLP_Scaling
     DBG_ASSERT(scaled_jac_c_space == jac_c_space_);

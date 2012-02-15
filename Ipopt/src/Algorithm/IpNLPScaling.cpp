@@ -234,9 +234,15 @@ namespace Ipopt
     const SmartPtr<const MatrixSpace> jac_c_space,
     const SmartPtr<const MatrixSpace> jac_d_space,
     const SmartPtr<const SymMatrixSpace> h_space,
+    const SmartPtr<const MatrixSpace> jac_c_p_space,
+    const SmartPtr<const MatrixSpace> jac_d_p_space,
+    const SmartPtr<const MatrixSpace> h_p_space,
     SmartPtr<const MatrixSpace>& new_jac_c_space,
     SmartPtr<const MatrixSpace>& new_jac_d_space,
     SmartPtr<const SymMatrixSpace>& new_h_space,
+    SmartPtr<const MatrixSpace>& new_jac_c_p_space,
+    SmartPtr<const MatrixSpace>& new_jac_d_p_space,
+    SmartPtr<const MatrixSpace>& new_h_p_space,
     const Matrix& Px_L, const Vector& x_L,
     const Matrix& Px_U, const Vector& x_U)
   {
@@ -295,6 +301,21 @@ namespace Ipopt
       new_jac_c_space = jac_c_space;
     }
 
+    if (IsValid(jac_c_p_space)) {
+      if (IsValid(dc)) {
+	scaled_jac_c_p_space_ =
+	  new ScaledMatrixSpace(ConstPtr(dc), false, jac_c_p_space,
+				NULL, false);
+	new_jac_c_p_space = GetRawPtr(scaled_jac_c_p_space_);
+      } else {
+	scaled_jac_c_p_space_ = NULL;
+	new_jac_c_p_space = jac_c_p_space;
+      }
+    } else {
+      scaled_jac_c_p_space_ = NULL;
+      new_jac_c_p_space = NULL;
+    }
+
     if (IsValid(dx_) || IsValid(dd)) {
       scaled_jac_d_space_ =
         new ScaledMatrixSpace(ConstPtr(dd), false, jac_d_space,
@@ -305,6 +326,22 @@ namespace Ipopt
       scaled_jac_d_space_ = NULL;
       new_jac_d_space =jac_d_space ;
     }
+
+    if (IsValid(jac_d_p_space)) {
+      if (IsValid(dd)) {
+	scaled_jac_d_p_space_ =
+	  new ScaledMatrixSpace(ConstPtr(dd), false, jac_d_p_space,
+				NULL, false);
+	new_jac_d_p_space = GetRawPtr(scaled_jac_d_p_space_);
+      } else {
+	scaled_jac_d_p_space_ = NULL;
+	new_jac_d_p_space = jac_d_p_space;
+      }
+    } else {
+      scaled_jac_d_p_space_ = NULL;
+      new_jac_d_p_space = NULL;
+    }
+
 
     if (IsValid(h_space)) {
       if (IsValid(dx_)) {
@@ -318,6 +355,19 @@ namespace Ipopt
     }
     else {
       new_h_space = NULL;
+    }
+
+    if (IsValid(h_p_space)) {
+      if (IsValid(dx_)) {
+	scaled_h_p_space_ = new ScaledMatrixSpace(ConstPtr(dx_), true, h_p_space, NULL, false);
+	new_h_p_space = GetRawPtr(scaled_h_p_space_);
+      } else {
+	scaled_h_p_space_ = NULL;
+	new_h_p_space = h_p_space;
+      }
+    } else {
+      scaled_h_p_space_ = NULL;
+      new_h_p_space = NULL;
     }
   }
 
@@ -520,12 +570,42 @@ namespace Ipopt
     }
   }
 
+  SmartPtr<const Matrix> StandardScalingBase::apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix)
+  {
+    DBG_START_METH("NLPScalingObject::apply_jac_c_p_scaling", dbg_verbosity);
+    if (IsValid(scaled_jac_c_p_space_)) {
+      SmartPtr<ScaledMatrix> ret = scaled_jac_c_p_space_->MakeNewScaledMatrix(false);
+      ret->SetUnscaledMatrix(matrix);
+      return GetRawPtr(ret);
+    }
+    else {
+      SmartPtr<const Matrix> ret = matrix;
+      matrix = NULL;
+      return ret;
+    }
+  }
+
   SmartPtr<const Matrix> StandardScalingBase::apply_jac_d_scaling(
     SmartPtr<const Matrix> matrix)
   {
     DBG_START_METH("NLPScalingObject::apply_jac_d_scaling", dbg_verbosity);
     if (IsValid(scaled_jac_d_space_)) {
       SmartPtr<ScaledMatrix> ret = scaled_jac_d_space_->MakeNewScaledMatrix(false);
+      ret->SetUnscaledMatrix(matrix);
+      return GetRawPtr(ret);
+    }
+    else {
+      SmartPtr<const Matrix> ret = matrix;
+      matrix = NULL;
+      return ret;
+    }
+  }
+
+  SmartPtr<const Matrix> StandardScalingBase::apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix)
+  {
+    DBG_START_METH("StandardScalingBase::apply_jac_d_p_scaling", dbg_verbosity);
+    if (IsValid(scaled_jac_d_p_space_)) {
+      SmartPtr<ScaledMatrix> ret = scaled_jac_d_p_space_->MakeNewScaledMatrix(false);
       ret->SetUnscaledMatrix(matrix);
       return GetRawPtr(ret);
     }

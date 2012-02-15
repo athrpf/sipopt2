@@ -117,6 +117,15 @@ namespace Ipopt
                                         const Vector& yd,
                                         Number mu);
 
+    /** Jacobian of equality constraints w.r.t. parameters */
+    virtual SmartPtr<const Matrix> jac_c_p(const Vector& x);
+
+    /** Jacobian of inequality constraints w.r.t. parameters */
+    virtual SmartPtr<const Matrix> jac_d_p(const Vector& x);
+
+    /** d^L/(dx dp) */
+    virtual SmartPtr<const Matrix> h_p(const Vector& x);
+
     /** Provides a Hessian matrix from the correct matrix space with
      *  uninitialized values.  This can be used in LeastSquareMults to
      *  obtain a "zero Hessian". */
@@ -311,6 +320,10 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> scaled_jac_c_space_;
     SmartPtr<const MatrixSpace> scaled_jac_d_space_;
     SmartPtr<const SymMatrixSpace> scaled_h_space_;
+
+    SmartPtr<const MatrixSpace> scaled_jac_c_p_space_;
+    SmartPtr<const MatrixSpace> scaled_jac_d_p_space_;
+    SmartPtr<const MatrixSpace> scaled_h_p_space_;
     //@}
     /**@name Storage for Model Quantities */
     //@{
