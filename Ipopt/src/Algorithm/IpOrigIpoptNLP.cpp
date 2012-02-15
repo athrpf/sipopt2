@@ -39,6 +39,7 @@ namespace Ipopt
       grad_f_cache_(1),
       c_cache_(1),
       jac_c_cache_(1),
+      jac_c_p_cache_(1),
       d_cache_(1),
       jac_d_cache_(1),
       h_cache_(1),

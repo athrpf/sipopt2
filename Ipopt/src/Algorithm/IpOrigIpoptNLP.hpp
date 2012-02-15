@@ -340,6 +340,10 @@ namespace Ipopt
      *  (current iteration) */
     CachedResults<SmartPtr<const Matrix> > jac_c_cache_;
 
+    /** Jacobian Matrix for equality constraints
+	w.r.t. parameters */
+    CachedResults<SmartPtr<const Matrix> > jac_c_p_cache_;
+
     /** Inequality constraint residual (reformulated
      *  as equalities with slacks */
     CachedResults<SmartPtr<const Vector> > d_cache_;

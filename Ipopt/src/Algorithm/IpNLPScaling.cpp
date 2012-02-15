@@ -15,7 +15,7 @@ namespace Ipopt
 {
 
 #if COIN_IPOPT_VERBOSITY > 0
-  static const Index dbg_verbosity = 0;
+  static const Index dbg_verbosity = 1;
 #endif
 
   NLPScalingObject::NLPScalingObject()
@@ -570,7 +570,7 @@ namespace Ipopt
     }
   }
 
-  SmartPtr<const Matrix> StandardScalingBase::apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix)
+  SmartPtr<const Matrix> StandardScalingBase::apply_jac_c_p_scaling(SmartPtr<const Matrix> matrix)
   {
     DBG_START_METH("NLPScalingObject::apply_jac_c_p_scaling", dbg_verbosity);
     if (IsValid(scaled_jac_c_p_space_)) {
@@ -601,7 +601,7 @@ namespace Ipopt
     }
   }
 
-  SmartPtr<const Matrix> StandardScalingBase::apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix)
+  SmartPtr<const Matrix> StandardScalingBase::apply_jac_d_p_scaling(SmartPtr<const Matrix> matrix)
   {
     DBG_START_METH("StandardScalingBase::apply_jac_d_p_scaling", dbg_verbosity);
     if (IsValid(scaled_jac_d_p_space_)) {

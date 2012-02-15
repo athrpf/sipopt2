@@ -100,7 +100,7 @@ namespace Ipopt
     /** Returns a scaled version of the jacobian for c w.r.t. parameters
      */
     virtual SmartPtr<const Matrix>
-    apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix) { return NULL;}
+    apply_jac_c_p_scaling(SmartPtr<const Matrix> matrix) { return NULL;}
     /** Returns a scaled version of the jacobian for d If the
      *  overloaded method does not create a new matrix, make sure to
      *  set the matrix ptr passed in to NULL.
@@ -110,7 +110,7 @@ namespace Ipopt
     /** Returns a scaled version of the jacobian for d w.r.t. parameters
      */
     virtual SmartPtr<const Matrix>
-    apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix) { return NULL;}
+    apply_jac_d_p_scaling(SmartPtr<const Matrix> matrix) { return NULL;}
     /** Returns a scaled version of the hessian of the lagrangian If
      *  the overloaded method does not create a new matrix, make sure
      *  to set the matrix ptr passed in to NULL.
@@ -300,7 +300,7 @@ namespace Ipopt
     virtual SmartPtr<const Matrix>
     apply_jac_c_scaling(SmartPtr<const Matrix> matrix);
     virtual SmartPtr<const Matrix>
-    apply_jac_c_p_scaling(SmartPtr<const Matrix>& matrix);
+    apply_jac_c_p_scaling(SmartPtr<const Matrix> matrix);
     /** Returns a scaled version of the jacobian for d If the
      *  overloaded method does not create a new matrix, make sure to
      *  set the matrix ptr passed in to NULL.
@@ -308,7 +308,7 @@ namespace Ipopt
     virtual SmartPtr<const Matrix>
     apply_jac_d_scaling(SmartPtr<const Matrix> matrix);
     virtual SmartPtr<const Matrix>
-    apply_jac_d_p_scaling(SmartPtr<const Matrix>& matrix);
+    apply_jac_d_p_scaling(SmartPtr<const Matrix> matrix);
     /** Returns a scaled version of the hessian of the lagrangian If
      *  the overloaded method does not create a new matrix, make sure
      *  to set the matrix ptr passed in to NULL.
