@@ -38,7 +38,7 @@ namespace Ipopt
   {
     delete [] val_;
 
-    ma86_finalise(&keep_, &control_);
+    if(keep_) ma86_finalise(&keep_, &control_);
   }
 
   void Ma86SolverInterface::RegisterOptions(SmartPtr<RegisteredOptions> roptions)
@@ -46,7 +46,7 @@ namespace Ipopt
     roptions->AddIntegerOption(
       "ma86_print_level",
       "Debug printing level for the linear solver MA86",
-      0,
+      -1,
       "Meep");
     /*
     "<0 no printing.\n"
@@ -80,7 +80,7 @@ namespace Ipopt
       "ma86_umax",
       "Maximum Pivoting Threshold",
       0.0, false, 0.5, false, 1e-4,
-      "See MA86 documentation.");
+      "Maximum value to which u will be increased to improve quality.");
     roptions->AddStringOption3(
       "ma86_scaling",
       "Controls scaling of matrix",
@@ -92,10 +92,14 @@ namespace Ipopt
     roptions->AddStringOption3(
       "ma86_order",
       "Controls type of ordering used by HSL_MA86",
+#ifdef COINHSL_HAS_METIS
       "auto",
+#else
+      "amd",
+#endif
       "auto", "Try both AMD and MeTiS, pick best",
       "amd", "Use the HSL_MC68 approximate minimum degree algorithm",
-      "metis", "Use the MeTiS nested dissection algorithm",
+      "metis", "Use the MeTiS nested dissection algorithm (if available)",
       "This option controls ordering for the solver HSL_MA86.");
   }
 
@@ -113,7 +117,7 @@ namespace Ipopt
     options.GetNumericValue("ma86_small", control_.small_, prefix);
     options.GetNumericValue("ma86_static", control_.static_, prefix);
     options.GetNumericValue("ma86_u", control_.u, prefix);
-    options.GetNumericValue("ma86_u", umax_, prefix);
+    options.GetNumericValue("ma86_umax", umax_, prefix);
     std::string order_method, scaling_method;
     options.GetStringValue("ma86_order", order_method, prefix);
     if(order_method == "metis") {
@@ -261,6 +265,7 @@ namespace Ipopt
     struct ma86_info info;
 
     if (new_matrix || pivtol_changed_) {
+
 
       if (HaveIpData()) {
         IpData().TimingStats().LinearSystemFactorization().Start();
