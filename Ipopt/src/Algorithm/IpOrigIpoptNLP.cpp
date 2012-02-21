@@ -846,9 +846,36 @@ namespace Ipopt
     return retValue;
   }
 
-  SmartPtr<const Matrix> OrigIpoptNLP::h_p(const Vector& x)
+  SmartPtr<const Matrix> OrigIpoptNLP::h_p(const Vector& x, Number obj_factor,
+					   const Vector& yc,
+					   const Vector& yd)
   {
     DBG_START_METH("OrigIpoptNLP::h_p", dbg_verbosity);
+
+    SmartPtr<Matrix> unscaled_h_p;
+    SmartPtr<const Matrix> retValue;
+
+    std::vector<const TaggedObject*> deps(3);
+    deps[0] = &x;
+    deps[1] = &yc;
+    deps[2] = &yd;
+
+    std::vector<Number> scalar_deps(1);
+    scalar_deps[0] = obj_factor;
+
+    if (!h_p_cache_.GetCachedResult(retValue, deps, scalar_deps)) {
+      unscaled_h_p = h_p_space_->MakeNewMatrix();
+
+      SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
+      SmartPtr<const Vector> unscaled_yc = NLP_scaling()->apply_vector_scaling_c(&yc);
+      SmartPtr<const Vector> unscaled_yd = NLP_scaling()->apply_vector_scaling_d(&yd);
+      Number scaled_obj_factor = NLP_scaling()->apply_obj_scaling(obj_factor);
+      bool success = nlp_->Eval_h_p(*unscaled_x, *p_, scaled_obj_factor, *unscaled_yc, *unscaled_yd, *unscaled_h_p);
+      ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the hessian of the lagrangian w.r.t. xp");
+      retValue = NLP_scaling()->apply_hessian_xp_scaling(ConstPtr(unscaled_h));
+      h_p_cache_.AddCachedResult(retValue, deps, scalar_deps);
+    }
+    return retValue;
   }
 
   void OrigIpoptNLP::GetSpaces(SmartPtr<const VectorSpace>& x_space,
