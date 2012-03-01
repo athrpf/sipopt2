@@ -234,6 +234,16 @@ namespace Ipopt
     {
       return false;
     }
+
+    virtual bool Eval_h_p(const Vector& x,
+			  const Vector& p,
+			  Number obj_factor,
+			  const Vector& yc,
+			  const Vector& yd,
+			  Matrix& h_p)
+    {
+      return false;
+    }
     //@}
 
     /** @name NLP solution routines. Have default dummy

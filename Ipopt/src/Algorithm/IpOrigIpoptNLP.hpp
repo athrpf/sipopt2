@@ -124,7 +124,10 @@ namespace Ipopt
     virtual SmartPtr<const Matrix> jac_d_p(const Vector& x);
 
     /** d^L/(dx dp) */
-    virtual SmartPtr<const Matrix> h_p(const Vector& x);
+    virtual SmartPtr<const Matrix> h_p(const Vector& x,
+				       Number obj_factor,
+				       const Vector& yc,
+				       const Vector& yd);
 
     /** Provides a Hessian matrix from the correct matrix space with
      *  uninitialized values.  This can be used in LeastSquareMults to
@@ -359,6 +362,9 @@ namespace Ipopt
     /** Hessian of the lagrangian
      *  (current iteration) */
     CachedResults<SmartPtr<const SymMatrix> > h_cache_;
+
+    /** Hessian of the lagrangian w.r.t. the parameters */
+    CachedResults<SmartPtr<const Matrix> > h_p_cache_;
 
     /** Unscaled version of x vector */
     CachedResults<SmartPtr<const Vector> > unscaled_x_cache_;

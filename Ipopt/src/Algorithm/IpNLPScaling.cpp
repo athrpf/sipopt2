@@ -632,6 +632,22 @@ namespace Ipopt
     }
   }
 
+  SmartPtr<const Matrix>
+  StandardScalingBase::apply_hessian_xp_scaling(SmartPtr<const Matrix> matrix)
+  {
+    DBG_START_METH("StandardScalingBase::apply_hessian_xp_scaling", dbg_verbosity);
+    if (IsValid(scaled_h_p_space_)) {
+      SmartPtr<ScaledMatrix> ret = scaled_h_p_space_->MakeNewScaledMatrix(false);
+      ret->SetUnscaledMatrix(matrix);
+      return GetRawPtr(ret);
+    }
+    else {
+      SmartPtr<const Matrix> ret = matrix;
+      matrix = NULL;
+      return ret;
+    }
+  }
+
   bool StandardScalingBase::have_x_scaling()
   {
     return IsValid(dx_);

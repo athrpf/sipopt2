@@ -1,4 +1,4 @@
-// Copyright 2010, 2011 Hans Pirnay
+// Copyright 2010, 2011, 2012 Hans Pirnay
 // All Rights Reserved.
 // This code is published under the Eclipse Public License.
 //
@@ -43,10 +43,14 @@ int main(int argv, char**argc)
 
   retval = app_ipopt->OptimizeTNLP(sens_tnlp);
 
+  SmartPtr<const Vector> x = app_ipopt->IpoptDataObject()->curr()->x();
+  SmartPtr<const Vector> y_c = app_ipopt->IpoptDataObject()->curr()->y_c();
+  SmartPtr<const Vector> y_d = app_ipopt->IpoptDataObject()->curr()->y_d();
+
   SmartPtr<IpoptNLP> ipopt_nlp = app_ipopt->IpoptNLPObject();
-  SmartPtr<const Matrix> opt_jac_c_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_c_p(*app_ipopt->IpoptDataObject()->curr()->x());
-  SmartPtr<const Matrix> opt_jac_d_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_d_p(*app_ipopt->IpoptDataObject()->curr()->x());
-  SmartPrt<const Matrix> opt_h_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->h_p(*app_ipopt->IpoptDataObject()->curr()->x());
+  SmartPtr<const Matrix> opt_jac_c_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_c_p(*x);
+  SmartPtr<const Matrix> opt_jac_d_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_d_p(*x);
+  SmartPtr<const Matrix> opt_h_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->h_p(*x, 1.0, *y_c, *y_d);
   opt_jac_c_p->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_c_p");
   opt_jac_d_p->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_d_p");
 

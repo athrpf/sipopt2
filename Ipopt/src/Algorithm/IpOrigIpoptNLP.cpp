@@ -44,6 +44,7 @@ namespace Ipopt
       jac_d_cache_(1),
       jac_d_p_cache_(1),
       h_cache_(1),
+      h_p_cache_(1),
       unscaled_x_cache_(1),
       initialized_(false)
   {}
@@ -864,7 +865,7 @@ namespace Ipopt
     scalar_deps[0] = obj_factor;
 
     if (!h_p_cache_.GetCachedResult(retValue, deps, scalar_deps)) {
-      unscaled_h_p = h_p_space_->MakeNewMatrix();
+      unscaled_h_p = h_p_space_->MakeNew();
 
       SmartPtr<const Vector> unscaled_x = get_unscaled_x(x);
       SmartPtr<const Vector> unscaled_yc = NLP_scaling()->apply_vector_scaling_c(&yc);
@@ -872,7 +873,7 @@ namespace Ipopt
       Number scaled_obj_factor = NLP_scaling()->apply_obj_scaling(obj_factor);
       bool success = nlp_->Eval_h_p(*unscaled_x, *p_, scaled_obj_factor, *unscaled_yc, *unscaled_yd, *unscaled_h_p);
       ASSERT_EXCEPTION(success, Eval_Error, "Error evaluating the hessian of the lagrangian w.r.t. xp");
-      retValue = NLP_scaling()->apply_hessian_xp_scaling(ConstPtr(unscaled_h));
+      retValue = NLP_scaling()->apply_hessian_xp_scaling(ConstPtr(unscaled_h_p));
       h_p_cache_.AddCachedResult(retValue, deps, scalar_deps);
     }
     return retValue;

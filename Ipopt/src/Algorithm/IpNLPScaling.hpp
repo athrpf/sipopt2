@@ -117,6 +117,11 @@ namespace Ipopt
      */
     virtual SmartPtr<const SymMatrix>
     apply_hessian_scaling(SmartPtr<const SymMatrix> matrix)=0;
+    /** Returns a scaled version of the hessian of the lagrangian
+     *  w.r.t. x and p.
+     */
+    virtual SmartPtr<const Matrix>
+    apply_hessian_xp_scaling(SmartPtr<const Matrix> matrix)=0;
     //@}
 
     /** Methods for scaling bounds - these wrap those above */
@@ -315,6 +320,9 @@ namespace Ipopt
      */
     virtual SmartPtr<const SymMatrix>
     apply_hessian_scaling(SmartPtr<const SymMatrix> matrix);
+    /** scaled hessian of the lagrangian w.r.t. x and p. */
+    virtual SmartPtr<const Matrix>
+    apply_hessian_xp_scaling(SmartPtr<const Matrix> matrix);
     //@}
 
     /** @name Methods for determining whether scaling for entities is
