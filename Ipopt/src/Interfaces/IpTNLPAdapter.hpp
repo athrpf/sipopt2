@@ -127,6 +127,13 @@ namespace Ipopt
                         const Vector& yd,
                         SymMatrix& h);
 
+    virtual bool Eval_h_p(const Vector& x,
+			  const Vector& p,
+			  Number obj_factor,
+			  const Vector& yc,
+			  const Vector& yd,
+			  Matrix& h_p);
+
     virtual void GetScalingParameters(
       const SmartPtr<const VectorSpace> x_space,
       const SmartPtr<const VectorSpace> c_space,

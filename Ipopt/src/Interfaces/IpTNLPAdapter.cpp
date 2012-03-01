@@ -1965,6 +1965,58 @@ namespace Ipopt
     return retval;
   }
 
+  bool TNLPAdapter::Eval_h_p(const Vector& x,
+			   const Vector& p,
+			   Number obj_factor,
+			   const Vector& yc,
+			   const Vector& yd,
+			   Matrix& h_p)
+  {
+    DBG_START_METH("TNLPAdapter::Eval_h_p", dbg_verbosity);
+    if (obj_factor==0. && yc.Asum()==0. && yd.Asum()==0.) {
+      GenTMatrix* st_h_p = static_cast<GenTMatrix*>(&h_p);
+      DBG_ASSERT(dynamic_cast<GenTMatrix*>(&h_p));
+      Number* values = st_h_p->Values();
+      for (Index i=0; i<nz_h_p_; i++) {
+	values[i] = 0.;
+      }
+      return true;
+    }
+
+    bool retval = false;
+    bool new_x = update_local_x(x);
+    bool new_y = update_local_lambda(yc, yd);
+    bool new_p = update_local_p(p);
+
+    GenTMatrix* st_h_p = static_cast<GenTMatrix*>(&h_p);
+    DBG_ASSERT(dynamic_cast<SymTMatrix*>(&h));
+    Number* values = st_h_p->Values();
+
+    if (h_p_idx_map_) {
+      Number * full_h_p = new Number[nz_full_h_p_];
+
+      if (tnlp_->eval_L_xp(n_full_x_, full_x_, new_x,
+			   n_full_p_, full_p_, new_p,
+			   obj_factor, n_full_g_,
+			   full_lambda_, new_y, nz_full_h_p_,
+			   NULL, NULL, values)) {
+	for (Index i=0; i<nz_h_p_; ++i) {
+	  values[i] = full_h_p[h_p_idx_map_[i]];
+	}
+	retval = true;
+      }
+      delete[] full_h_p;
+    } else {
+      retval = tnlp_->eval_L_xp(n_full_x_, full_x_, new_x,
+				n_full_p_, full_p_, new_p,
+				obj_factor, n_full_g_,
+				full_lambda_, new_y, nz_full_h_p_,
+				NULL, NULL, values);
+    }
+    return retval;
+  }
+
+
   void TNLPAdapter::GetScalingParameters(
     const SmartPtr<const VectorSpace> x_space,
     const SmartPtr<const VectorSpace> c_space,
