@@ -53,5 +53,5 @@ int main(int argv, char**argc)
   SmartPtr<const Matrix> opt_h_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->h_p(*x, 1.0, *y_c, *y_d);
   opt_jac_c_p->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_c_p");
   opt_jac_d_p->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_d_p");
-
+    opt_h_p->Print(*app_ipopt->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_h_p");
 }
