@@ -60,15 +60,16 @@ namespace Ipopt
       g_sol_(NULL),
       lambda_sol_(NULL),
       obj_sol_(0.0),
+      var_and_para_x_(NULL),
+      var_x_(NULL),
+      para_x_(NULL),
+      paraCnt_(0),
       objval_called_with_current_x_(false),
       conval_called_with_current_x_(false),
       hesset_called_(false),
       set_active_objective_called_(false),
       Oinfo_ptr_(NULL),
-      suffix_handler_(suffix_handler),
-      var_and_para_x_(NULL),
-      var_x_(NULL),
-      para_x_(NULL)
+      suffix_handler_(suffix_handler)
   {
     DBG_START_METH("AmplTNLP::AmplTNLP",
                    dbg_verbosity);
@@ -621,11 +622,13 @@ namespace Ipopt
       return true;
     }
     else if (!iRow && !jCol && values) {
-      if (!apply_new_x(new_x, n, x)) {
+      update_var_and_para_x(n, x, np, p);
+      if (!apply_new_x(new_x, n+np, var_and_para_x_)) {
         return false;
       }
 
-      jacval(const_cast<Number*>(x), values, (fint*)nerror_);
+      //jacval(const_cast<Number*>(x), values, (fint*)nerror_);
+      jacval(var_and_para_x_, values, (fint*)nerror_);
       if (nerror_ok(nerror_)) {
         return true;
       }
