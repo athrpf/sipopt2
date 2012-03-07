@@ -236,16 +236,6 @@ namespace Ipopt
     }
   }
 
-  void AmplTNLP::update_var_and_para_x(Index n,const Number* x,Index np,const Number* xp){
-    DBG_ASSERT(np == paraCnt_);
-
-    for (Index i=0; i < np; ++i)
-      var_and_para_x_[para_x_[i]] = xp[i];
-
-    for (Index i=0; i < n; ++i)
-      var_and_para_x_[var_x_[i]] = x[i];
-  }
-
   void AmplTNLP::set_active_objective(Index in_obj_no)
   {
     if (hesset_called_) {
@@ -523,24 +513,13 @@ namespace Ipopt
     return true;
   }
 
-  bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
-  {
-    DBG_START_METH("AmplTNLP::eval_f",
-                   dbg_verbosity);
-    if (!apply_new_x(new_x, n, x)) {
-      return false;
-    }
-
-    return internal_objval(x, obj_value);
-  }
-
   bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x,
-		                 Index np, const Number*xp, Number& obj_value)
+			Index np, const Number* p, bool new_p,
+			Number& obj_value)
     {
       DBG_START_METH("AmplTNLP::eval_f (parametric overload)",
                      dbg_verbosity);
-      update_var_and_para_x(n, x, np, xp);
-      if (!apply_new_x(new_x, n+np, var_and_para_x_)) {
+      if (!apply_new_xp(new_x, n, x, new_p, np, p)) {
         return false;
       }
 
@@ -854,6 +833,45 @@ namespace Ipopt
       // tell ampl that we have a new x
       xknowne(const_cast<Number*>(x), (fint*)nerror_);
       return nerror_ok(nerror_);
+    }
+
+    return true;
+  }
+
+  bool AmplTNLP::apply_new_xp(bool new_x, Index n, const Number* x,
+			      bool new_p, Index np, const Number* p)
+  {
+    DBG_START_METH("AmplTNLP::apply_new_xp",
+                   dbg_verbosity);
+
+    ASL_pfgh* asl = asl_;
+    DBG_ASSERT(asl_);
+
+    if (new_x) {
+      if (!hesset_called_) {
+        call_hesset();
+      }
+      for (Index k=0; k<n; ++k) {
+
+      }
+
+      for (Index i=0; i < n; ++i)
+	var_and_para_x_[var_x_[i]] = x[i];
+
+      DBG_PRINT((1, "Set new x.\n"));
+      // update the flags so these methods are called
+      // before evaluating the hessian
+      conval_called_with_current_x_ = false;
+      objval_called_with_current_x_ = false;
+
+      // tell ampl that we have a new x
+      xknowne(const_cast<Number*>(var_and_para_x_), (fint*)nerror_);
+      return nerror_ok(nerror_);
+    }
+
+    if (new_p) {
+      for (Index i=0; i < np; ++i)
+	var_and_para_x_[para_x_[i]] = p[i];
     }
 
     return true;
