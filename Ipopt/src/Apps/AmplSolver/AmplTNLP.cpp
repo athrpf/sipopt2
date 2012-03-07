@@ -65,7 +65,10 @@ namespace Ipopt
       hesset_called_(false),
       set_active_objective_called_(false),
       Oinfo_ptr_(NULL),
-      suffix_handler_(suffix_handler)
+      suffix_handler_(suffix_handler),
+      var_and_para_x_(NULL),
+      var_x_(NULL),
+      para_x_(NULL)
   {
     DBG_START_METH("AmplTNLP::AmplTNLP",
                    dbg_verbosity);
@@ -187,6 +190,49 @@ namespace Ipopt
       }
       break;
     }
+
+    prepareAmplParameters();
+
+
+  }
+
+  void AmplTNLP::prepareAmplParameters() {
+    // identify parameters and create storage for pure-var in x and parameter-var in x, as they are
+    // mixed in ampl
+    ASL_pfgh* asl = asl_;
+
+    Index paraCnt = 0;     //number of parameters
+    const Index* parameter_flags = suffix_handler_->GetIntegerSuffixValues("parameter", AmplSuffixHandler::Variable_Source);
+
+    if (!parameter_flags) {// if parameter_flags is null pointer, exit here
+      paraCnt_ = 0;
+      return;
+    }
+
+    std::cout<< "prepareAmplParameters: " << parameter_flags << std::endl;
+    for (Index i=0; i<n_var; ++i) {
+      if (parameter_flags[i])
+        ++paraCnt;
+    }
+    paraCnt_ = paraCnt;
+    const int var_in_xCnt = n_var - paraCnt; //number of non-parameter in Ampl x
+
+    //allocate memory
+    var_and_para_x_ = new Number[n_var];
+    var_x_ = new Index[var_in_xCnt];
+    para_x_ = new Index[paraCnt];
+
+    //create mapping
+    Index varI = 0;
+    Index paraI = 0;
+    for (Index i=0; i<n_var; ++i) {
+      if (parameter_flags[i])
+      	para_x_[paraI++] = i;
+      else
+        var_x_[varI++] = i;
+    }
+
+
   }
 
   void AmplTNLP::set_active_objective(Index in_obj_no)
@@ -257,6 +303,18 @@ namespace Ipopt
       if (havepi0) {
         delete [] havepi0;
         havepi0 = NULL;
+      }
+      if (var_and_para_x_) {
+    	delete [] var_and_para_x_;
+    	var_and_para_x_ = NULL;
+      }
+      if (var_x_) {
+      	delete [] var_x_;
+       	var_x_ = NULL;
+      }
+      if (para_x_) {
+       	delete [] para_x_;
+       	para_x_ = NULL;
       }
       ASL* asl_to_free = (ASL*)asl_;
       ASL_free(&asl_to_free);

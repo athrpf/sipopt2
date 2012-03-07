@@ -64,7 +64,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -139,7 +139,7 @@ namespace Ipopt
     private:
       /**@name Default Compiler Generated Methods
        * (Hidden to avoid implicit creation/calling).
-       * These methods are not implemented and 
+       * These methods are not implemented and
        * we do not want the compiler to implement
        * them for us, so we declare them private
        * and do not define them. This ensures that
@@ -232,7 +232,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -457,7 +457,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
@@ -499,6 +499,13 @@ namespace Ipopt
     Number obj_sol_;
     //@}
 
+    //@{
+    /** Storage Vectors for parameter/pure variables */
+    Number* var_and_para_x_;
+    Index* var_x_;
+    Index* para_x_;
+    Index paraCnt_;
+    //@}
     /**@name Flags to track internal state */
     //@{
     /** true when the objective value has been calculated with the
@@ -548,6 +555,8 @@ namespace Ipopt
 
     /** calls hesset ASL function */
     void call_hesset();
+
+    void prepareAmplParameters();
 
     /** meta data to pass on to TNLP */
     StringMetaDataMapType var_string_md_;
