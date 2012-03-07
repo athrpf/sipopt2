@@ -327,11 +327,8 @@ namespace Ipopt
 
     /** evaluates the objective value for the nlp. Overloaded from TNLP */
     virtual bool eval_f(Index n, const Number* x, bool new_x,
-                        Number& obj_value);
-
-    /** evaluates the objective value for the nlp. Overloaded from TNLP */
-    virtual bool eval_f(Index n, const Number* x, bool new_x,
-                        Index np, const Number* xp, Number& obj_value);
+                        Index np, const Number* xp, bool new_p,
+			Number& obj_value);
 
     /** evaluates the gradient of the objective for the
     nlp. Overloaded from TNLP */
@@ -548,6 +545,8 @@ namespace Ipopt
     /** Internal function to update the internal and ampl state if the
      *  x value changes */
     bool apply_new_x(bool new_x, Index n, const Number* x);
+    bool apply_new_xp(bool new_x, Index n, const Number* x,
+		      bool new_p, Index np, const Number* p);
 
     /** Method for obtaining the name of the NL file and the options
      *  set from AMPL.  Returns a pointer to a char* with the name of
@@ -566,7 +565,6 @@ namespace Ipopt
 
     /** help functions for parametric approach */
     void prepareAmplParameters();
-    void update_var_and_para_x(Index n,const Number* x,Index np,const Number* xp);
 
     /** meta data to pass on to TNLP */
     StringMetaDataMapType var_string_md_;
