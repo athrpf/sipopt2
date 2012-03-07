@@ -206,6 +206,9 @@ namespace Ipopt
 
     if (!parameter_flags) {// if parameter_flags is null pointer, exit here
       paraCnt_ = 0;
+      var_x_ = new Index[n_var];        //if paraCnt == 0, but para overloads are used, var_and_para_x_
+      for (Index i = 0; i<n_var; ++i)   //will be updated with Number* x using var_x_
+          var_x_[i] = i;
       return;
     }
 
@@ -231,8 +234,16 @@ namespace Ipopt
       else
         var_x_[varI++] = i;
     }
+  }
 
+  void AmplTNLP::update_var_and_para_x(Index n,const Number* x,Index np,const Number* xp){
+    DBG_ASSERT(np == paraCnt_);
 
+    for (Index i=0; i < np; ++i)
+      var_and_para_x_[para_x_[i]] = xp[i];
+
+    for (Index i=0; i < n; ++i)
+      var_and_para_x_[var_x_[i]] = x[i];
   }
 
   void AmplTNLP::set_active_objective(Index in_obj_no)
@@ -502,6 +513,12 @@ namespace Ipopt
     return true;
   }
 
+  bool AmplTNLP::get_var_and_para_x(const Index nTotal, Number* retArray) {
+    for (Index i=0; i<nTotal; ++i)
+      retArray[i] = var_and_para_x_[i];
+    return true;
+  }
+
   bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x, Number& obj_value)
   {
     DBG_START_METH("AmplTNLP::eval_f",
@@ -512,6 +529,19 @@ namespace Ipopt
 
     return internal_objval(x, obj_value);
   }
+
+  bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x,
+		                 Index np, const Number*xp, Number& obj_value)
+    {
+      DBG_START_METH("AmplTNLP::eval_f (parametric overload)",
+                     dbg_verbosity);
+      update_var_and_para_x(n, x, np, xp);
+      if (!apply_new_x(new_x, n+np, var_and_para_x_)) {
+        return false;
+      }
+
+      return internal_objval(var_and_para_x_, obj_value);
+    }
 
   bool AmplTNLP::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
   {

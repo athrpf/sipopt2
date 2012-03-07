@@ -322,9 +322,15 @@ namespace Ipopt
                                     bool init_z, Number* z_L, Number* z_U,
                                     Index m, bool init_lambda, Number* lambda);
 
+    virtual bool get_var_and_para_x(const Index nTotal, Number* retArray);
+
     /** evaluates the objective value for the nlp. Overloaded from TNLP */
     virtual bool eval_f(Index n, const Number* x, bool new_x,
                         Number& obj_value);
+
+    /** evaluates the objective value for the nlp. Overloaded from TNLP */
+    virtual bool eval_f(Index n, const Number* x, bool new_x,
+                        Index np, const Number* xp, Number& obj_value);
 
     /** evaluates the gradient of the objective for the
     nlp. Overloaded from TNLP */
@@ -556,7 +562,9 @@ namespace Ipopt
     /** calls hesset ASL function */
     void call_hesset();
 
+    /** help functions for parametric approach */
     void prepareAmplParameters();
+    void update_var_and_para_x(Index n,const Number* x,Index np,const Number* xp);
 
     /** meta data to pass on to TNLP */
     StringMetaDataMapType var_string_md_;
