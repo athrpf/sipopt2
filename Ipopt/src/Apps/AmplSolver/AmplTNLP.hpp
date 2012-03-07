@@ -292,8 +292,9 @@ namespace Ipopt
     * detailed documentation. */
     //@{
     /** returns dimensions of the nlp. Overloaded from TNLP */
-    virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style);
+    virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
+                              Index& nnz_h_lag, Index& nnz_jac_g_p,
+			      Index& nnz_h_lag_p, IndexStyleEnum& index_style);
 
     /** returns names and other meta data for the variables and constraints
      *  Overloaded from TNLP */
@@ -345,6 +346,7 @@ namespace Ipopt
      *  evaluates the jacobian values (if values is not NULL) for the
      *  nlp. Overloaded from TNLP */
     virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values);
 

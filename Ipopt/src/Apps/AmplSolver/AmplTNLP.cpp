@@ -354,8 +354,9 @@ namespace Ipopt
     delete (fint*) nerror_;
   }
 
-  bool AmplTNLP::get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style)
+  bool AmplTNLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
+                              Index& nnz_h_lag, Index& nnz_jac_g_p,
+			      Index& nnz_h_lag_p, IndexStyleEnum& index_style)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
@@ -364,10 +365,13 @@ namespace Ipopt
       call_hesset();
     }
 
-    n = n_var; // # of variables (variable types have been asserted in the constructor
+    n = n_var - paraCnt_; // # of variables (variable types have been asserted in the constructor
+    np = paraCnt_;
     m = n_con; // # of constraints
     nnz_jac_g = nzc; // # of non-zeros in the jacobian
     nnz_h_lag = nz_h_full_; // # of non-zeros in the hessian
+    nnz_jac_g_p = 0; // noch falsch ...
+    nnz_h_lag_p = 0; // noch falsch ...
 
     index_style = TNLP::FORTRAN_STYLE;
 
@@ -590,6 +594,7 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_jac_g(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values)
   {
@@ -597,7 +602,7 @@ namespace Ipopt
                    dbg_verbosity);
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
-    DBG_ASSERT(n == n_var);
+    DBG_ASSERT(n == n_var-paraCnt_);
     DBG_ASSERT(m == n_con);
 
     if (iRow && jCol && !values) {
