@@ -510,6 +510,12 @@ namespace Ipopt
     Index* var_x_;
     Index* para_x_;
     Index paraCnt_;
+    Index* jac_row_all_ ;
+    Index* jac_col_all_ ;
+    Number* jac_val_all_ ;
+    Index* var_jac_;
+    Index* para_jac_;
+    Index para_jac_Cnt_;
     //@}
     /**@name Flags to track internal state */
     //@{

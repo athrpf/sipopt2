@@ -64,6 +64,12 @@ namespace Ipopt
       var_x_(NULL),
       para_x_(NULL),
       paraCnt_(0),
+      jac_row_all_(NULL),
+      jac_col_all_(NULL),
+      jac_val_all_(NULL),
+      var_jac_(NULL),
+      para_jac_(NULL),
+      para_jac_Cnt_(0),
       objval_called_with_current_x_(false),
       conval_called_with_current_x_(false),
       hesset_called_(false),
@@ -191,10 +197,7 @@ namespace Ipopt
       }
       break;
     }
-
     prepareAmplParameters();
-
-
   }
 
   void AmplTNLP::prepareAmplParameters() {
@@ -225,6 +228,9 @@ namespace Ipopt
     var_and_para_x_ = new Number[n_var];
     var_x_ = new Index[var_in_xCnt];
     para_x_ = new Index[paraCnt];
+    jac_row_all_ = new Index[nzc];
+    jac_col_all_ = new Index[nzc];
+    jac_val_all_ = new Number[nzc];
 
     //create mapping
     Index varI = 0;
@@ -317,6 +323,26 @@ namespace Ipopt
       if (para_x_) {
        	delete [] para_x_;
        	para_x_ = NULL;
+      }
+      if(jac_row_all_) {
+        delete [] jac_row_all_;
+        jac_row_all_ = NULL;
+      }
+      if(jac_col_all_) {
+        delete [] jac_col_all_ ;
+        jac_col_all_ = NULL;
+      }
+      if(jac_val_all_) {
+        delete [] jac_val_all_ ;
+        jac_val_all_ = NULL;
+      }
+      if(var_jac_) {
+        delete [] var_jac_;
+        var_jac_ = NULL;
+      }
+      if(para_jac_){
+        delete [] para_jac_;
+        para_jac_ = NULL;
       }
       ASL* asl_to_free = (ASL*)asl_;
       ASL_free(&asl_to_free);
@@ -586,28 +612,46 @@ namespace Ipopt
     DBG_ASSERT(m == n_con);
 
     if (iRow && jCol && !values) {
-      // setup the structure
+      // setup the structure of all jac(var+para)
       Index current_nz = 0;
       for (Index i=0; i<n_con; i++) {
         for (cgrad* cg=Cgrad[i]; cg; cg = cg->next) {
-          iRow[cg->goff] = i + 1;
-          jCol[cg->goff] = cg->varno + 1;
+          jac_row_all_[cg->goff] = i + 1;
+          jac_col_all_[cg->goff] = cg->varno + 1;
+          //iRow[cg->goff] = i + 1;
+          //jCol[cg->goff] = cg->varno + 1;
           //    iRow[current_nz] = i + 1;
           //    jCol[current_nz] = cg->varno+1;
           current_nz++;
         }
       }
-      DBG_ASSERT(current_nz == nele_jac);
+      // copy all entries of vars in jRow / jCol AND create mapping
+      bool isValid = false;
+      Index retCnt = 0;
+      Index index_in_var_x = -1;
+      for (Index i=0; i<current_nz; ++i) {                //loop thru all elements in _all_
+        index_in_var_x = -1;
+        for (Index j=0; j<n; ++j) {                       //loop thru all elements in var_x_
+          if (jac_col_all_[i] == var_x_[j]) {              //to check if varno is in var_x_
+            index_in_var_x = j;
+            break;
+          }
+        }
+        if (index_in_var_x >= 0) {                        //add to return indices
+          iRow[retCnt++]=jac_row_all_[i];
+          jCol[retCnt++]=index_in_var_x;
+        }
+      }
+      DBG_ASSERT(retCnt == nele_jac);       //retCnt++ in last iteration, therefore it holds numOfEle
       return true;
     }
     else if (!iRow && !jCol && values) {
-      update_var_and_para_x(n, x, np, p);
-      if (!apply_new_x(new_x, n+np, var_and_para_x_)) {
+      if (!apply_new_xp(new_x, n, x, new_p, np, p)) {
         return false;
       }
 
       //jacval(const_cast<Number*>(x), values, (fint*)nerror_);
-      jacval(var_and_para_x_, values, (fint*)nerror_);
+      jacval(var_and_para_x_, jac_val_all_, (fint*)nerror_);
       if (nerror_ok(nerror_)) {
         return true;
       }
