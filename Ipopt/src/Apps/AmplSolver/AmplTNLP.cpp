@@ -70,6 +70,10 @@ namespace Ipopt
       var_jac_(NULL),
       para_jac_(NULL),
       para_jac_Cnt_(0),
+      parameter_flags_(NULL),
+      index_in_var_or_para_(NULL),
+      var_nzc_(0),
+      para_nzc_(0),
       objval_called_with_current_x_(false),
       conval_called_with_current_x_(false),
       hesset_called_(false),
@@ -206,9 +210,9 @@ namespace Ipopt
     ASL_pfgh* asl = asl_;
 
     Index paraCnt = 0;     //number of parameters
-    const Index* parameter_flags = suffix_handler_->GetIntegerSuffixValues("parameter", AmplSuffixHandler::Variable_Source);
+    parameter_flags_ =const_cast<Index*>(suffix_handler_->GetIntegerSuffixValues("parameter", AmplSuffixHandler::Variable_Source));
 
-    if (!parameter_flags) {// if parameter_flags is null pointer, exit here
+    if (!parameter_flags_) {// if parameter_flags is null pointer, exit here
       paraCnt_ = 0;
       var_x_ = new Index[n_var];        //if paraCnt == 0, but para overloads are used, var_and_para_x_
       for (Index i = 0; i<n_var; ++i)   //will be updated with Number* x using var_x_
@@ -216,9 +220,9 @@ namespace Ipopt
       return;
     }
 
-    std::cout<< "prepareAmplParameters: " << parameter_flags << std::endl;
+    std::cout<< "prepareAmplParameters: " << parameter_flags_ << std::endl;
     for (Index i=0; i<n_var; ++i) {
-      if (parameter_flags[i])
+      if (parameter_flags_[i])
         ++paraCnt;
     }
     paraCnt_ = paraCnt;
@@ -226,21 +230,50 @@ namespace Ipopt
 
     //allocate memory
     var_and_para_x_ = new Number[n_var];
+    index_in_var_or_para_ = new Index[n_var];
     var_x_ = new Index[var_in_xCnt];
     para_x_ = new Index[paraCnt];
     jac_row_all_ = new Index[nzc];
     jac_col_all_ = new Index[nzc];
     jac_val_all_ = new Number[nzc];
+    //(secure sized)
+    var_jac_ = new Index[nzc];
+    para_jac_ = new Index[nzc];
 
     //create mapping
     Index varI = 0;
     Index paraI = 0;
     for (Index i=0; i<n_var; ++i) {
-      if (parameter_flags[i])
+      if (parameter_flags_[i]){
+        index_in_var_or_para_[i] = paraI;
       	para_x_[paraI++] = i;
-      else
+      }else{
+        index_in_var_or_para_[i] = varI;
         var_x_[varI++] = i;
+      }
     }
+
+    // setup the structure of all jac(var+para) and mapping
+    Index current_nz = 0;
+    Index current_var_nz = 0;
+    Index current_par_nz = 0;
+    for (Index i=0; i<n_con; i++) {
+      for (cgrad* cg=Cgrad[i]; cg; cg = cg->next) {
+        jac_row_all_[cg->goff] = i + 1;
+        jac_col_all_[cg->goff] = cg->varno + 1;
+        ++current_nz;
+        if (parameter_flags_[jac_col_all_[cg->goff]]) {
+          para_jac_[current_par_nz] = cg->goff;
+          ++current_par_nz;
+        } else {
+          var_jac_[current_var_nz] = cg->goff;
+          ++current_var_nz;
+        }
+      }
+    }
+    var_nzc_ = current_var_nz;
+    para_nzc_ = current_par_nz;
+    DBG_ASSERT(current_nz == nzc);
   }
 
   void AmplTNLP::set_active_objective(Index in_obj_no)
@@ -344,6 +377,14 @@ namespace Ipopt
         delete [] para_jac_;
         para_jac_ = NULL;
       }
+      if(parameter_flags_){
+        delete [] parameter_flags_;
+        parameter_flags_ = NULL;
+      }
+      if(index_in_var_or_para_){
+        delete [] index_in_var_or_para_;
+        index_in_var_or_para_ = NULL;
+      }
       ASL* asl_to_free = (ASL*)asl_;
       ASL_free(&asl_to_free);
       asl_ = NULL;
@@ -385,9 +426,9 @@ namespace Ipopt
     n = n_var - paraCnt_; // # of variables (variable types have been asserted in the constructor
     np = paraCnt_;
     m = n_con; // # of constraints
-    nnz_jac_g = nzc; // # of non-zeros in the jacobian
+    nnz_jac_g = var_nzc_; // # of non-zeros in the var-jacobian
     nnz_h_lag = nz_h_full_; // # of non-zeros in the hessian
-    nnz_jac_g_p = 0; // noch falsch ...
+    nnz_jac_g_p = para_nzc_; //# of non-zeros in the para-jacobian
     nnz_h_lag_p = 0; // noch falsch ...
 
     index_style = TNLP::FORTRAN_STYLE;
@@ -600,7 +641,7 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_jac_g(Index n, const Number* x, bool new_x,
-			    Index np, const Number* p, bool new_p,
+			                      Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values)
   {
@@ -612,37 +653,12 @@ namespace Ipopt
     DBG_ASSERT(m == n_con);
 
     if (iRow && jCol && !values) {
-      // setup the structure of all jac(var+para)
-      Index current_nz = 0;
-      for (Index i=0; i<n_con; i++) {
-        for (cgrad* cg=Cgrad[i]; cg; cg = cg->next) {
-          jac_row_all_[cg->goff] = i + 1;
-          jac_col_all_[cg->goff] = cg->varno + 1;
-          //iRow[cg->goff] = i + 1;
-          //jCol[cg->goff] = cg->varno + 1;
-          //    iRow[current_nz] = i + 1;
-          //    jCol[current_nz] = cg->varno+1;
-          current_nz++;
-        }
+
+      // copy all entries of vars in jRow / jCol
+      for (Index i = 0; i < nele_jac; ++i){
+        iRow[i] = jac_row_all_[var_jac_[i]];
+        jCol[i] = index_in_var_or_para_[jac_col_all_[var_jac_[i]]];
       }
-      // copy all entries of vars in jRow / jCol AND create mapping
-      bool isValid = false;
-      Index retCnt = 0;
-      Index index_in_var_x = -1;
-      for (Index i=0; i<current_nz; ++i) {                //loop thru all elements in _all_
-        index_in_var_x = -1;
-        for (Index j=0; j<n; ++j) {                       //loop thru all elements in var_x_
-          if (jac_col_all_[i] == var_x_[j]) {              //to check if varno is in var_x_
-            index_in_var_x = j;
-            break;
-          }
-        }
-        if (index_in_var_x >= 0) {                        //add to return indices
-          iRow[retCnt++]=jac_row_all_[i];
-          jCol[retCnt++]=index_in_var_x;
-        }
-      }
-      DBG_ASSERT(retCnt == nele_jac);       //retCnt++ in last iteration, therefore it holds numOfEle
       return true;
     }
     else if (!iRow && !jCol && values) {
@@ -650,9 +666,11 @@ namespace Ipopt
         return false;
       }
 
-      //jacval(const_cast<Number*>(x), values, (fint*)nerror_);
       jacval(var_and_para_x_, jac_val_all_, (fint*)nerror_);
       if (nerror_ok(nerror_)) {
+        for(Index i = 0; i<nele_jac; ++i){
+          values[i] = jac_val_all_[var_jac_[i]];
+        }
         return true;
       }
     }
@@ -893,18 +911,21 @@ namespace Ipopt
 
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
+    if (!hesset_called_) {
+            call_hesset();
+    }
 
     if (new_x) {
-      if (!hesset_called_) {
-        call_hesset();
-      }
-      for (Index k=0; k<n; ++k) {
-
-      }
-
       for (Index i=0; i < n; ++i)
-	var_and_para_x_[var_x_[i]] = x[i];
+        var_and_para_x_[var_x_[i]] = x[i];
+    }
 
+    if (new_p) {
+      for (Index i=0; i < np; ++i)
+        var_and_para_x_[para_x_[i]] = p[i];
+    }
+
+    if (new_x || new_p) {
       DBG_PRINT((1, "Set new x.\n"));
       // update the flags so these methods are called
       // before evaluating the hessian
@@ -914,14 +935,9 @@ namespace Ipopt
       // tell ampl that we have a new x
       xknowne(const_cast<Number*>(var_and_para_x_), (fint*)nerror_);
       return nerror_ok(nerror_);
+    } else {
+      return true;
     }
-
-    if (new_p) {
-      for (Index i=0; i < np; ++i)
-	var_and_para_x_[para_x_[i]] = p[i];
-    }
-
-    return true;
   }
 
   void AmplTNLP::write_solution_file(const std::string& message) const
