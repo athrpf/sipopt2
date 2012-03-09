@@ -343,17 +343,35 @@ namespace Ipopt
      *  evaluates the jacobian values (if values is not NULL) for the
      *  nlp. Overloaded from TNLP */
     virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
-			    Index np, const Number* p, bool new_p,
+			                      Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values);
+
+    /** specifies the jacobian structure (if values is NULL) and
+     *  evaluates the jacobian values (if values is not NULL) for the
+     *  nlp. Overloaded from TNLP */
+    virtual bool eval_jac_gp(Index n, const Number* x, bool new_x,
+                             Index np, const Number* p, bool new_p,
+                             Index m, Index nele_jac, Index* iRow,
+                             Index *jCol, Number* values);
 
     /** specifies the structure of the hessian of the lagrangian (if
      *  values is NULL) and evaluates the values (if values is not
      *  NULL). Overloaded from TNLP */
     virtual bool eval_h(Index n, const Number* x, bool new_x,
+                        Index np, const Number* p, bool new_p,
                         Number obj_factor, Index m, const Number* lambda,
                         bool new_lambda, Index nele_hess, Index* iRow,
                         Index* jCol, Number* values);
+
+    /** specifies the structure of the hessian of the lagrangian (if
+     *  values is NULL) and evaluates the values (if values is not
+     *  NULL). Overloaded from TNLP */
+    virtual bool eval_h_xp(Index n, const Number* x, bool new_x,
+                           Index np, const Number* p, bool new_p,
+                           Number obj_factor, Index m, const Number* lambda,
+                           bool new_lambda, Index nele_hess, Index* iRow,
+                           Index* jCol, Number* values);
 
     /** retrieve the scaling parameters for the variables, objective
      *  function, and constraints. */
@@ -506,20 +524,29 @@ namespace Ipopt
 
     //@{
     /** Storage Vectors for parameter/pure variables */
-    Number* var_and_para_x_;
-    Index* var_x_;
-    Index* para_x_;
-    Index paraCnt_;
-    Index* jac_row_all_ ;
-    Index* jac_col_all_ ;
+    Number* var_and_para_x_;        //holds the complete vector (vars n paras mixed)
+    Index* var_x_;                  //maps the indizes from the var vector to the index in var_and_para
+    Index* para_x_;                 //                 from the para vector             in var_and_para
+    Index paraCnt_;                 //number of parameters in the problem
+    Index* jac_row_all_ ;           //the triplet row/col/val holds the answers from ampl (vars n paras)
+    Index* jac_col_all_ ;           //of the non-zero-elements
     Number* jac_val_all_ ;
-    Index* var_jac_;
-    Index* para_jac_;
-    Index para_jac_Cnt_;
-    Index* parameter_flags_;
+    Index* var_jac_;                //maps the indizes of jacobian of the variables only to the index [triplet]_all_
+    Index* para_jac_;               //                                    parameters only
+    const Index* parameter_flags_;  //length of var_and_para_x_, holds 0 if element is a var and 1 if para
+
+    /** length of var_and_para_x_, holds index of element in the subvector, used with para.._flags_ to find
+    the element in the subvector (vars only OR paras only). used e.g. in eval_jac_g*/
     Index* index_in_var_or_para_;
-    Index var_nzc_;
-    Index para_nzc_;
+    Index var_nzc_;                 //nonzeros in the submatrix of vars only in jacobian
+    Index para_nzc_;                //                             paras
+    Index* hes_row_all_;
+    Index* hes_col_all_;
+    Number* hes_val_all_;
+    Index* var_hes_;
+    Index* para_hes_;
+    Index var_nz_h_;
+    Index para_nz_h_;
     //@}
     /**@name Flags to track internal state */
     //@{
