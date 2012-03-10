@@ -14,6 +14,7 @@
 #include "IpException.hpp"
 #include "IpAlgTypes.hpp"
 #include "IpReturnCodes.hpp"
+#include "IpTNLP.hpp"
 
 #include <map>
 
@@ -50,13 +51,6 @@ namespace Ipopt
   class ParaTNLP : public ReferencedObject
   {
   public:
-    /** Type of the constraints*/
-    enum LinearityType
-    {
-      LINEAR/** Constraint/Variable is linear.*/,
-      NON_LINEAR/**Constraint/Varaible is non-linear.*/
-    };
-
     /**@name Constructors/Destructors */
     //@{
     ParaTNLP()
@@ -78,10 +72,9 @@ namespace Ipopt
      *  style indexing for the sparse matrix iRow and jCol parameters.
      *  C_STYLE is 0-based, and FORTRAN_STYLE is 1-based.
      */
-    enum IndexStyleEnum { C_STYLE=0, FORTRAN_STYLE=1 };
     virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                               Index& nnz_h_lag, Index& nnz_jac_g_p,
-			      Index& nnz_h_lag_p, IndexStyleEnum& index_style)=0;
+			      Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style)=0;
 
     typedef std::map<std::string, std::vector<std::string> > StringMetaDataMapType;
     typedef std::map<std::string, std::vector<Index> > IntegerMetaDataMapType;
@@ -133,7 +126,7 @@ namespace Ipopt
      * (TNLP::Linear or TNLP::NonLinear). The var_types
      *  array should be allocated with length at least n. (default implementation
      *  just return false and does not fill the array).*/
-    virtual bool get_variables_linearity(Index n, LinearityType* var_types)
+    virtual bool get_variables_linearity(Index n, TNLP::LinearityType* var_types)
     {
       return false;
     }
@@ -141,7 +134,7 @@ namespace Ipopt
     /** overload this method to return the constraint linearity.
      * array should be alocated with length at least n. (default implementation
      *  just return false and does not fill the array).*/
-    virtual bool get_constraints_linearity(Index m, LinearityType* const_types)
+    virtual bool get_constraints_linearity(Index m, TNLP::LinearityType* const_types)
     {
       return false;
     }

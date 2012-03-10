@@ -39,7 +39,7 @@ int main(int argv, char**argc)
   app_ipopt->Initialize();
 
   // create AmplSensTNLP from argc. This is an nlp because we are using our own TNLP Adapter
-  SmartPtr<TNLP> sens_tnlp = new ParametricTNLP();
+  SmartPtr<ParaTNLP> sens_tnlp = new ParametricTNLP();
 
   retval = app_ipopt->OptimizeTNLP(sens_tnlp);
 

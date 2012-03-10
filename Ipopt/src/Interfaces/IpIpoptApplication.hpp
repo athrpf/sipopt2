@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "IpJournalist.hpp"
-#include "IpTNLP.hpp"
+#include "IpParaTNLP.hpp"
 #include "IpNLP.hpp"
 /* Return codes for the Optimize call for an application */
 #include "IpReturnCodes.hpp"
@@ -77,6 +77,7 @@ namespace Ipopt
     //@{
     /** Solve a problem that inherits from TNLP */
     virtual ApplicationReturnStatus OptimizeTNLP(const SmartPtr<TNLP>& tnlp);
+    virtual ApplicationReturnStatus OptimizeTNLP(const SmartPtr<ParaTNLP>& tnlp);
 
     /** Solve a problem that inherits from NLP */
     virtual ApplicationReturnStatus OptimizeNLP(const SmartPtr<NLP>& nlp);
@@ -165,7 +166,7 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

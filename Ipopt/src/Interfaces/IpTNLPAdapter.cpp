@@ -14,6 +14,7 @@
 #include "IpDenseVector.hpp"
 #include "IpExpansionMatrix.hpp"
 #include "IpGenTMatrix.hpp"
+#include "IpParaTNLPWrapper.hpp"
 #include "IpSymTMatrix.hpp"
 #include "IpTDependencyDetector.hpp"
 #include "IpTSymDependencyDetector.hpp"
@@ -60,6 +61,44 @@ namespace Ipopt
 #endif
 
   TNLPAdapter::TNLPAdapter(const SmartPtr<TNLP> tnlp,
+                           const SmartPtr<const Journalist> jnlst /* = NULL */)
+      :
+      tnlp_(new ParaTNLPWrapper(tnlp)),
+      jnlst_(jnlst),
+      full_x_(NULL),
+      full_p_(NULL),
+      full_lambda_(NULL),
+      full_g_(NULL),
+      jac_g_(NULL),
+      jac_g_p_(NULL),
+      c_rhs_(NULL),
+      x_tag_for_iterates_(0),
+      p_tag_for_iterates_(0),
+      y_c_tag_for_iterates_(0),
+      y_d_tag_for_iterates_(0),
+      x_tag_for_g_(0),
+      p_tag_for_g_(0),
+      x_tag_for_jac_g_(0),
+      p_tag_for_jac_g_(0),
+      x_tag_for_jac_g_p_(0),
+      p_tag_for_jac_g_p_(0),
+      jac_idx_map_(NULL),
+      jac_g_p_idx_map_(NULL),
+      h_idx_map_(NULL),
+      h_p_idx_map_(NULL),
+      x_fixed_map_(NULL),
+      findiff_jac_ia_(NULL),
+      findiff_jac_ja_(NULL),
+      findiff_jac_postriplet_(NULL),
+      findiff_x_l_(NULL),
+      findiff_x_u_(NULL)
+  {
+    DBG_START_METH("TNLPAdapter::TNLPAdapter", dbg_verbosity);
+    ASSERT_EXCEPTION(IsValid(tnlp_), INVALID_TNLP,
+                     "The TNLP passed to TNLPAdapter is NULL. This MUST be a valid TNLP!");
+  }
+
+  TNLPAdapter::TNLPAdapter(const SmartPtr<ParaTNLP> tnlp,
                            const SmartPtr<const Journalist> jnlst /* = NULL */)
       :
       tnlp_(tnlp),
@@ -2794,17 +2833,23 @@ namespace Ipopt
 
     // Obtain the problem size
     Index nx; // number of variables
+    Index np; // number of parameters
     Index ng; // number of constriants
     Index nz_jac_g; // number of nonzeros in constraint Jacobian
     Index nz_hess_lag; // number of nonzeros in Lagrangian Hessian
+    Index nz_jac_g_p; // number of nonzeros in constraint jacobian w.r.t. parameters
+    Index nz_hess_lag_p; // number of nonzeros in Lagrangian Hessian w.r.t. parameters
     TNLP::IndexStyleEnum index_style;
-    retval = tnlp_->get_nlp_info(nx, ng, nz_jac_g, nz_hess_lag, index_style);
+    retval = tnlp_->get_nlp_info(nx, np, ng, nz_jac_g, nz_hess_lag, nz_jac_g_p, nz_hess_lag_p, index_style);
     ASSERT_EXCEPTION(retval, INVALID_TNLP, "get_nlp_info returned false for derivative checker");
 
     // Obtain starting point as reference point at which derivative
     // test should be performed
     Number* xref = new Number[nx];
     tnlp_->get_starting_point(nx, true, xref, false, NULL, NULL, ng, false, NULL);
+
+    Number* pref = new Number[np];
+    tnlp_->get_parameters(np, pref);
 
     // Perform a random perturbation.  We need the bounds to make sure
     // they are not violated
@@ -2829,24 +2874,26 @@ namespace Ipopt
 
     // Obtain value of objective and constraints at reference point
     bool new_x = true;
+    bool new_p = true;
     Number fref;
     Number* gref = NULL;
     if (ng>0) {
       gref = new Number[ng];
     }
-    retval = tnlp_->eval_f(nx, xref, new_x, fref);
+    retval = tnlp_->eval_f(nx, xref, new_x, np, pref, new_p, fref);
     ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                      "In TNLP derivative test: f could not be evaluated at reference point.");
     new_x = false;
+    new_p = false;
     if (ng>0) {
-      retval = tnlp_->eval_g(nx, xref, new_x, ng, gref);
+      retval = tnlp_->eval_g(nx, xref, new_x, np, pref, new_p, ng, gref);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: g could not be evaluated at reference point.");
     }
 
     // Obtain gradient of objective function at reference pont
     Number* grad_f = new Number[nx];
-    retval = tnlp_->eval_grad_f(nx, xref, true, grad_f);
+    retval = tnlp_->eval_grad_f(nx, xref, true, np, pref, true, grad_f);
     ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                      "In TNLP derivative test: grad_f could not be evaluated at reference point.");
 
@@ -2857,7 +2904,9 @@ namespace Ipopt
       // Obtain constraint Jacobian at reference point (including structure)
       g_iRow = new Index[nz_jac_g];
       g_jCol = new Index[nz_jac_g];
-      retval = tnlp_->eval_jac_g(nx, NULL, false, ng, nz_jac_g,
+      retval = tnlp_->eval_jac_g(nx, NULL, false,
+				 np, NULL, false,
+				 ng, nz_jac_g,
                                  g_iRow, g_jCol, NULL);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: Jacobian structure could not be evaluated.");
@@ -2870,7 +2919,8 @@ namespace Ipopt
       }
       // Obtain values at reference pont
       jac_g = new Number[nz_jac_g];
-      retval = tnlp_->eval_jac_g(nx, xref, new_x, ng,
+      retval = tnlp_->eval_jac_g(nx, xref, new_x,
+				 np, pref, new_p, ng,
                                  nz_jac_g, NULL, NULL, jac_g);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: Jacobian values could not be evaluated at reference point.");
@@ -2904,7 +2954,7 @@ namespace Ipopt
 
         Number fpert;
         new_x = true;
-        retval = tnlp_->eval_f(nx, xpert, new_x, fpert);
+        retval = tnlp_->eval_f(nx, xpert, new_x, np, pref, false, fpert);
         ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                          "In TNLP derivative test: f could not be evaluated at perturbed point.");
         new_x = false;
@@ -2926,7 +2976,7 @@ namespace Ipopt
         }
 
         if (ng>0) {
-          retval = tnlp_->eval_g(nx, xpert, new_x, ng, gpert);
+          retval = tnlp_->eval_g(nx, xpert, new_x, np, pref, false, ng, gpert);
           ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                            "In TNLP derivative test: g could not be evaluated at reference point.");
           for (Index icon=0; icon<ng; icon++) {
@@ -2971,7 +3021,7 @@ namespace Ipopt
       // Get sparsity structure of Hessian
       Index* h_iRow = new Index[nz_hess_lag];
       Index* h_jCol = new Index[nz_hess_lag];
-      retval = tnlp_->eval_h(nx, NULL, false, 0., ng, NULL, false,
+      retval = tnlp_->eval_h(nx, NULL, false, np, NULL, false, 0., ng, NULL, false,
                              nz_hess_lag, h_iRow, h_jCol, NULL);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: Hessian structure could not be evaluated.");
@@ -3012,9 +3062,11 @@ namespace Ipopt
         }
         // Hessian at reference point
         new_x = true;
+	new_p = true;
         bool new_y = true;
-        retval = tnlp_->eval_h(nx, xref, new_x, objfact, ng, lambda, new_y,
+        retval = tnlp_->eval_h(nx, xref, new_x, np, pref, new_p, objfact, ng, lambda, new_y,
                                nz_hess_lag, NULL, NULL, h_values);
+	new_p = false;
         new_x = false;
         new_y = false;
         ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
@@ -3028,13 +3080,14 @@ namespace Ipopt
           new_x = true;
           if (icon==-1) {
             // we are looking at the objective function
-            retval = tnlp_->eval_grad_f(nx, xpert, new_x, gradpert);
+            retval = tnlp_->eval_grad_f(nx, xpert, new_x, np, pref, new_p, gradpert);
             ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                              "In TNLP derivative test: grad_f could not be evaluated at perturbed point.");
           }
           else {
             // this is the icon-th constraint
-            retval = tnlp_->eval_jac_g(nx, xpert, new_x, ng,
+            retval = tnlp_->eval_jac_g(nx, xpert, new_x,
+				       np, pref, new_p, ng,
                                        nz_jac_g, NULL, NULL, jacpert);
             ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                              "In TNLP derivative test: Jacobian values could not be evaluated at reference point.");
@@ -3143,7 +3196,9 @@ namespace Ipopt
     // the equality constraints entries
     Index* g_iRow = new Index[nz_full_jac_g_];
     Index* g_jCol = new Index[nz_full_jac_g_];
-    if (!tnlp_->eval_jac_g(n_full_x_, NULL, false, n_full_g_, nz_full_jac_g_,
+    if (!tnlp_->eval_jac_g(n_full_x_, NULL, false,
+			   n_full_p_, NULL, false,
+			   n_full_g_, nz_full_jac_g_,
                            g_iRow, g_jCol, NULL)) {
       delete [] g_iRow;
       delete [] g_jCol;
@@ -3203,12 +3258,14 @@ namespace Ipopt
     // First we evaluate the equality constraint Jacobian at the
     // starting point with some random perturbation (projected into bounds)
     if (!tnlp_->get_starting_point(n_full_x_, true, full_x_, false, NULL,
-                                   NULL, n_full_g_, false, NULL)) {
+                                   NULL, n_full_g_, false, NULL) ||
+	!tnlp_->get_parameters(n_full_p_, full_p_)) {
       delete [] jac_c_iRow;
       delete [] jac_c_jCol;
       delete [] jac_c_map;
       return false;
     }
+
     // Here we reset the random number generator
     IpResetRandom01();
     for (Index i=0; i<n_full_x_; i++) {
@@ -3221,7 +3278,9 @@ namespace Ipopt
     Number* g_vals = NULL;
     if (dependency_detection_with_rhs_) {
       g_vals = new Number[n_full_g_];
-      if (!tnlp_->eval_g(n_full_x_, full_x_, true, n_full_g_, g_vals)) {
+      if (!tnlp_->eval_g(n_full_x_, full_x_, true,
+			 n_full_x_, full_p_, true,
+			 n_full_g_, g_vals)) {
         delete [] jac_c_iRow;
         delete [] jac_c_jCol;
         delete [] jac_c_map;
@@ -3229,7 +3288,8 @@ namespace Ipopt
         return false;
       }
     }
-    if (!tnlp_->eval_jac_g(n_full_x_, full_x_, false, n_full_g_,
+    if (!tnlp_->eval_jac_g(n_full_x_, full_x_, false,
+			   n_full_p_, full_p_, false, n_full_g_,
                            nz_full_jac_g_, NULL, NULL, jac_g_)) {
       delete [] jac_c_iRow;
       delete [] jac_c_jCol;

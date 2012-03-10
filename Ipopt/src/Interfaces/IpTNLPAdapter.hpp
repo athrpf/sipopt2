@@ -11,6 +11,7 @@
 
 #include "IpNLP.hpp"
 #include "IpTNLP.hpp"
+#include "IpParaTNLP.hpp"
 #include "IpOrigIpoptNLP.hpp"
 #include <list>
 
@@ -33,6 +34,9 @@ namespace Ipopt
     /**@name Constructors/Destructors */
     //@{
     /** Default constructor */
+    TNLPAdapter(const SmartPtr<ParaTNLP> tnlp,
+                const SmartPtr<const Journalist> jnlst = NULL);
+
     TNLPAdapter(const SmartPtr<TNLP> tnlp,
                 const SmartPtr<const Journalist> jnlst = NULL);
 
@@ -205,7 +209,7 @@ namespace Ipopt
     //@}
 
     /** Accessor method for the underlying TNLP. */
-    SmartPtr<TNLP> tnlp() const
+    SmartPtr<ParaTNLP> tnlp() const
     {
       return tnlp_;
     }
@@ -250,7 +254,7 @@ namespace Ipopt
 
     /** Pointer to the TNLP class (class specific to Number* vectors and
      *  harwell triplet matrices) */
-    SmartPtr<TNLP> tnlp_;
+    SmartPtr<ParaTNLP> tnlp_;
 
     /** Journalist */
     SmartPtr<const Journalist> jnlst_;

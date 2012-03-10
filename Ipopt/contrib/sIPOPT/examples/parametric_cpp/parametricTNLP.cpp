@@ -29,7 +29,7 @@ ParametricTNLP::~ParametricTNLP()
 
 bool ParametricTNLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
 				  Index& nnz_h_lag, Index& nnz_jac_g_p,
-				  Index& nnz_h_lag_p, IndexStyleEnum& index_style)
+				  Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style)
 {
   // x1, x2, x3
   n = 3;
@@ -47,7 +47,7 @@ bool ParametricTNLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_
   nnz_jac_g_p = 2;
   nnz_h_lag_p = 1;
 
-  index_style = FORTRAN_STYLE;
+  index_style = TNLP::FORTRAN_STYLE;
 
   return true;
 }
