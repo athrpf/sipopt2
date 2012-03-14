@@ -18,7 +18,7 @@ int main(int argv, char* argc[])
 {
   // Create a new instance of your nlp
   //  (use a SmartPtr, not raw)
-  SmartPtr<TNLP> mynlp = new HS071_NLP();
+  SmartPtr<ParaTNLP> mynlp = new HS071_NLP();
 
   // Create a new instance of IpoptApplication
   //  (use a SmartPtr, not raw)

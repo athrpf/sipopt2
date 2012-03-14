@@ -21,7 +21,9 @@ includeipopt_HEADERS = \
 	IpStdCInterface.h \
 	IpTNLP.hpp \
 	IpTNLPAdapter.hpp \
-	IpTNLPReducer.hpp
+	IpTNLPReducer.hpp \
+	IpParaTNLP.hpp \
+	IpParaTNLPWrapper.hpp
 
 lib_LTLIBRARIES = libipopt.la
 
@@ -38,7 +40,8 @@ libipopt_la_SOURCES = \
 	IpStdInterfaceTNLP.cpp IpStdInterfaceTNLP.hpp \
 	IpTNLP.hpp \
 	IpTNLPAdapter.cpp IpTNLPAdapter.hpp \
-	IpTNLPReducer.cpp IpTNLPReducer.hpp
+	IpTNLPReducer.cpp IpTNLPReducer.hpp \
+	IpParaTNLP.hpp IpParaTNLPWrapper.hpp
 
 libipopt_la_LIBADD = $(IPALLLIBS)
 

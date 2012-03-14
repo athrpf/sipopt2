@@ -9,7 +9,7 @@
 #ifndef __HS071_NLP_HPP__
 #define __HS071_NLP_HPP__
 
-#include "IpTNLP.hpp"
+#include "IpParaTNLP.hpp"
 
 using namespace Ipopt;
 
@@ -34,7 +34,7 @@ using namespace Ipopt;
  *
  *
  */
-class HS071_NLP : public TNLP
+class HS071_NLP : public ParaTNLP
 {
 public:
   /** default constructor */
@@ -49,7 +49,7 @@ public:
   virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                             Index& nnz_h_lag, Index& nnz_jac_g_p,
 			    Index& nnz_h_lag_p,
-			    IndexStyleEnum& index_style);
+			    TNLP::IndexStyleEnum& index_style);
 
   /** Method to return the bounds for my problem */
   virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,

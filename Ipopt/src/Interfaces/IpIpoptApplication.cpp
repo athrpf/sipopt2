@@ -669,6 +669,13 @@ namespace Ipopt
   }
 
   ApplicationReturnStatus
+  IpoptApplication::OptimizeTNLP(const SmartPtr<ParaTNLP>& tnlp)
+  {
+    nlp_adapter_ = new TNLPAdapter(GetRawPtr(tnlp), ConstPtr(jnlst_));
+    return OptimizeNLP(nlp_adapter_);
+  }
+
+  ApplicationReturnStatus
   IpoptApplication::ReOptimizeTNLP(const SmartPtr<TNLP>& tnlp)
   {
     ASSERT_EXCEPTION(IsValid(nlp_adapter_), INVALID_WARMSTART,
@@ -676,8 +683,8 @@ namespace Ipopt
     TNLPAdapter* adapter =
       static_cast<TNLPAdapter*> (GetRawPtr(nlp_adapter_));
     DBG_ASSERT(dynamic_cast<TNLPAdapter*> (GetRawPtr(nlp_adapter_)));
-    ASSERT_EXCEPTION(adapter->tnlp()==tnlp, INVALID_WARMSTART,
-                     "ReOptimizeTNLP called for different TNLP.")
+    //ASSERT_EXCEPTION(adapter->tnlp()==tnlp, INVALID_WARMSTART,
+    //                 "ReOptimizeTNLP called for different TNLP.")
 
     return ReOptimizeNLP(nlp_adapter_);
   }

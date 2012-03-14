@@ -7,12 +7,12 @@
 #ifndef __PARAMETRICTNLPEXAMPLE_HPP__
 #define __PARAMETRICTNLPEXAMPLE_HPP__
 
-#include "IpTNLP.hpp"
+#include "IpParaTNLP.hpp"
 
 namespace Ipopt
 {
 
-  class ParametricTNLP : public TNLP
+  class ParametricTNLP : public ParaTNLP
   {
   public:
 
@@ -27,7 +27,7 @@ namespace Ipopt
     /** Method to return some info about the nlp */
     virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
 			      Index& nnz_h_lag, Index& nnz_jac_g_p,
-			      Index& nnz_h_p_lag, IndexStyleEnum& index_style);
+			      Index& nnz_h_p_lag, TNLP::IndexStyleEnum& index_style);
 
     /** Method to return the bounds for my problem */
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,

@@ -1,19 +1,18 @@
-// Copyright (C) 2004, 2009 International Business Machines and others.
+// Copyright (C) 2012 Hans Pirnay
 // All Rights Reserved.
 // This code is published under the Eclipse Public License.
 //
-// $Id$
-//
-// Authors:  Carl Laird, Andreas Waechter     IBM    2004-08-13
+// Authors:  Hans Pirnay    2012-03-14
 
-#ifndef __IPTNLP_HPP__
-#define __IPTNLP_HPP__
+#ifndef __IPParaTNLPWrapper_HPP__
+#define __IPParaTNLP_HPP__
 
 #include "IpUtils.hpp"
 #include "IpReferenced.hpp"
 #include "IpException.hpp"
 #include "IpAlgTypes.hpp"
 #include "IpReturnCodes.hpp"
+#include "IpParaTNLP.hpp"
 
 #include <map>
 
@@ -32,7 +31,7 @@ namespace Ipopt
    *  ipopt.
    *
    *  This interface presents the problem form:
-   *  
+   *
    *     min f(x)
    *
    *     s.t. gL <= g(x) <= gU
@@ -47,46 +46,29 @@ namespace Ipopt
    *  variable has no upper or lower bound, set the bound to
    *  -ipopt_inf or +ipopt_inf respectively
    */
-  class TNLP : public ReferencedObject
+  class ParaTNLPWrapper : public ParaTNLP
   {
   public:
-    /** Type of the constraints*/
-    enum LinearityType
-    {
-      LINEAR/** Constraint/Variable is linear.*/,
-      NON_LINEAR/**Constraint/Varaible is non-linear.*/
-    };
-
     /**@name Constructors/Destructors */
     //@{
-    TNLP()
+    ParaTNLPWrapper(SmartPtr<TNLP> tnlp) : tnlp_(tnlp)
     {}
 
     /** Default destructor */
-    virtual ~TNLP()
+    virtual ~ParaTNLPWrapper()
     {}
     //@}
 
-    DECLARE_STD_EXCEPTION(INVALID_TNLP);
+    virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
+                              Index& nnz_h_lag, Index& nnz_jac_g_p,
+			      Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style)
+    {
+      np = 0;
+      nnz_jac_g_p = 0;
+      nnz_h_lag_p = 0;
+      return tnlp_->get_nlp_info(n, m, nnz_jac_g, nnz_h_lag, index_style);
+    }
 
-    /**@name methods to gather information about the NLP */
-    //@{
-    /** overload this method to return the number of variables
-     *  and constraints, and the number of non-zeros in the jacobian and
-     *  the hessian. The index_style parameter lets you specify C or Fortran
-     *  style indexing for the sparse matrix iRow and jCol parameters.
-     *  C_STYLE is 0-based, and FORTRAN_STYLE is 1-based.
-     */
-    enum IndexStyleEnum { C_STYLE=0, FORTRAN_STYLE=1 };
-    virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style)=0;
-
-    typedef std::map<std::string, std::vector<std::string> > StringMetaDataMapType;
-    typedef std::map<std::string, std::vector<Index> > IntegerMetaDataMapType;
-    typedef std::map<std::string, std::vector<Number> > NumericMetaDataMapType;
-
-    /** overload this method to return any meta data for
-     *  the variables and the constraints */
     virtual bool get_var_con_metadata(Index n,
                                       StringMetaDataMapType& var_string_md,
                                       IntegerMetaDataMapType& var_integer_md,
@@ -97,108 +79,115 @@ namespace Ipopt
                                       NumericMetaDataMapType& con_numeric_md)
 
     {
-      return false;
+      return tnlp_->get_var_con_metadata(n, var_string_md,
+					 var_integer_md,
+					 var_numeric_md,
+					 m,
+					 con_string_md,
+					 con_integer_md,
+					 con_numeric_md);
     }
 
-    /** overload this method to return the information about the bound
-     *  on the variables and constraints. The value that indicates
-     *  that a bound does not exist is specified in the parameters
-     *  nlp_lower_bound_inf and nlp_upper_bound_inf.  By default,
-     *  nlp_lower_bound_inf is -1e19 and nlp_upper_bound_inf is
-     *  1e19. (see TNLPAdapter) */
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
-                                 Index m, Number* g_l, Number* g_u)=0;
+                                 Index m, Number* g_l, Number* g_u)
+    {
+      return get_bounds_info(n, x_l, x_u, m, g_l, g_u);
+    }
 
-    /** overload this method to return scaling parameters. This is
-     *  only called if the options are set to retrieve user scaling.
-     *  There, use_x_scaling (or use_g_scaling) should get set to true
-     *  only if the variables (or constraints) are to be scaled.  This
-     *  method should return true only if the scaling parameters could
-     *  be provided.
-     */
+    virtual bool get_parameters(Index np, Number* p)
+    {
+      return true;
+    }
+
     virtual bool get_scaling_parameters(Number& obj_scaling,
                                         bool& use_x_scaling, Index n,
                                         Number* x_scaling,
                                         bool& use_g_scaling, Index m,
                                         Number* g_scaling)
     {
-      return false;
+      return tnlp_->get_scaling_parameters(obj_scaling, use_x_scaling, n,
+					   x_scaling, use_g_scaling, m, g_scaling);
     }
 
-    /** overload this method to return the variables linearity
-     * (TNLP::Linear or TNLP::NonLinear). The var_types
-     *  array should be allocated with length at least n. (default implementation
-     *  just return false and does not fill the array).*/
-    virtual bool get_variables_linearity(Index n, LinearityType* var_types)
+    virtual bool get_variables_linearity(Index n, TNLP::LinearityType* var_types)
     {
-      return false;
+      return tnlp_->get_variables_linearity(n, var_types);
     }
 
-    /** overload this method to return the constraint linearity.
-     * array should be alocated with length at least n. (default implementation
-     *  just return false and does not fill the array).*/
-    virtual bool get_constraints_linearity(Index m, LinearityType* const_types)
+    virtual bool get_constraints_linearity(Index m, TNLP::LinearityType* const_types)
     {
-      return false;
+      return tnlp_->get_constraints_linearity(m, const_types);
     }
 
-    /** overload this method to return the starting point. The bool
-     *  variables indicate whether the algorithm wants you to
-     *  initialize x, z_L/z_u, and lambda, respectively.  If, for some
-     *  reason, the algorithm wants you to initialize these and you
-     *  cannot, return false, which will cause Ipopt to stop.  You
-     *  will have to run Ipopt with different options then.
-     */
     virtual bool get_starting_point(Index n, bool init_x, Number* x,
                                     bool init_z, Number* z_L, Number* z_U,
                                     Index m, bool init_lambda,
-                                    Number* lambda)=0;
-
-    /** overload this method to provide an Ipopt iterate (already in
-     *  the form Ipopt requires it internally) for a warm start.
-     *  Since this is only for expert users, a default dummy
-     *  implementation is provided and returns false. */
-    virtual bool get_warm_start_iterate(IteratesVector& warm_start_iterate)
+                                    Number* lambda)
     {
-      return false;
+      return tnlp_->get_starting_point(n, init_x, x, init_z, z_L, z_U,
+				       m, init_lambda, lambda);
     }
 
-    /** overload this method to return the value of the objective function */
+    virtual bool get_warm_start_iterate(IteratesVector& warm_start_iterate)
+    {
+      return tnlp_->get_warm_start_iterate(warm_start_iterate);
+    }
+
     virtual bool eval_f(Index n, const Number* x, bool new_x,
-                        Number& obj_value)=0;
+			Index np, const Number* p, bool new_p,
+                        Number& obj_value)
+    {
+      return tnlp_->eval_f(n, x, new_x, obj_value);
+    }
 
-    /** overload this method to return the vector of the gradient of
-     *  the objective w.r.t. x */
     virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
-                             Number* grad_f)=0;
+			     Index np, const Number* p, bool new_p,
+			     Number* grad_f)
+    {
+      return tnlp_->eval_grad_f(n, x, new_x, grad_f);
+    }
 
-    /** overload this method to return the vector of constraint values */
     virtual bool eval_g(Index n, const Number* x, bool new_x,
-                        Index m, Number* g)=0;
-    /** overload this method to return the jacobian of the
-     *  constraints. The vectors iRow and jCol only need to be set
-     *  once. The first call is used to set the structure only (iRow
-     *  and jCol will be non-NULL, and values will be NULL) For
-     *  subsequent calls, iRow and jCol will be NULL. */
-    virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
-                            Index m, Index nele_jac, Index* iRow,
-                            Index *jCol, Number* values)=0;
+			Index np, const Number* p, bool new_p,
+                        Index m, Number* g)
+    {
+      return tnlp_->eval_g(n, x, new_x, m, g);
+    }
 
-    /** overload this method to return the hessian of the
-     *  lagrangian. The vectors iRow and jCol only need to be set once
-     *  (during the first call). The first call is used to set the
-     *  structure only (iRow and jCol will be non-NULL, and values
-     *  will be NULL) For subsequent calls, iRow and jCol will be
-     *  NULL. This matrix is symmetric - specify the lower diagonal
-     *  only.  A default implementation is provided, in case the user
-     *  wants to se quasi-Newton approximations to estimate the second
-     *  derivatives and doesn't not neet to implement this method. */
+    virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
+                            Index m, Index nele_jac, Index* iRow,
+                            Index *jCol, Number* values)
+    {
+      return tnlp_->eval_jac_g(n, x, new_x, m, nele_jac, iRow, jCol, values);
+    }
+
+    virtual bool eval_jac_g_p(Index n, const Number* x, bool new_x,
+			      Index np, const Number* p, bool new_p,
+			      Index m, Index nele_jac, Index* iRow,
+			      Index *jCol, Number* values)
+    {
+      return true;
+    }
+
     virtual bool eval_h(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
                         Number obj_factor, Index m, const Number* lambda,
                         bool new_lambda, Index nele_hess,
                         Index* iRow, Index* jCol, Number* values)
     {
-      return false;
+      return tnlp_->eval_h(n, x, new_x, obj_factor, m, lambda, new_lambda, nele_hess,
+			   iRow, jCol, values);
+    }
+
+    virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
+			   Index np, const Number* p, bool new_p,
+			   Number obj_factor, Index m,
+			   const Number* lambda, bool new_lambda,
+			   Index nele_hess_p, Index* iRow, Index* jCol,
+			   Number* values)
+    {
+      return true;
     }
     //@}
 
@@ -210,19 +199,11 @@ namespace Ipopt
                                    Index m, const Number* g, const Number* lambda,
                                    Number obj_value,
                                    const IpoptData* ip_data,
-                                   IpoptCalculatedQuantities* ip_cq)=0;
-    /** This method is called just before finalize_solution.  With
-     *  this method, the algorithm returns any metadata collected
-     *  during its run, including the metadata provided by the user
-     *  with the above get_var_con_metada.  Each metadata can be of
-     *  type string, integer, and numeric. It can be associated to
-     *  either the variables or the constraints.  The metadata that
-     *  was associated with the primal variable vector is stored in
-     *  var_..._md.  The metadata associated with the constraint
-     *  multipliers is stored in con_..._md.  The metadata associated
-     *  with the bound multipliers is stored in var_..._md, with the
-     *  suffixes "_z_L", and "_z_U", denoting lower and upper
-     *  bounds. */
+                                   IpoptCalculatedQuantities* ip_cq)
+    {
+      return tnlp_->finalize_solution(status, n, x, z_L, z_U, m, g, lambda, obj_value, ip_data, ip_cq);
+    }
+
     virtual void finalize_metadata(Index n,
                                    const StringMetaDataMapType& var_string_md,
                                    const IntegerMetaDataMapType& var_integer_md,
@@ -231,7 +212,15 @@ namespace Ipopt
                                    const StringMetaDataMapType& con_string_md,
                                    const IntegerMetaDataMapType& con_integer_md,
                                    const NumericMetaDataMapType& con_numeric_md)
-    {}
+    {
+      return tnlp_->finalize_metadata(n, var_string_md,
+				      var_integer_md,
+				      var_numeric_md,
+				      m,
+				      con_string_md,
+				      con_integer_md,
+				      con_numeric_md);
+    }
 
 
     /** Intermediate Callback method for the user.  Providing dummy
@@ -247,7 +236,9 @@ namespace Ipopt
                                        const IpoptData* ip_data,
                                        IpoptCalculatedQuantities* ip_cq)
     {
-      return true;
+      return tnlp_->intermediate_callback(mode, iter, obj_value, inf_pr, inf_du,
+					  mu, d_norm, regularization_size, alpha_du,
+					  alpha_pr, ls_trials, ip_data, ip_cq);
     }
     //@}
 
@@ -266,34 +257,36 @@ namespace Ipopt
     //@{
     virtual Index get_number_of_nonlinear_variables()
     {
-      return -1;
+      return tnlp_->get_number_of_nonlinear_variables();
     }
 
     virtual bool get_list_of_nonlinear_variables(Index num_nonlin_vars,
         Index* pos_nonlin_vars)
     {
-      return false;
+      return tnlp_->get_list_of_nonlinear_variables(num_nonlin_vars, pos_nonlin_vars);
     }
     //@}
 
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
      * they will not be implicitly created/called. */
     //@{
     /** Default Constructor */
-    //TNLP();
+    //ParaTNLPWrapper();
 
     /** Copy Constructor */
-    TNLP(const TNLP&);
+    ParaTNLPWrapper(const ParaTNLPWrapper&);
 
     /** Overloaded Equals Operator */
-    void operator=(const TNLP&);
+    void operator=(const ParaTNLPWrapper&);
     //@}
+
+    SmartPtr<TNLP> tnlp_;
   };
 
 } // namespace Ipopt

@@ -1,4 +1,4 @@
-// Copyright (C) 2004, 2009 International Business Machines and others.
+// Copyright (C) 2004, 2009, 2012 International Business Machines and others.
 // All Rights Reserved.
 // This code is published under the Eclipse Public License.
 //
@@ -6,14 +6,15 @@
 //
 // Authors:  Carl Laird, Andreas Waechter     IBM    2004-08-13
 
-#ifndef __IPTNLP_HPP__
-#define __IPTNLP_HPP__
+#ifndef __IPParaTNLP_HPP__
+#define __IPParaTNLP_HPP__
 
 #include "IpUtils.hpp"
 #include "IpReferenced.hpp"
 #include "IpException.hpp"
 #include "IpAlgTypes.hpp"
 #include "IpReturnCodes.hpp"
+#include "IpTNLP.hpp"
 
 #include <map>
 
@@ -32,7 +33,7 @@ namespace Ipopt
    *  ipopt.
    *
    *  This interface presents the problem form:
-   *  
+   *
    *     min f(x)
    *
    *     s.t. gL <= g(x) <= gU
@@ -47,27 +48,21 @@ namespace Ipopt
    *  variable has no upper or lower bound, set the bound to
    *  -ipopt_inf or +ipopt_inf respectively
    */
-  class TNLP : public ReferencedObject
+  class ParaTNLP : public ReferencedObject
   {
   public:
-    /** Type of the constraints*/
-    enum LinearityType
-    {
-      LINEAR/** Constraint/Variable is linear.*/,
-      NON_LINEAR/**Constraint/Varaible is non-linear.*/
-    };
-
     /**@name Constructors/Destructors */
     //@{
-    TNLP()
+    ParaTNLP()
     {}
 
     /** Default destructor */
-    virtual ~TNLP()
+    virtual ~ParaTNLP()
     {}
     //@}
 
     DECLARE_STD_EXCEPTION(INVALID_TNLP);
+    DECLARE_STD_EXCEPTION(TNLP_IS_PARAMETRIC);
 
     /**@name methods to gather information about the NLP */
     //@{
@@ -77,9 +72,9 @@ namespace Ipopt
      *  style indexing for the sparse matrix iRow and jCol parameters.
      *  C_STYLE is 0-based, and FORTRAN_STYLE is 1-based.
      */
-    enum IndexStyleEnum { C_STYLE=0, FORTRAN_STYLE=1 };
-    virtual bool get_nlp_info(Index& n, Index& m, Index& nnz_jac_g,
-                              Index& nnz_h_lag, IndexStyleEnum& index_style)=0;
+    virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
+                              Index& nnz_h_lag, Index& nnz_jac_g_p,
+			      Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style)=0;
 
     typedef std::map<std::string, std::vector<std::string> > StringMetaDataMapType;
     typedef std::map<std::string, std::vector<Index> > IntegerMetaDataMapType;
@@ -109,6 +104,8 @@ namespace Ipopt
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
                                  Index m, Number* g_l, Number* g_u)=0;
 
+    virtual bool get_parameters(Index np, Number* p)=0;
+
     /** overload this method to return scaling parameters. This is
      *  only called if the options are set to retrieve user scaling.
      *  There, use_x_scaling (or use_g_scaling) should get set to true
@@ -129,7 +126,7 @@ namespace Ipopt
      * (TNLP::Linear or TNLP::NonLinear). The var_types
      *  array should be allocated with length at least n. (default implementation
      *  just return false and does not fill the array).*/
-    virtual bool get_variables_linearity(Index n, LinearityType* var_types)
+    virtual bool get_variables_linearity(Index n, TNLP::LinearityType* var_types)
     {
       return false;
     }
@@ -137,7 +134,7 @@ namespace Ipopt
     /** overload this method to return the constraint linearity.
      * array should be alocated with length at least n. (default implementation
      *  just return false and does not fill the array).*/
-    virtual bool get_constraints_linearity(Index m, LinearityType* const_types)
+    virtual bool get_constraints_linearity(Index m, TNLP::LinearityType* const_types)
     {
       return false;
     }
@@ -165,24 +162,35 @@ namespace Ipopt
 
     /** overload this method to return the value of the objective function */
     virtual bool eval_f(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
                         Number& obj_value)=0;
 
     /** overload this method to return the vector of the gradient of
      *  the objective w.r.t. x */
     virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
-                             Number* grad_f)=0;
+			     Index np, const Number* p, bool new_p,
+			     Number* grad_f)=0;
 
     /** overload this method to return the vector of constraint values */
     virtual bool eval_g(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
                         Index m, Number* g)=0;
+
     /** overload this method to return the jacobian of the
      *  constraints. The vectors iRow and jCol only need to be set
      *  once. The first call is used to set the structure only (iRow
      *  and jCol will be non-NULL, and values will be NULL) For
      *  subsequent calls, iRow and jCol will be NULL. */
     virtual bool eval_jac_g(Index n, const Number* x, bool new_x,
+			    Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values)=0;
+
+    /** Jacobian of constraints w.r.t. parameters */
+    virtual bool eval_jac_g_p(Index n, const Number* x, bool new_x,
+			      Index np, const Number* p, bool new_p,
+			      Index m, Index nele_jac, Index* iRow,
+			      Index *jCol, Number* values)=0;
 
     /** overload this method to return the hessian of the
      *  lagrangian. The vectors iRow and jCol only need to be set once
@@ -194,12 +202,23 @@ namespace Ipopt
      *  wants to se quasi-Newton approximations to estimate the second
      *  derivatives and doesn't not neet to implement this method. */
     virtual bool eval_h(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
                         Number obj_factor, Index m, const Number* lambda,
                         bool new_lambda, Index nele_hess,
-                        Index* iRow, Index* jCol, Number* values)
-    {
-      return false;
-    }
+                        Index* iRow, Index* jCol, Number* values)=0;
+
+    /** overload this method to return the sensitivity of the first
+     *  order derivative of the lagrangian w.r.t. to the parameters.
+     *  As with the other functions for getting second order derivatives,
+     *  The function works in the same way as eval_h.
+     *  The row corresponds to x, the column to p.
+     */
+    virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
+			   Index np, const Number* p, bool new_p,
+			   Number obj_factor, Index m,
+			   const Number* lambda, bool new_lambda,
+			   Index nele_hess_p, Index* iRow, Index* jCol,
+			   Number* values)=0;
     //@}
 
     /** @name Solution Methods */
@@ -279,20 +298,20 @@ namespace Ipopt
   private:
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that
      * they will not be implicitly created/called. */
     //@{
     /** Default Constructor */
-    //TNLP();
+    //ParaTNLP();
 
     /** Copy Constructor */
-    TNLP(const TNLP&);
+    ParaTNLP(const ParaTNLP&);
 
     /** Overloaded Equals Operator */
-    void operator=(const TNLP&);
+    void operator=(const ParaTNLP&);
     //@}
   };
 
