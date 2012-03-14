@@ -24,7 +24,7 @@ HS071_NLP::~HS071_NLP()
 // returns the size of the problem
 bool HS071_NLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                              Index& nnz_h_lag, Index& nnz_jac_g_p,
-			     Index& nnz_h_lag_p, IndexStyleEnum& index_style)
+			     Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style)
 {
   // The problem described in HS071_NLP.hpp has 4 variables, x[0] through x[3]
   n = 4;
