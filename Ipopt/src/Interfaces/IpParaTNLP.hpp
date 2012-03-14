@@ -51,6 +51,8 @@ namespace Ipopt
   class ParaTNLP : public ReferencedObject
   {
   public:
+    typedef TNLP::LinearityType LinearityType;
+    typedef TNLP::IndexStyleEnum IndexStyleEnum;
     /**@name Constructors/Destructors */
     //@{
     ParaTNLP()

@@ -10,7 +10,7 @@
 #define __IPAMPLTNLP_HPP__
 
 #include "IpUtils.hpp"
-#include "IpTNLP.hpp"
+#include "IpParaTNLP.hpp"
 #include "IpJournalist.hpp"
 #include "IpOptionsList.hpp"
 
@@ -264,7 +264,7 @@ namespace Ipopt
   /** Ampl Interface.
    *  Ampl Interface, implemented as a TNLP.
    */
-  class AmplTNLP : public TNLP
+  class AmplTNLP : public ParaTNLP
   {
   public:
     /**@name Constructors/Destructors */
@@ -294,7 +294,7 @@ namespace Ipopt
     /** returns dimensions of the nlp. Overloaded from TNLP */
     virtual bool get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                               Index& nnz_h_lag, Index& nnz_jac_g_p,
-			      Index& nnz_h_lag_p, IndexStyleEnum& index_style);
+			      Index& nnz_h_lag_p, TNLP::IndexStyleEnum& index_style);
 
     /** returns names and other meta data for the variables and constraints
      *  Overloaded from TNLP */
@@ -310,6 +310,8 @@ namespace Ipopt
     /** returns bounds of the nlp. Overloaded from TNLP */
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
                                  Index m, Number* g_l, Number* g_u);
+
+    virtual bool get_parameters(Index np, Number* p);
 
     /** Returns the constraint linearity.
      * array will be alocated with length n. (default implementation
@@ -333,10 +335,12 @@ namespace Ipopt
     /** evaluates the gradient of the objective for the
     nlp. Overloaded from TNLP */
     virtual bool eval_grad_f(Index n, const Number* x, bool new_x,
+			     Index np, const Number* p, bool new_p,
                              Number* grad_f);
 
     /** evaluates the constraint residuals for the nlp. Overloaded from TNLP */
     virtual bool eval_g(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
                         Index m, Number* g);
 
     /** specifies the jacobian structure (if values is NULL) and
@@ -350,7 +354,7 @@ namespace Ipopt
     /** specifies the jacobian structure (if values is NULL) and
      *  evaluates the jacobian values (if values is not NULL) for the
      *  nlp. Overloaded from TNLP */
-    virtual bool eval_jac_gp(Index n, const Number* x, bool new_x,
+    virtual bool eval_jac_g_p(Index n, const Number* x, bool new_x,
                              Index np, const Number* p, bool new_p,
                              Index m, Index nele_jac, Index* iRow,
                              Index *jCol, Number* values);
@@ -367,7 +371,7 @@ namespace Ipopt
     /** specifies the structure of the hessian of the lagrangian (if
      *  values is NULL) and evaluates the values (if values is not
      *  NULL). Overloaded from TNLP */
-    virtual bool eval_h_xp(Index n, const Number* x, bool new_x,
+    virtual bool eval_L_xp(Index n, const Number* x, bool new_x,
                            Index np, const Number* p, bool new_p,
                            Number obj_factor, Index m, const Number* lambda,
                            bool new_lambda, Index nele_hess, Index* iRow,

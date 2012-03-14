@@ -26,7 +26,7 @@ option presolve 0;
 
 # turn presolve off so no variables / equations are eliminated
 # by AMPL
-option solver ipopt;
+option solver valipopt;
 
 # set run_sens to yes
 #option ipopt_options 'run_sens yes';

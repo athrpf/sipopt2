@@ -49,7 +49,7 @@ namespace Ipopt
                      const char* ampl_banner_string /* = NULL */,
                      std::string* nl_file_content /* = NULL */)
       :
-      TNLP(),
+      ParaTNLP(),
       jnlst_(jnlst),
       asl_(NULL),
       obj_sign_(1),
@@ -118,7 +118,7 @@ namespace Ipopt
     else {
       if (!stub) {
         jnlst_->Printf(J_ERROR, J_MAIN, "No .nl file given!\n");
-        THROW_EXCEPTION(INVALID_TNLP, "No .nl file given!\n");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "No .nl file given!\n");
       }
       nl = jac0dim(stub, (fint)strlen(stub));
       DBG_ASSERT(nl);
@@ -167,43 +167,43 @@ namespace Ipopt
       break;
     case ASL_readerr_nofile : {
         jnlst_->Printf(J_ERROR, J_MAIN, "Cannot open .nl file\n");
-        THROW_EXCEPTION(INVALID_TNLP, "Cannot open .nl file");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "Cannot open .nl file");
       }
       break;
     case ASL_readerr_nonlin : {
         DBG_ASSERT(false); // this better not be an error!
         jnlst_->Printf(J_ERROR, J_MAIN, "model involves nonlinearities (ed0read)\n");
-        THROW_EXCEPTION(INVALID_TNLP, "model involves nonlinearities (ed0read)");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "model involves nonlinearities (ed0read)");
       }
       break;
     case  ASL_readerr_argerr : {
         jnlst_->Printf(J_ERROR, J_MAIN, "user-defined function with bad args\n");
-        THROW_EXCEPTION(INVALID_TNLP, "user-defined function with bad args");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "user-defined function with bad args");
       }
       break;
     case ASL_readerr_unavail : {
         jnlst_->Printf(J_ERROR, J_MAIN, "user-defined function not available\n");
-        THROW_EXCEPTION(INVALID_TNLP, "user-defined function not available");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "user-defined function not available");
       }
       break;
     case ASL_readerr_corrupt : {
         jnlst_->Printf(J_ERROR, J_MAIN, "corrupt .nl file\n");
-        THROW_EXCEPTION(INVALID_TNLP, "corrupt .nl file");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "corrupt .nl file");
       }
       break;
     case ASL_readerr_bug : {
         jnlst_->Printf(J_ERROR, J_MAIN, "bug in .nl reader\n");
-        THROW_EXCEPTION(INVALID_TNLP, "bug in .nl reader");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "bug in .nl reader");
       }
       break;
     case ASL_readerr_CLP : {
         jnlst_->Printf(J_ERROR, J_MAIN, "Ampl model contains a constraint without \"=\", \">=\", or \"<=\".\n");
-        THROW_EXCEPTION(INVALID_TNLP, "Ampl model contains a constraint without \"=\", \">=\", or \"<=\".");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "Ampl model contains a constraint without \"=\", \">=\", or \"<=\".");
       }
       break;
     default: {
         jnlst_->Printf(J_ERROR, J_MAIN, "Unknown error in stub file read. retcode = %d\n", retcode);
-        THROW_EXCEPTION(INVALID_TNLP, "Unknown error in stub file read");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "Unknown error in stub file read");
       }
       break;
     }
@@ -330,7 +330,7 @@ namespace Ipopt
   {
     if (hesset_called_) {
       jnlst_->Printf(J_ERROR, J_MAIN, "Internal error: AmplTNLP::set_active_objective called after AmplTNLP::call_hesset.\n");
-      THROW_EXCEPTION(INVALID_TNLP, "Internal error: AmplTNLP::set_active_objective called after AmplTNLP::call_hesset.");
+      THROW_EXCEPTION(TNLP::INVALID_TNLP, "Internal error: AmplTNLP::set_active_objective called after AmplTNLP::call_hesset.");
     }
     ASL_pfgh* asl = asl_;
     obj_no = in_obj_no;
@@ -341,7 +341,7 @@ namespace Ipopt
   {
     if (hesset_called_) {
       jnlst_->Printf(J_ERROR, J_MAIN, "Internal error: AmplTNLP::call_hesset is called twice.\n");
-      THROW_EXCEPTION(INVALID_TNLP, "Internal error: AmplTNLP::call_hesset is called twice.");
+      THROW_EXCEPTION(TNLP::INVALID_TNLP, "Internal error: AmplTNLP::call_hesset is called twice.");
     }
 
     ASL_pfgh* asl = asl_;
@@ -353,7 +353,7 @@ namespace Ipopt
       if (n_obj>1 && !set_active_objective_called_) {
         jnlst_->Printf(J_ERROR, J_MAIN,
                        "There is more than one objective function in the AMPL model, but AmplTNLP::set_active_objective has not been called.\n");
-        THROW_EXCEPTION(INVALID_TNLP, "There is more than one objective function in the AMPL model, but AmplTNLP::set_active_objective has not been called");
+        THROW_EXCEPTION(TNLP::INVALID_TNLP, "There is more than one objective function in the AMPL model, but AmplTNLP::set_active_objective has not been called");
       }
       // see "changes" in solvers directory of ampl code...
       hesset(1,obj_no,1,0,nlc);
@@ -573,6 +573,11 @@ namespace Ipopt
     return true;
   }
 
+  bool AmplTNLP::get_parameters(Index np, Number* p)
+  {
+    return false;
+  }
+
 
   bool AmplTNLP::get_constraints_linearity(Index n,
       LinearityType* const_types)
@@ -584,11 +589,11 @@ namespace Ipopt
     DBG_ASSERT(nlnc == 0 && lnc == 0);
     //the first nlc constraints are non linear the rest is linear
     for (Index i=0; i<nlc; i++) {
-      const_types[i]=NON_LINEAR;
+      const_types[i]=TNLP::NON_LINEAR;
     }
     // the rest is linear
     for (Index i=nlc; i<n_con; i++)
-      const_types[i]=LINEAR;
+      const_types[i]=TNLP::LINEAR;
     return true;
   }
 
@@ -664,10 +669,13 @@ namespace Ipopt
       return internal_objval(var_and_para_x_, obj_value);
     }
 
-  bool AmplTNLP::eval_grad_f(Index n, const Number* x, bool new_x, Number* grad_f)
+  bool AmplTNLP::eval_grad_f(Index n, const Number* x, bool new_x,
+			     Index np, const Number* p, bool new_p,
+			     Number* grad_f)
   {
     DBG_START_METH("AmplTNLP::eval_grad_f",
                    dbg_verbosity);
+    return false;
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
 
@@ -695,10 +703,12 @@ namespace Ipopt
     return true;
   }
 
-  bool AmplTNLP::eval_g(Index n, const Number* x, bool new_x, Index m, Number* g)
+  bool AmplTNLP::eval_g(Index n, const Number* x, bool new_x,
+			Index np, const Number* p, bool new_p,
+			Index m, Number* g)
   {
     DBG_START_METH("AmplTNLP::eval_g", dbg_verbosity);
-
+    return false;
     DBG_DO(ASL_pfgh* asl = asl_);
     DBG_ASSERT(n == n_var);
     DBG_ASSERT(m == n_con);
@@ -752,7 +762,7 @@ namespace Ipopt
     return false;
   }
 
-  bool AmplTNLP::eval_jac_gp(Index n, const Number* x, bool new_x,
+  bool AmplTNLP::eval_jac_g_p(Index n, const Number* x, bool new_x,
                              Index np, const Number* p, bool new_p,
                              Index m, Index nele_jac, Index* iRow,
                              Index *jCol, Number* values)
@@ -852,7 +862,7 @@ namespace Ipopt
     return false;
   }
 
-  bool AmplTNLP::eval_h_xp(Index n, const Number* x, bool new_x,
+  bool AmplTNLP::eval_L_xp(Index n, const Number* x, bool new_x,
                            Index np, const Number* p, bool new_p,
                            Number obj_factor, Index m, const Number* lambda,
                            bool new_lambda, Index nele_hess, Index* iRow,
