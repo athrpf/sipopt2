@@ -322,6 +322,7 @@ namespace Ipopt
     /** provides a starting point for the nlp variables. Overloaded
     from TNLP */
     virtual bool get_starting_point(Index n, bool init_x, Number* x,
+                                  /*Index np, bool init_p, Number* p,*/
                                     bool init_z, Number* z_L, Number* z_U,
                                     Index m, bool init_lambda, Number* lambda);
 

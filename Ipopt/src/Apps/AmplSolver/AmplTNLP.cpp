@@ -618,22 +618,35 @@ namespace Ipopt
   }
 
   bool AmplTNLP::get_starting_point(Index n, bool init_x, Number* x,
+                                  /*Index np, bool init_p, Number* p,*/
                                              bool init_z, Number* z_L, Number* z_U, Index m,
                                              bool init_lambda, Number* lambda)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
-    DBG_ASSERT(n == n_var);
+    DBG_ASSERT(n+np == n_var);
     DBG_ASSERT(m == n_con);
 
     if (init_x) {
       for (Index i=0; i<n; i++) {
-        if (havex0[i]) {
-          x[i] = X0[i];
+        if (havex0[var_x_[i]]) {
+          x[i] = X0[var_x_[i]];
         }
         else {
           x[i] = 0.0;
         }
+      }
+    }
+
+
+    if (/*init_p*/init_x) {
+      for (Index i=0; i<paraCnt_; i++) {
+        //if (havex0[para_x_[i]]) {
+          //x[i] = X0[para_x_[i]];
+        //}
+        //else {
+          //x[i] = 0.0;
+        //}
       }
     }
 
@@ -642,7 +655,7 @@ namespace Ipopt
       DBG_ASSERT(IsValid(suffix_handler_));
       const double* zL_init = suffix_handler_->GetNumberSuffixValues("ipopt_zL_in", AmplSuffixHandler::Variable_Source);
       const double* zU_init = suffix_handler_->GetNumberSuffixValues("ipopt_zU_in", AmplSuffixHandler::Variable_Source);
-      for (Index i=0; i<n; i++) {
+      for (Index i=0; i<n_var; i++) {
         if (zL_init) {
           z_L[i]=zL_init[i];
         }
