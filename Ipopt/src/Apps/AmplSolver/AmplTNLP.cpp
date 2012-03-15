@@ -587,7 +587,7 @@ namespace Ipopt
 
     return true;
   }
-
+  /*
   bool AmplTNLP::get_parameters(Index np, Number* p)
   {
     DBG_ASSERT(np == paraCnt_);
@@ -596,7 +596,7 @@ namespace Ipopt
       p[i] = var_and_para_x_[para_x_[i]];
     }
     return true;
-  }
+    }*/
 
 
   bool AmplTNLP::get_constraints_linearity(Index n,
@@ -618,9 +618,9 @@ namespace Ipopt
   }
 
   bool AmplTNLP::get_starting_point(Index n, bool init_x, Number* x,
-                                  /*Index np, bool init_p, Number* p,*/
-                                             bool init_z, Number* z_L, Number* z_U, Index m,
-                                             bool init_lambda, Number* lambda)
+				    Index np, bool init_p, Number* p,
+				    bool init_z, Number* z_L, Number* z_U, Index m,
+				    bool init_lambda, Number* lambda)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
@@ -639,14 +639,15 @@ namespace Ipopt
     }
 
 
-    if (/*init_p*/init_x) {
+    if (init_p) {
       for (Index i=0; i<paraCnt_; i++) {
-        //if (havex0[para_x_[i]]) {
-          //x[i] = X0[para_x_[i]];
-        //}
-        //else {
-          //x[i] = 0.0;
-        //}
+        if (havex0[para_x_[i]]) {
+          x[i] = X0[para_x_[i]];
+	}
+        else {
+	  THROW_EXCEPTION(TNLP::INVALID_TNLP, "A parameter was not set explicitly!\n");
+          x[i] = 0.0;
+	}
       }
     }
 
@@ -655,15 +656,15 @@ namespace Ipopt
       DBG_ASSERT(IsValid(suffix_handler_));
       const double* zL_init = suffix_handler_->GetNumberSuffixValues("ipopt_zL_in", AmplSuffixHandler::Variable_Source);
       const double* zU_init = suffix_handler_->GetNumberSuffixValues("ipopt_zU_in", AmplSuffixHandler::Variable_Source);
-      for (Index i=0; i<n_var; i++) {
+      for (Index i=0; i<n; i++) {
         if (zL_init) {
-          z_L[i]=zL_init[i];
+          z_L[i]=zL_init[var_x_[i]];
         }
         else {
           z_L[i] =1.0;
         }
         if (zU_init) {
-          z_U[i]=zU_init[i];
+          z_U[i]=zU_init[var_x_[i]];
         }
         else {
           z_U[i] =1.0;
@@ -710,7 +711,6 @@ namespace Ipopt
   {
     DBG_START_METH("AmplTNLP::eval_grad_f",
                    dbg_verbosity);
-    return false;
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
 
@@ -749,7 +749,6 @@ namespace Ipopt
 			                  Index m, Number* g)
   {
     DBG_START_METH("AmplTNLP::eval_g", dbg_verbosity);
-    return false;
     DBG_DO(ASL_pfgh* asl = asl_);
     DBG_ASSERT((n+np) == n_var);
     DBG_ASSERT(m == n_con);
