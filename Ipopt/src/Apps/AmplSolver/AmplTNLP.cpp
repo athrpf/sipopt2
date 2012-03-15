@@ -642,11 +642,11 @@ namespace Ipopt
     if (init_p) {
       for (Index i=0; i<paraCnt_; i++) {
         if (havex0[para_x_[i]]) {
-          x[i] = X0[para_x_[i]];
+          p[i] = X0[para_x_[i]];
 	}
         else {
 	  THROW_EXCEPTION(TNLP::INVALID_TNLP, "A parameter was not set explicitly!\n");
-          x[i] = 0.0;
+          p[i] = 0.0;
 	}
       }
     }
