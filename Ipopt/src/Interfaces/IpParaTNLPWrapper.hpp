@@ -93,11 +93,11 @@ namespace Ipopt
     {
       return get_bounds_info(n, x_l, x_u, m, g_l, g_u);
     }
-
+    /*
     virtual bool get_parameters(Index np, Number* p)
     {
       return true;
-    }
+      }*/
 
     virtual bool get_scaling_parameters(Number& obj_scaling,
                                         bool& use_x_scaling, Index n,
@@ -120,6 +120,7 @@ namespace Ipopt
     }
 
     virtual bool get_starting_point(Index n, bool init_x, Number* x,
+				    Index np, bool init_p, Number* p,
                                     bool init_z, Number* z_L, Number* z_U,
                                     Index m, bool init_lambda,
                                     Number* lambda)

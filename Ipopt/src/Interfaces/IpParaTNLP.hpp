@@ -106,7 +106,7 @@ namespace Ipopt
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
                                  Index m, Number* g_l, Number* g_u)=0;
 
-    virtual bool get_parameters(Index np, Number* p)=0;
+    //virtual bool get_parameters(Index np, Number* p)=0;
 
     /** overload this method to return scaling parameters. This is
      *  only called if the options are set to retrieve user scaling.
@@ -149,6 +149,7 @@ namespace Ipopt
      *  will have to run Ipopt with different options then.
      */
     virtual bool get_starting_point(Index n, bool init_x, Number* x,
+				    Index np, bool init_p, Number* p,
                                     bool init_z, Number* z_L, Number* z_U,
                                     Index m, bool init_lambda,
                                     Number* lambda)=0;

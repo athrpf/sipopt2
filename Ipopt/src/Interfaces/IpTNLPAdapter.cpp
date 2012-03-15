@@ -1665,10 +1665,12 @@ namespace Ipopt
     bool init_x = need_x;
     bool init_z = need_z_L || need_z_U;
     bool init_lambda = need_y_c || need_y_d;
-
+    bool init_p = true;
     bool retvalue =
-      tnlp_->get_starting_point(n_full_x_, init_x, full_x, init_z,
-                                full_z_l, full_z_u, n_full_g_, init_lambda,
+      tnlp_->get_starting_point(n_full_x_, init_x, full_x,
+				n_full_p_, init_p, full_p_,
+				init_z, full_z_l, full_z_u,
+				n_full_g_, init_lambda,
                                 full_lambda);
 
     if (!retvalue) {
@@ -1781,7 +1783,7 @@ namespace Ipopt
     if (n_full_p_>0) {
       SmartPtr<DenseVector> dp = dynamic_cast<DenseVector*>(GetRawPtr(p));
       Number* p_values = dp->Values();
-      return tnlp_->get_parameters(n_full_p_, p_values);
+      //return tnlp_->get_parameters(n_full_p_, p_values);
     }
     return true;
   }
@@ -2846,10 +2848,10 @@ namespace Ipopt
     // Obtain starting point as reference point at which derivative
     // test should be performed
     Number* xref = new Number[nx];
-    tnlp_->get_starting_point(nx, true, xref, false, NULL, NULL, ng, false, NULL);
-
     Number* pref = new Number[np];
-    tnlp_->get_parameters(np, pref);
+    tnlp_->get_starting_point(nx, true, xref, np, true, pref, false, NULL, NULL, ng, false, NULL);
+
+    //tnlp_->get_parameters(np, pref);
 
     // Perform a random perturbation.  We need the bounds to make sure
     // they are not violated
@@ -3257,9 +3259,11 @@ namespace Ipopt
 
     // First we evaluate the equality constraint Jacobian at the
     // starting point with some random perturbation (projected into bounds)
-    if (!tnlp_->get_starting_point(n_full_x_, true, full_x_, false, NULL,
-                                   NULL, n_full_g_, false, NULL) ||
-	!tnlp_->get_parameters(n_full_p_, full_p_)) {
+    if (!tnlp_->get_starting_point(n_full_x_, true, full_x_,
+				   n_full_p_, true, full_p_,
+				   false, NULL,
+                                   NULL, n_full_g_, false, NULL) ) {
+	//!tnlp_->get_parameters(n_full_p_, full_p_)) {
       delete [] jac_c_iRow;
       delete [] jac_c_jCol;
       delete [] jac_c_map;
