@@ -1781,9 +1781,19 @@ namespace Ipopt
   {
     DBG_START_METH("TNLPAdapter::GetParameters", dbg_verbosity);
     if (n_full_p_>0) {
+      // this call to get_starting_point might be unnecessary.
+      // If it has been called before, we don't need to do it again...
+      Number* full_x = new Number[n_full_x_];
+      tnlp_->get_starting_point(n_full_x_, true, full_x,
+				n_full_p_, true, full_p_,
+				false, NULL,
+				NULL, n_full_g_, false, NULL);
+      delete[] full_x;
       SmartPtr<DenseVector> dp = dynamic_cast<DenseVector*>(GetRawPtr(p));
       Number* p_values = dp->Values();
-      //return tnlp_->get_parameters(n_full_p_, p_values);
+      for (Index k=0; k<n_full_p_; ++k) {
+	p_values[k] = full_p_[k];
+      }
     }
     return true;
   }
