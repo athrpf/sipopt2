@@ -434,10 +434,6 @@ namespace Ipopt
         delete [] para_jac_;
         para_jac_ = NULL;
       }
-      if(parameter_flags_){
-        delete [] parameter_flags_;
-        parameter_flags_ = NULL;
-      }
       if(index_in_var_or_para_){
         delete [] index_in_var_or_para_;
         index_in_var_or_para_ = NULL;
@@ -968,16 +964,18 @@ namespace Ipopt
                                    IpoptCalculatedQuantities* ip_cq)
   {
     ASL_pfgh* asl = asl_;
-
+    apply_new_xp(true, n, x,
+		 false, paraCnt_, NULL);
+    /* x_sol_ is not needed anymore - we have var_and_para_x_
     if (!x_sol_) {
       x_sol_ = new Number[n];
-    }
-    if (!z_L_sol_) {
+      }*/
+    /*if (!z_L_sol_) {
       z_L_sol_ = new Number[n];
     }
     if (!z_U_sol_) {
       z_U_sol_ = new Number[n];
-    }
+      }*/
     if (!g_sol_) {
       g_sol_ = new Number[m];
     }
@@ -985,9 +983,9 @@ namespace Ipopt
       lambda_sol_ = new Number[m];
     }
 
-    IpBlasDcopy(n, x, 1, x_sol_, 1);
-    IpBlasDcopy(n, z_L, 1, z_L_sol_, 1);
-    IpBlasDcopy(n, z_U, 1, z_U_sol_, 1);
+    //IpBlasDcopy(n, x, 1, x_sol_, 1);
+    //IpBlasDcopy(n, z_L, 1, z_L_sol_, 1); These must be resorted!
+    //IpBlasDcopy(n, z_U, 1, z_U_sol_, 1);
     IpBlasDcopy(m, g, 1, g_sol_, 1);
     IpBlasDcopy(m, lambda, 1, lambda_sol_, 1);
     obj_sol_ = obj_value;
@@ -1036,8 +1034,8 @@ namespace Ipopt
 
     if (IsValid(suffix_handler_)) {
       // Modified for warm-start from AMPL. Assign Bound Multipliers as Suffixes
-      suf_rput("ipopt_zL_out", ASL_Sufkind_var,  z_L_sol_);
-      suf_rput("ipopt_zU_out", ASL_Sufkind_var,  z_U_sol_);
+      //suf_rput("ipopt_zL_out", ASL_Sufkind_var,  z_L_sol_);
+      //suf_rput("ipopt_zU_out", ASL_Sufkind_var,  z_U_sol_);
     }
 
     // Write the .sol file
@@ -1167,14 +1165,14 @@ namespace Ipopt
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl);
-    DBG_ASSERT(x_sol_ && lambda_sol_);
+    DBG_ASSERT(lambda_sol_);
 
     // We need to copy the message into a non-const char array to make
     // it work with the AMPL C function.
     char* cmessage = new char[message.length()+1];
     strcpy(cmessage, message.c_str());
 
-    write_sol(cmessage, x_sol_, lambda_sol_, (Option_Info*)Oinfo_ptr_);
+    write_sol(cmessage, var_and_para_x_, lambda_sol_, (Option_Info*)Oinfo_ptr_);
 
     delete [] cmessage;
   }
