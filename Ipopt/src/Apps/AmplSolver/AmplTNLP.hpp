@@ -549,6 +549,8 @@ namespace Ipopt
     Number* hes_val_all_;
     Index* var_hes_;
     Index* para_hes_;
+    Index* para_hes_row_;
+    Index* para_hes_col_;
     Index var_nz_h_;
     Index para_nz_h_;
     //@}

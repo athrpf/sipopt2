@@ -78,6 +78,8 @@ namespace Ipopt
       hes_val_all_(NULL),
       var_hes_(NULL),
       para_hes_(NULL),
+      para_hes_row_(NULL),
+      para_hes_col_(NULL),
       var_nz_h_(0),
       para_nz_h_(0),
       objval_called_with_current_x_(false),
@@ -255,6 +257,8 @@ namespace Ipopt
     para_jac_ = new Index[nzc];
     var_hes_ = new Index[nz_h_full_];
     para_hes_ = new Index[nz_h_full_];
+    para_hes_col_ = new Index[nz_h_full_];
+    para_hes_row_ = new Index[nz_h_full_];
 
     //create mapping for x
     Index varI = 0;
@@ -304,17 +308,20 @@ namespace Ipopt
             if (!parameter_flags_[hes_row_all_[current_nz]-1] &&
                 !parameter_flags_[hes_col_all_[current_nz]-1]){
               var_hes_[current_var_nz] = current_nz;
-              //std::cout << current_nz << "v cnz "<< hes_row_all_[current_nz]-1 <<" "<< hes_col_all_[current_nz]-1<<std::endl;
               ++current_var_nz;
             }else if(!parameter_flags_[hes_row_all_[current_nz]-1] &&
                       parameter_flags_[hes_col_all_[current_nz]-1]){
-              para_hes_[current_par_nz] = current_nz+1;
-              //std::cout << current_nz << "p cnz "<< hes_row_all_[current_nz]-1 <<" "<< hes_col_all_[current_nz]-1<<std::endl;
+              para_hes_[current_par_nz] = current_nz;
+              para_hes_row_[current_par_nz] = index_in_var_or_para_[hes_row_all_[current_nz]-1]+1;
+              para_hes_col_[current_par_nz] = index_in_var_or_para_[hes_col_all_[current_nz]-1]+1;
+              //std::cout << current_par_nz << " <- current par " << para_hes_row_[current_par_nz] << para_hes_col_[current_par_nz]<< std::endl;
               ++current_par_nz;
             }else if( parameter_flags_[hes_row_all_[current_nz]-1] &&
                      !parameter_flags_[hes_col_all_[current_nz]-1]){
-              para_hes_[current_par_nz] = -(current_nz+1);    //-current_nz flags this entry as to be switched to get (x,p)
-              //std::cout << current_nz << "p cnz "<< hes_row_all_[current_nz]-1 <<" "<< hes_col_all_[current_nz]-1<<std::endl;
+              para_hes_[current_par_nz] = current_nz;    //-current_nz flags this entry as to be switched to get (x,p)
+              para_hes_row_[current_par_nz] = index_in_var_or_para_[hes_col_all_[current_nz]-1]+1;
+              para_hes_col_[current_par_nz] = index_in_var_or_para_[hes_row_all_[current_nz]-1]+1;
+              //std::cout << current_par_nz << " <- current par " << para_hes_row_[current_par_nz] << para_hes_col_[current_par_nz]<< std::endl;
               ++current_par_nz;
             }
             //std::cout << current_nz << "a cnz "<< hes_row_all_[current_nz]-1 <<" "<< hes_col_all_[current_nz]-1<<std::endl;
@@ -455,6 +462,14 @@ namespace Ipopt
         delete[] para_hes_;
         para_hes_ = 0;
       }
+      if(para_hes_row_){
+              delete[] para_hes_row_;
+              para_hes_row_ = 0;
+      }
+      if(para_hes_col_){
+              delete[] para_hes_col_;
+              para_hes_col_ = 0;
+      }
       ASL* asl_to_free = (ASL*)asl_;
       ASL_free(&asl_to_free);
       asl_ = NULL;
@@ -575,7 +590,12 @@ namespace Ipopt
 
   bool AmplTNLP::get_parameters(Index np, Number* p)
   {
-    return false;
+    DBG_ASSERT(np == paraCnt_);
+
+    for (Index i = 0; i < paraCnt_; ++i){
+      p[i] = var_and_para_x_[para_x_[i]];
+    }
+    return true;
   }
 
 
@@ -597,7 +617,9 @@ namespace Ipopt
     return true;
   }
 
-  bool AmplTNLP::get_starting_point(Index n, bool init_x, Number* x, bool init_z, Number* z_L, Number* z_U, Index m, bool init_lambda, Number* lambda)
+  bool AmplTNLP::get_starting_point(Index n, bool init_x, Number* x,
+                                             bool init_z, Number* z_L, Number* z_U, Index m,
+                                             bool init_lambda, Number* lambda)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
@@ -657,8 +679,8 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x,
-			Index np, const Number* p, bool new_p,
-			Number& obj_value)
+			                  Index np, const Number* p, bool new_p,
+			                  Number& obj_value)
     {
       DBG_START_METH("AmplTNLP::eval_f (parametric overload)",
                      dbg_verbosity);
@@ -670,8 +692,8 @@ namespace Ipopt
     }
 
   bool AmplTNLP::eval_grad_f(Index n, const Number* x, bool new_x,
-			     Index np, const Number* p, bool new_p,
-			     Number* grad_f)
+			                       Index np, const Number* p, bool new_p,
+			                       Number* grad_f)
   {
     DBG_START_METH("AmplTNLP::eval_grad_f",
                    dbg_verbosity);
@@ -679,7 +701,7 @@ namespace Ipopt
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
 
-    if (!apply_new_x(new_x, n, x)) {
+    if (!apply_new_xp(new_x, n, x, new_p, np, p)) {
       return false;
     }
 
@@ -689,7 +711,13 @@ namespace Ipopt
       }
     }
     else {
-      objgrd(obj_no, const_cast<Number*>(x), grad_f, (fint*)nerror_);
+      Number* temp = new Number[n_var];
+      //objgrd(obj_no, const_cast<Number*>(x), grad_f, (fint*)nerror_);
+      objgrd(obj_no, var_and_para_x_, temp, (fint*)nerror_);
+      for (Index i = 0; i < n; ++i) {
+        grad_f[i] = temp[var_x_[i]];
+      }
+      delete [] temp;
       if (!nerror_ok(nerror_)) {
         return false;
       }
@@ -704,20 +732,20 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_g(Index n, const Number* x, bool new_x,
-			Index np, const Number* p, bool new_p,
-			Index m, Number* g)
+			                  Index np, const Number* p, bool new_p,
+			                  Index m, Number* g)
   {
     DBG_START_METH("AmplTNLP::eval_g", dbg_verbosity);
     return false;
     DBG_DO(ASL_pfgh* asl = asl_);
-    DBG_ASSERT(n == n_var);
+    DBG_ASSERT((n+np) == n_var);
     DBG_ASSERT(m == n_con);
 
-    if (!apply_new_x(new_x, n, x)) {
+    if (!apply_new_xp(new_x, n, x, new_p, np, p)) {
       return false;
     }
 
-    return internal_conval(x, m, g);
+    return internal_conval(var_and_para_x_, m, g);
   }
 
   bool AmplTNLP::eval_jac_g(Index n, const Number* x, bool new_x,
@@ -878,13 +906,8 @@ namespace Ipopt
     if (iRow && jCol && !values) {
       // setup the structure
       for (Index i = 0; i < para_nz_h_; ++i){
-        if (para_hes_[i]>0){          //row = var, col = para
-          iRow[i] = index_in_var_or_para_[hes_row_all_[para_hes_[i]-1]-1]+1;    //-1 cause of trick
-          jCol[i] = index_in_var_or_para_[hes_col_all_[para_hes_[i]-1]-1]+1;    //-1,+1 cause of 0-based,1-based
-        } else {                      //in this case row and col needs to be switched
-          iRow[i] = index_in_var_or_para_[hes_col_all_[-para_hes_[i]-1]-1]+1;
-          jCol[i] = index_in_var_or_para_[hes_row_all_[-para_hes_[i]-1]-1]+1;
-        }
+        iRow[i] = para_hes_row_[i];
+        jCol[i] = para_hes_col_[i];
       }
 
       DBG_ASSERT(para_nz_h_==nele_hess);
