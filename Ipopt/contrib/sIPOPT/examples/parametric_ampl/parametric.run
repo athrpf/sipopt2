@@ -10,7 +10,7 @@ reset;
 # Set parameter values here
 # ---------------------------------
 #
-param nominal_eta1 := 4.5;
+param nominal_eta1 := 5.0;
 param perturbed_eta1 := 4;
 
 param nominal_eta2 := 1;
@@ -41,8 +41,8 @@ let eta2 := nominal_eta2;
 
 solve;
 
-#print "";
-#print "Nominal Solution:";
-#display x1, x2, x3, eta1, eta2;
+print "";
+print "Nominal Solution:";
+display x1, x2, x3, eta1, eta2, const2;
 #print "Estimation of Perturbed Solution with sIPOPT:";
 #display x1.sens_sol_state_1, x2.sens_sol_state_1, x3.sens_sol_state_1, eta1.sens_sol_state_1, eta2.sens_sol_state_1;
