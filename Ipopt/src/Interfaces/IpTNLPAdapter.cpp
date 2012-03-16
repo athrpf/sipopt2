@@ -1360,7 +1360,7 @@ namespace Ipopt
 	if (c_row != -1) {
 	  jac_g_p_idx_map_[current_nz] = i;
 	  jac_c_p_iRow[current_nz] = c_row + 1;
-	  jac_c_p_jCol[current_nz] = g_p_jCol[i]-1;
+	  jac_c_p_jCol[current_nz] = g_p_jCol[i];
 	  current_nz++;
 	}
       }
@@ -1380,7 +1380,7 @@ namespace Ipopt
 	if (d_row != -1) {
 	  jac_g_p_idx_map_[current_nz] = i;
 	  jac_d_p_iRow[current_nz] = d_row + 1;
-	  jac_d_p_jCol[current_nz] = g_p_jCol[i]-1;
+	  jac_d_p_jCol[current_nz] = g_p_jCol[i];
 	  current_nz++;
 	}
       }
