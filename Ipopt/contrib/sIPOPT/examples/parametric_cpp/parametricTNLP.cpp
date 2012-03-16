@@ -69,24 +69,31 @@ bool ParametricTNLP::get_bounds_info(Index n, Number* x_l, Number* x_u,
 }
 
 bool ParametricTNLP::get_starting_point(Index n, bool init_x, Number* x,
+					Index np, bool init_p, Number* p,
 					bool init_z, Number* z_L, Number* z_U,
 					Index m, bool init_lambda,
 					Number* lambda)
 {
-  for (Index k=0; k<n; ++k) {
-    x[k] = 5.0;
+  if (init_x) {
+    for (Index k=0; k<n; ++k) {
+      x[k] = 5.0;
+    }
+  }
+  if (init_p) {
+    p[0] = 4.5;
+    p[1] = 1.0;
   }
 
   return true;
 }
-
+/*
 bool ParametricTNLP::get_parameters(Index np, Number* p)
 {
   assert(np ==2);
   p[0] = 5.0;
   p[1] = 1.0;
   return true;
-}
+  }*/
 
 bool ParametricTNLP::eval_f(Index n, const Number* x, bool new_x,
 			    Index np, const Number* p, bool new_p,

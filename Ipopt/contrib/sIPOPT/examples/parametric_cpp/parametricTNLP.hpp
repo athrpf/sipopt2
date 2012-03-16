@@ -35,11 +35,10 @@ namespace Ipopt
 
     /** Method to return the starting point for the algorithm */
     virtual bool get_starting_point(Index n, bool init_x, Number* x,
+				    Index np, bool init_p, Number* p,
 				    bool init_z, Number* z_L, Number* z_U,
 				    Index m, bool init_lambda,
 				    Number* lambda);
-
-    virtual bool get_parameters(Index np, Number* p);
 
     /** Method to return the objective value */
     virtual bool eval_f(Index n, const Number* x, bool new_x,
