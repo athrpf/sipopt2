@@ -9,6 +9,10 @@
 #include "AmplTNLP.hpp"
 #include "IpIpoptApplication.hpp"
 
+#include "IpPDSearchDirCalc.hpp"
+#include "IpIpoptAlg.hpp"
+#include "IpOrigIpoptNLP.hpp"
+
 #include "IpoptConfig.h"
 #ifdef HAVE_CSTRING
 # include <cstring>
@@ -98,6 +102,18 @@ int main(int argc, char**args)
   }
 
   // finalize_solution method in AmplTNLP writes the solution file
+
+  SmartPtr<const Vector> x = app->IpoptDataObject()->curr()->x();
+  SmartPtr<const Vector> y_c = app->IpoptDataObject()->curr()->y_c();
+  SmartPtr<const Vector> y_d = app->IpoptDataObject()->curr()->y_d();
+
+  SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
+  SmartPtr<const Matrix> opt_jac_c_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_c_p(*x);
+  SmartPtr<const Matrix> opt_jac_d_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->jac_d_p(*x);
+  SmartPtr<const Matrix> opt_h_p = (dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp)))->h_p(*x, 1.0, *y_c, *y_d);
+  opt_jac_c_p->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_c_p");
+  opt_jac_d_p->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_jac_d_p");
+  opt_h_p->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "opt_h_p");
 
   return 0;
 }
