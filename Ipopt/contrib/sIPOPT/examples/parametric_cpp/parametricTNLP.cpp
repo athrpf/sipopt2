@@ -80,7 +80,7 @@ bool ParametricTNLP::get_starting_point(Index n, bool init_x, Number* x,
     }
   }
   if (init_p) {
-    p[0] = 4.5;
+    p[0] = 5.;
     p[1] = 1.0;
   }
 
