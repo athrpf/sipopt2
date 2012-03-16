@@ -246,7 +246,9 @@ namespace Ipopt
     jac_row_all_ = new Index[nzc];
     jac_col_all_ = new Index[nzc];
     jac_val_all_ = new Number[nzc];
-    nz_h_full_ = sphsetup(-1, 1,1,1);
+    //nz_h_full_ = sphsetup(-1, 1,1,1);
+    if (!hesset_called_)
+      call_hesset();
     //std::cout<< nz_h_full_<<"  nz h full"<<std::endl;
     hes_row_all_ = new Index[nz_h_full_];
     hes_col_all_ = new Index[nz_h_full_];
