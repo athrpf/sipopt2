@@ -73,19 +73,27 @@ namespace Ipopt
                                       StringMetaDataMapType& var_string_md,
                                       IntegerMetaDataMapType& var_integer_md,
                                       NumericMetaDataMapType& var_numeric_md,
+                                      Index np,
+                                      StringMetaDataMapType& para_string_md,
+                                      IntegerMetaDataMapType& para_integer_md,
+                                      NumericMetaDataMapType& para_numeric_md,
                                       Index m,
                                       StringMetaDataMapType& con_string_md,
                                       IntegerMetaDataMapType& con_integer_md,
                                       NumericMetaDataMapType& con_numeric_md)
 
     {
-      return tnlp_->get_var_con_metadata(n, var_string_md,
-					 var_integer_md,
-					 var_numeric_md,
-					 m,
-					 con_string_md,
-					 con_integer_md,
-					 con_numeric_md);
+      bool retval =  tnlp_->get_var_con_metadata(n, var_string_md,
+						 var_integer_md,
+						 var_numeric_md,
+						 m,
+						 con_string_md,
+						 con_integer_md,
+						 con_numeric_md);
+      para_string_md.clear();
+      para_integer_md.clear();
+      para_numeric_md.clear();
+      return retval;
     }
 
     virtual bool get_bounds_info(Index n, Number* x_l, Number* x_u,
