@@ -47,6 +47,7 @@ namespace Ipopt
 
     virtual void DetermineScalingParametersImpl(
       const SmartPtr<const VectorSpace> x_space,
+      const SmartPtr<const VectorSpace> p_space,
       const SmartPtr<const VectorSpace> c_space,
       const SmartPtr<const VectorSpace> d_space,
       const SmartPtr<const MatrixSpace> jac_c_space,
@@ -63,7 +64,7 @@ namespace Ipopt
 
     /**@name Default Compiler Generated Methods
      * (Hidden to avoid implicit creation/calling).
-     * These methods are not implemented and 
+     * These methods are not implemented and
      * we do not want the compiler to implement
      * them for us, so we declare them private
      * and do not define them. This ensures that

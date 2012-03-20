@@ -101,7 +101,7 @@ namespace Ipopt
       bool need_z_U
     );
 
-    virtual bool GetParameters(SmartPtr<Vector> p);
+    //virtual bool GetParameters(SmartPtr<Vector> p);
 
     /** Method for obtaining an entire iterate as a warmstart point.
      *  The incoming IteratesVector has to be filled. */

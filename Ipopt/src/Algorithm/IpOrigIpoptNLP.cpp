@@ -256,16 +256,6 @@ namespace Ipopt
         return false;
       }
 
-      // get parameters
-      SmartPtr<Vector> p = p_space_->MakeNew();
-      retValue = nlp_->GetParameters(p);
-      if (!retValue) {
-        jnlst_->Printf(J_WARNING, J_INITIALIZATION,
-                       "GetParameters method for the NLP returns false.\n");
-        return false;
-      }
-      p_ = GetRawPtr(p);
-
       // Check if the Hessian space is actually a limited-memory
       // approximation.  If so, get the required information from the
       // NLP and create an appropreate h_space
@@ -315,6 +305,7 @@ namespace Ipopt
       }
 
       NLP_scaling()->DetermineScaling(x_space_,
+				      p_space_,
                                       c_space_, d_space_,
                                       jac_c_space_, jac_d_space_,
                                       h_space_,
@@ -417,6 +408,7 @@ namespace Ipopt
                 "modified d_U scaled");
 
     // Create the iterates structures
+    SmartPtr<Vector> p_vec = p_space_->MakeNew();
     x = x_space_->MakeNew();
     y_c = c_space_->MakeNew();
     y_d = d_space_->MakeNew();
@@ -425,12 +417,14 @@ namespace Ipopt
     v_L = d_l_space_->MakeNew();
     v_U = d_u_space_->MakeNew();
 
+    bool init_p = true;
     retValue = nlp_->GetStartingPoint(GetRawPtr(x), init_x,
+				      GetRawPtr(p_vec), init_p,
                                       GetRawPtr(y_c), init_y_c,
                                       GetRawPtr(y_d), init_y_d,
                                       GetRawPtr(z_L), init_z_L,
                                       GetRawPtr(z_U), init_z_U);
-
+    p_ = GetRawPtr(p_vec);
     if (!retValue) {
       return false;
     }
@@ -880,6 +874,7 @@ namespace Ipopt
   }
 
   void OrigIpoptNLP::GetSpaces(SmartPtr<const VectorSpace>& x_space,
+			       SmartPtr<const VectorSpace>& p_space,
                                SmartPtr<const VectorSpace>& c_space,
                                SmartPtr<const VectorSpace>& d_space,
                                SmartPtr<const VectorSpace>& x_l_space,
@@ -890,10 +885,12 @@ namespace Ipopt
                                SmartPtr<const MatrixSpace>& pd_l_space,
                                SmartPtr<const VectorSpace>& d_u_space,
                                SmartPtr<const MatrixSpace>& pd_u_space,
-			       SmartPtr<const VectorSpace>& p_space,
                                SmartPtr<const MatrixSpace>& Jac_c_space,
                                SmartPtr<const MatrixSpace>& Jac_d_space,
-                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
+                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+			       SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                               SmartPtr<const MatrixSpace>& Jac_d_p_space,
+                               SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
     DBG_START_METH("OrigIpoptNLP::GetSpaces", dbg_verbosity);
     // Make sure that we already have all the pointers

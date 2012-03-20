@@ -13,6 +13,7 @@ namespace Ipopt
 
   void UserScaling::DetermineScalingParametersImpl(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     const SmartPtr<const MatrixSpace> jac_c_space,
@@ -26,7 +27,7 @@ namespace Ipopt
     SmartPtr<Vector>& dd)
   {
     DBG_ASSERT(IsValid(nlp_));
-    nlp_->GetScalingParameters(x_space, c_space, d_space, df, dx, dc, dd);
+    nlp_->GetScalingParameters(x_space, p_space, c_space, d_space, df, dx, dc, dd);
   }
 
 } // namespace Ipopt

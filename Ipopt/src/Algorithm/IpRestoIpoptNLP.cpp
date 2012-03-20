@@ -130,15 +130,20 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> orig_jac_c_space;
     SmartPtr<const MatrixSpace> orig_jac_d_space;
     SmartPtr<const SymMatrixSpace> orig_h_space;
+    SmartPtr<const MatrixSpace> orig_jac_c_p_space;
+    SmartPtr<const MatrixSpace> orig_jac_d_p_space;
+    SmartPtr<const MatrixSpace> orig_h_p_space;
 
     orig_ip_nlp_->GetSpaces(orig_x_space, orig_c_space, orig_d_space,
                             orig_x_l_space, orig_px_l_space,
                             orig_x_u_space, orig_px_u_space,
                             orig_d_l_space, orig_pd_l_space,
                             orig_d_u_space, orig_pd_u_space,
-			                orig_p_space,
+			    orig_p_space,
                             orig_jac_c_space, orig_jac_d_space,
-                            orig_h_space);
+                            orig_h_space,
+			    orig_jac_c_p_space, orig_jac_d_p_space,
+			    orig_h_p_space);
 
     // Create the restoration phase problem vector/matrix spaces, based
     // on the original spaces (pretty inconvenient with all the
@@ -367,6 +372,7 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> scaled_jac_d_p_space;
     SmartPtr<const MatrixSpace> scaled_h_p_space;
     NLP_scaling()->DetermineScaling(GetRawPtr(x_space_),
+				    p_space_,
                                     c_space_, d_space_,
                                     GetRawPtr(jac_c_space_),
                                     GetRawPtr(jac_d_space_),

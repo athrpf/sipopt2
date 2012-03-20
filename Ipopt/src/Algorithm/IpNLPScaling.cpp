@@ -229,6 +229,7 @@ namespace Ipopt
 
   void StandardScalingBase::DetermineScaling(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     const SmartPtr<const MatrixSpace> jac_c_space,
@@ -248,7 +249,7 @@ namespace Ipopt
   {
     SmartPtr<Vector> dc;
     SmartPtr<Vector> dd;
-    DetermineScalingParametersImpl(x_space, c_space, d_space,
+    DetermineScalingParametersImpl(x_space, p_space, c_space, d_space,
                                    jac_c_space, jac_d_space,
                                    h_space, Px_L, x_L, Px_U, x_U,
                                    df_, dx_, dc, dd);
@@ -667,6 +668,7 @@ namespace Ipopt
 
   void NoNLPScalingObject::DetermineScalingParametersImpl(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     const SmartPtr<const MatrixSpace> jac_c_space,

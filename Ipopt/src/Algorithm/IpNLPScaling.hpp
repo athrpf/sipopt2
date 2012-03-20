@@ -193,6 +193,7 @@ namespace Ipopt
      *  compute and/or read scaling factors
      */
     virtual void DetermineScaling(const SmartPtr<const VectorSpace> x_space,
+				  const SmartPtr<const VectorSpace> p_space,
                                   const SmartPtr<const VectorSpace> c_space,
                                   const SmartPtr<const VectorSpace> d_space,
                                   const SmartPtr<const MatrixSpace> jac_c_space,
@@ -337,6 +338,7 @@ namespace Ipopt
      *  compute and/or read scaling factors
      */
     virtual void DetermineScaling(const SmartPtr<const VectorSpace> x_space,
+				  const SmartPtr<const VectorSpace> p_space,
                                   const SmartPtr<const VectorSpace> c_space,
                                   const SmartPtr<const VectorSpace> d_space,
                                   const SmartPtr<const MatrixSpace> jac_c_space,
@@ -370,6 +372,7 @@ namespace Ipopt
      *  which case no scaling for that item will be done later. */
     virtual void DetermineScalingParametersImpl(
       const SmartPtr<const VectorSpace> x_space,
+      const SmartPtr<const VectorSpace> p_space,
       const SmartPtr<const VectorSpace> c_space,
       const SmartPtr<const VectorSpace> d_space,
       const SmartPtr<const MatrixSpace> jac_c_space,
@@ -453,6 +456,7 @@ namespace Ipopt
     /** Overloaded from StandardScalingBase */
     virtual void DetermineScalingParametersImpl(
       const SmartPtr<const VectorSpace> x_space,
+      const SmartPtr<const VectorSpace> p_space,
       const SmartPtr<const VectorSpace> c_space,
       const SmartPtr<const VectorSpace> d_space,
       const SmartPtr<const MatrixSpace> jac_c_space,

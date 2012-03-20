@@ -68,6 +68,7 @@ namespace Ipopt
 
   void GradientScaling::DetermineScalingParametersImpl(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     const SmartPtr<const MatrixSpace> jac_c_space,
@@ -83,7 +84,9 @@ namespace Ipopt
     DBG_ASSERT(IsValid(nlp_));
 
     SmartPtr<Vector> x = x_space->MakeNew();
+    SmartPtr<Vector> p = p_space->MakeNew();
     if (!nlp_->GetStartingPoint(GetRawPtr(x), true,
+				GetRawPtr(p), true,
                                 NULL, false,
                                 NULL, false,
                                 NULL, false,
@@ -96,7 +99,7 @@ namespace Ipopt
     // Calculate grad_f scaling
     //
     SmartPtr<Vector> grad_f = x_space->MakeNew();
-    if (nlp_->Eval_grad_f(*x, *grad_f)) {
+    if (nlp_->Eval_grad_f(*x, *p, *grad_f)) {
       double max_grad_f = grad_f->Amax();
       df = 1.;
       if (scaling_obj_target_gradient_ == 0.) {
@@ -133,7 +136,7 @@ namespace Ipopt
       // Calculate c scaling
       //
       SmartPtr<Matrix> jac_c = jac_c_space->MakeNew();
-      if (nlp_->Eval_jac_c(*x, *jac_c)) {
+      if (nlp_->Eval_jac_c(*x, *p, *jac_c)) {
         dc = c_space->MakeNew();
         const double dbl_min = std::numeric_limits<double>::min();
         dc->Set(dbl_min);
@@ -172,7 +175,7 @@ namespace Ipopt
       // Calculate d scaling
       //
       SmartPtr<Matrix> jac_d = jac_d_space->MakeNew();
-      if (nlp_->Eval_jac_d(*x, *jac_d)) {
+      if (nlp_->Eval_jac_d(*x, *p, *jac_d)) {
         dd = d_space->MakeNew();
         const double dbl_min = std::numeric_limits<double>::min();
         dd->Set(dbl_min);

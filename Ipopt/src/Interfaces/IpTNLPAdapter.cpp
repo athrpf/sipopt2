@@ -1647,6 +1647,8 @@ namespace Ipopt
 
   bool TNLPAdapter::GetStartingPoint(SmartPtr<Vector> x,
                                      bool need_x,
+				     SmartPtr<Vector> p,
+				     bool need_p,
                                      SmartPtr<Vector> y_c,
                                      bool need_y_c,
                                      SmartPtr<Vector> y_d,
@@ -1659,22 +1661,24 @@ namespace Ipopt
   {
     DBG_START_METH("TNLPAdapter::GetStartingPoint", dbg_verbosity);
     Number* full_x = new Number[n_full_x_];
+    Number* full_p = new Number[n_full_p_];
     Number* full_z_l = new Number[n_full_x_];
     Number* full_z_u = new Number[n_full_x_];
     Number* full_lambda = new Number[n_full_g_];
     bool init_x = need_x;
     bool init_z = need_z_L || need_z_U;
     bool init_lambda = need_y_c || need_y_d;
-    bool init_p = true;
+    bool init_p = need_p;
     bool retvalue =
       tnlp_->get_starting_point(n_full_x_, init_x, full_x,
-				n_full_p_, init_p, full_p_,
+				n_full_p_, init_p, full_p,
 				init_z, full_z_l, full_z_u,
 				n_full_g_, init_lambda,
                                 full_lambda);
 
     if (!retvalue) {
       delete [] full_x;
+      delete [] full_p;
       delete [] full_z_l;
       delete [] full_z_u;
       delete [] full_lambda;
@@ -1695,6 +1699,14 @@ namespace Ipopt
       else {
         IpBlasDcopy(n_x_var, full_x, 1, values, 1);
       }
+    }
+
+    if (need_p) {
+      DenseVector* dp = static_cast<DenseVector*>(GetRawPtr(p));
+      DBG_ASSERT(dynamic_cast<DenseVector*>(GetRawPtr(p)));
+      Number* values = dp->Values();
+      const Index& n_p_var = p->Dim();
+      IpBlasDcopy(n_p_var, full_p, 1, values, 1);
     }
 
     if (need_y_c) {
@@ -1767,6 +1779,8 @@ namespace Ipopt
 
     delete [] full_x;
     full_x = NULL;
+    delete [] full_p;
+    full_p = NULL;
     delete [] full_z_l;
     full_z_l = NULL;
     delete [] full_z_u;
@@ -1777,7 +1791,7 @@ namespace Ipopt
     return true;
   }
 
-  bool TNLPAdapter::GetParameters(SmartPtr<Vector> p)
+  /*bool TNLPAdapter::GetParameters(SmartPtr<Vector> p)
   {
     DBG_START_METH("TNLPAdapter::GetParameters", dbg_verbosity);
     if (n_full_p_>0) {
@@ -1796,7 +1810,7 @@ namespace Ipopt
       }
     }
     return true;
-  }
+    }*/
 
   bool TNLPAdapter::GetWarmStartIterate(IteratesVector& warm_start_iterate)
   {

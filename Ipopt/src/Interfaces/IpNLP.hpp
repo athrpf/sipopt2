@@ -61,7 +61,7 @@ namespace Ipopt
 
     /** Method for creating the derived vector / matrix types.  The
      *  Hess_lagrangian_space pointer can be NULL if a quasi-Newton
-     *  options is chosen. */
+     *  options is chosen.
     virtual bool GetSpaces(SmartPtr<const VectorSpace>& x_space,
                            SmartPtr<const VectorSpace>& c_space,
                            SmartPtr<const VectorSpace>& d_space,
@@ -79,7 +79,7 @@ namespace Ipopt
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
     {
       return false;
-    }
+      }*/
 
     virtual bool GetSpaces(SmartPtr<const VectorSpace>& x_space,
                            SmartPtr<const VectorSpace>& c_space,
@@ -98,10 +98,7 @@ namespace Ipopt
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
 			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
                            SmartPtr<const MatrixSpace>& Jac_d_p_space,
-                           SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
-    {
-      return false;
-    }
+                           SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)=0;
 
     /** Method for obtaining the bounds information */
     virtual bool GetBoundsInformation(const Matrix& Px_L,
@@ -119,6 +116,8 @@ namespace Ipopt
     virtual bool GetStartingPoint(
       SmartPtr<Vector> x,
       bool need_x,
+      SmartPtr<Vector> p,
+      bool need_p,
       SmartPtr<Vector> y_c,
       bool need_y_c,
       SmartPtr<Vector> y_d,
@@ -128,11 +127,11 @@ namespace Ipopt
       SmartPtr<Vector> z_U,
       bool need_z_U
     )=0;
-
+    /*
     virtual bool GetParameters(SmartPtr<Vector> p)
     {
       return false;
-    }
+      }*/
 
     /** Method for obtaining an entire iterate as a warmstart point.
      *  The incoming IteratesVector has to be filled.  The default
@@ -146,73 +145,73 @@ namespace Ipopt
     /** @name NLP evaluation routines (overload
      *  in derived classes. */
     //@{
-    virtual bool Eval_f(const Vector& x, Number& f)
+    /*virtual bool Eval_f(const Vector& x, Number& f)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_f(const Vector& x, const Vector& p, Number& f)
-    {
+    virtual bool Eval_f(const Vector& x, const Vector& p, Number& f)=0;
+    /*    {
       return Eval_f(x, f);
-    }
-
+      }*/
+    /*
     virtual bool Eval_grad_f(const Vector& x, Vector& g_f)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f)
+    virtual bool Eval_grad_f(const Vector& x, const Vector& p, Vector& g_f)=0;
+    /*
     {
       return Eval_grad_f(x, g_f);
-    }
-
+      }
     virtual bool Eval_c(const Vector& x, Vector& c)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_c(const Vector& x, const Vector& p, Vector& c)
-    {
+    virtual bool Eval_c(const Vector& x, const Vector& p, Vector& c)=0;
+    /*{
       return false;
     }
 
     virtual bool Eval_jac_c(const Vector& x, Matrix& jac_c)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c)
-    {
+    virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c)=0;
+    /*{
       return false;
-    }
+      }*/
 
-    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c)
-    {
+    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c)=0;
+      /*{
       return false;
-    }
+      }
 
     virtual bool Eval_d(const Vector& x, Vector& d)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d)
-    {
+    virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d)=0;
+    /*    {
       return false;
-    }
+      }
 
     virtual bool Eval_jac_d(const Vector& x, Matrix& jac_d)
     {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d)
-    {
+    virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d)=0;
+    /*    {
       return false;
-    }
+      }*/
 
-    virtual bool Eval_jac_d_p(const Vector& x, const Vector& p, Matrix& jac_d)
-    {
+    virtual bool Eval_jac_d_p(const Vector& x, const Vector& p, Matrix& jac_d)=0;
+    /*    {
       return false;
     }
 
@@ -223,27 +222,27 @@ namespace Ipopt
                         SymMatrix& h)
     {
       return false;
-    }
+      }*/
 
     virtual bool Eval_h(const Vector& x,
 			const Vector& p,
                         Number obj_factor,
                         const Vector& yc,
                         const Vector& yd,
-                        SymMatrix& h)
-    {
+                        SymMatrix& h)=0;
+    /*    {
       return false;
-    }
+      }*/
 
     virtual bool Eval_h_p(const Vector& x,
 			  const Vector& p,
 			  Number obj_factor,
 			  const Vector& yc,
 			  const Vector& yd,
-			  Matrix& h_p)
-    {
+			  Matrix& h_p)=0;
+    /*    {
       return false;
-    }
+      }*/
     //@}
 
     /** @name NLP solution routines. Have default dummy
@@ -299,6 +298,7 @@ namespace Ipopt
     //@{
     virtual void GetScalingParameters(
       const SmartPtr<const VectorSpace> x_space,
+      const SmartPtr<const VectorSpace> p_space,
       const SmartPtr<const VectorSpace> c_space,
       const SmartPtr<const VectorSpace> d_space,
       Number& obj_scaling,
