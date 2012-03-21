@@ -244,11 +244,11 @@ namespace Ipopt
                                  x_u_space_, px_u_space_,
                                  d_l_space_, pd_l_space_,
                                  d_u_space_, pd_u_space_,
-				 p_space_,
+                                 p_space_,
                                  jac_c_space_, jac_d_space_,
                                  h_space_,
-				 jac_c_p_space_, jac_d_p_space_,
-				 h_p_space_);
+                                 jac_c_p_space_, jac_d_p_space_,
+                                 h_p_space_);
 
       if (!retValue) {
         jnlst_->Printf(J_WARNING, J_INITIALIZATION,
@@ -305,16 +305,16 @@ namespace Ipopt
       }
 
       NLP_scaling()->DetermineScaling(x_space_,
-				      p_space_,
+                      p_space_,
                                       c_space_, d_space_,
                                       jac_c_space_, jac_d_space_,
                                       h_space_,
-				      jac_c_p_space_, jac_d_p_space_,
-				      h_p_space_,
+                      jac_c_p_space_, jac_d_p_space_,
+                      h_p_space_,
                                       scaled_jac_c_space_, scaled_jac_d_space_,
                                       scaled_h_space_,
-				      scaled_jac_c_p_space_, scaled_jac_d_p_space_,
-				      scaled_h_p_space_,
+                      scaled_jac_c_p_space_, scaled_jac_d_p_space_,
+                      scaled_h_p_space_,
                                       *Px_L, *x_L, *Px_U, *x_U);
 
       if (x_space_->Dim() < c_space_->Dim()) {
@@ -419,7 +419,7 @@ namespace Ipopt
 
     bool init_p = true;
     retValue = nlp_->GetStartingPoint(GetRawPtr(x), init_x,
-				      GetRawPtr(p_vec), init_p,
+                                      GetRawPtr(p_vec), init_p,
                                       GetRawPtr(y_c), init_y_c,
                                       GetRawPtr(y_d), init_y_d,
                                       GetRawPtr(z_L), init_z_L,
@@ -826,9 +826,9 @@ namespace Ipopt
     if (d_space_->Dim()==0) {
       SmartPtr<const Vector> dep = NULL;
       if (!jac_d_p_cache_.GetCachedResult1Dep(retValue, GetRawPtr(dep))) {
-	SmartPtr<Matrix> unscaled_jac_d_p = jac_d_p_space_->MakeNew();
-	retValue = NLP_scaling()->apply_jac_d_p_scaling(ConstPtr(unscaled_jac_d_p));
-	jac_d_p_cache_.AddCachedResult1Dep(retValue, GetRawPtr(dep));
+        SmartPtr<Matrix> unscaled_jac_d_p = jac_d_p_space_->MakeNew();
+        retValue = NLP_scaling()->apply_jac_d_p_scaling(ConstPtr(unscaled_jac_d_p));
+        jac_d_p_cache_.AddCachedResult1Dep(retValue, GetRawPtr(dep));
       }
     }
     else {
@@ -842,8 +842,8 @@ namespace Ipopt
   }
 
   SmartPtr<const Matrix> OrigIpoptNLP::h_p(const Vector& x, Number obj_factor,
-					   const Vector& yc,
-					   const Vector& yd)
+                       const Vector& yc,
+                       const Vector& yd)
   {
     DBG_START_METH("OrigIpoptNLP::h_p", dbg_verbosity);
 
@@ -874,7 +874,7 @@ namespace Ipopt
   }
 
   void OrigIpoptNLP::GetSpaces(SmartPtr<const VectorSpace>& x_space,
-			       SmartPtr<const VectorSpace>& p_space,
+                               SmartPtr<const VectorSpace>& p_space,
                                SmartPtr<const VectorSpace>& c_space,
                                SmartPtr<const VectorSpace>& d_space,
                                SmartPtr<const VectorSpace>& x_l_space,
@@ -888,7 +888,7 @@ namespace Ipopt
                                SmartPtr<const MatrixSpace>& Jac_c_space,
                                SmartPtr<const MatrixSpace>& Jac_d_space,
                                SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
-			       SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                               SmartPtr<const MatrixSpace>& Jac_c_p_space,
                                SmartPtr<const MatrixSpace>& Jac_d_p_space,
                                SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
@@ -905,7 +905,7 @@ namespace Ipopt
                IsValid(pd_l_space_) &&
                IsValid(d_u_space_) &&
                IsValid(pd_u_space_) &&
-	           IsValid(p_space_) &&
+               IsValid(p_space_) &&
                IsValid(scaled_jac_c_space_) &&
                IsValid(scaled_jac_d_space_) &&
                IsValid(scaled_h_space_));

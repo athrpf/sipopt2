@@ -139,6 +139,7 @@ namespace Ipopt
 
     /** Accessor method for vector/matrix spaces pointers. */
     virtual void GetSpaces(SmartPtr<const VectorSpace>& x_space,
+                           SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const VectorSpace>& c_space,
                            SmartPtr<const VectorSpace>& d_space,
                            SmartPtr<const VectorSpace>& x_l_space,
@@ -149,13 +150,12 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& pd_l_space,
                            SmartPtr<const VectorSpace>& d_u_space,
                            SmartPtr<const MatrixSpace>& pd_u_space,
-			   SmartPtr<const VectorSpace>& p_space,
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
-			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                           SmartPtr<const MatrixSpace>& Jac_c_p_space,
                            SmartPtr<const MatrixSpace>& Jac_d_p_space,
-                           SmartPtr<const SymMatrixSpace>& Hess_lagrangian_p_space) = 0;
+                           SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space) = 0;
 
     /** Method for adapting the variable bounds.  This is called if
      *  slacks are becoming too small */

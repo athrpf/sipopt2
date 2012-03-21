@@ -126,9 +126,19 @@ namespace Ipopt
       return nlp_->Eval_jac_c(x, p, jac_c);
     }
 
+    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c_p)
+    {
+      return nlp_->Eval_jac_c_p(x, p, jac_c_p);
+    }
+
     virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d);
 
     virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d);
+
+    virtual bool Eval_jac_d_p(const Vector& x, const Vector& p, Matrix& jac_d_p)
+    {
+      return false;
+    }
 
     virtual bool Eval_h(const Vector& x,
 			const Vector& p,
@@ -136,6 +146,16 @@ namespace Ipopt
                         const Vector& yc,
                         const Vector& yd,
                         SymMatrix& h);
+
+    virtual bool Eval_h_p(const Vector& x,
+			const Vector& p,
+                        Number obj_factor,
+                        const Vector& yc,
+                        const Vector& yd,
+                        Matrix& h)
+    {
+      return false;
+    }
     //@}
 
     /** @name NLP solution routines. Have default dummy

@@ -134,16 +134,16 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> orig_jac_d_p_space;
     SmartPtr<const MatrixSpace> orig_h_p_space;
 
-    orig_ip_nlp_->GetSpaces(orig_x_space, orig_c_space, orig_d_space,
+    orig_ip_nlp_->GetSpaces(orig_x_space, orig_p_space,
+                            orig_c_space, orig_d_space,
                             orig_x_l_space, orig_px_l_space,
                             orig_x_u_space, orig_px_u_space,
                             orig_d_l_space, orig_pd_l_space,
                             orig_d_u_space, orig_pd_u_space,
-			    orig_p_space,
                             orig_jac_c_space, orig_jac_d_space,
                             orig_h_space,
-			    orig_jac_c_p_space, orig_jac_d_p_space,
-			    orig_h_p_space);
+                            orig_jac_c_p_space, orig_jac_d_p_space,
+                            orig_h_p_space);
 
     // Create the restoration phase problem vector/matrix spaces, based
     // on the original spaces (pretty inconvenient with all the
@@ -372,18 +372,18 @@ namespace Ipopt
     SmartPtr<const MatrixSpace> scaled_jac_d_p_space;
     SmartPtr<const MatrixSpace> scaled_h_p_space;
     NLP_scaling()->DetermineScaling(GetRawPtr(x_space_),
-				    p_space_,
+                                    p_space_,
                                     c_space_, d_space_,
                                     GetRawPtr(jac_c_space_),
                                     GetRawPtr(jac_d_space_),
                                     GetRawPtr(h_space_),
-				    jac_c_p_space_,
-				    jac_d_p_space_,
-				    h_p_space_,
+                                    jac_c_p_space_,
+                                    jac_d_p_space_,
+                                    h_p_space_,
                                     scaled_jac_c_space, scaled_jac_d_space,
                                     scaled_h_space,
-				    scaled_jac_c_p_space, scaled_jac_d_p_space,
-				    scaled_h_p_space,
+                                    scaled_jac_c_p_space, scaled_jac_d_p_space,
+                                    scaled_h_p_space,
                                     *Px_L_, *x_L_, *Px_U_, *x_U_);
     // For now we assume that no scaling is done inside the NLP_Scaling
     DBG_ASSERT(scaled_jac_c_space == jac_c_space_);
@@ -693,6 +693,7 @@ namespace Ipopt
   }
 
   void RestoIpoptNLP::GetSpaces(SmartPtr<const VectorSpace>& x_space,
+                                SmartPtr<const VectorSpace>& p_space,
                                 SmartPtr<const VectorSpace>& c_space,
                                 SmartPtr<const VectorSpace>& d_space,
                                 SmartPtr<const VectorSpace>& x_l_space,
@@ -703,12 +704,15 @@ namespace Ipopt
                                 SmartPtr<const MatrixSpace>& pd_l_space,
                                 SmartPtr<const VectorSpace>& d_u_space,
                                 SmartPtr<const MatrixSpace>& pd_u_space,
-                                SmartPtr<const VectorSpace>& p_space,
                                 SmartPtr<const MatrixSpace>& Jac_c_space,
                                 SmartPtr<const MatrixSpace>& Jac_d_space,
-                                SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
+                                SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+                                SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                                SmartPtr<const MatrixSpace>& Jac_d_p_space,
+                                SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
     x_space = GetRawPtr(x_space_);
+    p_space = GetRawPtr(p_space_);
     c_space = GetRawPtr(c_space_);
     d_space = GetRawPtr(d_space_);
     x_l_space = GetRawPtr(x_l_space_);
@@ -719,10 +723,15 @@ namespace Ipopt
     pd_l_space = GetRawPtr(pd_l_space_);
     d_u_space = GetRawPtr(d_u_space_);
     pd_u_space = GetRawPtr(pd_u_space_);
-    p_space = GetRawPtr(p_space_);
     Jac_c_space = GetRawPtr(jac_c_space_);
     Jac_d_space = GetRawPtr(jac_d_space_);
     Hess_lagrangian_space = GetRawPtr(h_space_);
+    //Jac_c_p_space = GetRawPtr(Jac_c_p_space_);
+    //Jac_d_p_space = GetRawPtr(Jac_d_p_space_);
+    //Hess_lagrangian_p_space = GetRawPtr(Hess_lagrangian_p_space_);
+    Jac_c_p_space = NULL;
+    Jac_d_p_space = NULL;
+    Hess_lagrangian_p_space = NULL;
   }
 
   Number RestoIpoptNLP::Eta(Number mu) const

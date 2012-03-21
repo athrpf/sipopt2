@@ -391,7 +391,7 @@ namespace Ipopt
                               SmartPtr<const MatrixSpace>& Jac_c_space,
                               SmartPtr<const MatrixSpace>& Jac_d_space,
                               SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
-			      SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                              SmartPtr<const MatrixSpace>& Jac_c_p_space,
                               SmartPtr<const MatrixSpace>& Jac_d_p_space,
                               SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
@@ -448,7 +448,7 @@ namespace Ipopt
     Index n_full_x, n_full_p, n_full_g, nz_full_jac_g, nz_full_h, nz_full_jac_g_p, nz_full_h_p;
     bool retval = tnlp_->get_nlp_info(n_full_x, n_full_p, n_full_g, nz_full_jac_g,
                                       nz_full_h, nz_full_jac_g_p,
-				      nz_full_h_p, index_style_);
+                                      nz_full_h_p, index_style_);
     ASSERT_EXCEPTION(retval, INVALID_TNLP, "get_nlp_info returned false");
     ASSERT_EXCEPTION(!warm_start_same_structure_ ||
                      (n_full_x == n_full_x_ &&
@@ -456,8 +456,8 @@ namespace Ipopt
                       n_full_g == n_full_g_ &&
                       nz_full_jac_g == nz_full_jac_g_ &&
                       nz_full_h == nz_full_h_ &&
-		      nz_full_jac_g_p == nz_full_jac_g_p_ &&
-		      nz_full_h_p == nz_full_h_p_),
+                      nz_full_jac_g_p == nz_full_jac_g_p_ &&
+                      nz_full_h_p == nz_full_h_p_),
                      INVALID_WARMSTART,
                      "warm_start_same_structure chosen, but problem dimensions are different.");
     n_full_x_ = n_full_x;
@@ -688,7 +688,7 @@ namespace Ipopt
           DBG_ASSERT(x_l[i]==x_u[i]);
           full_x_[i] = x_l[i];
           bool retval = tnlp_->eval_g(n_full_x_, full_x_, true,
-				      n_full_p_, full_p_, true,
+                                      n_full_p_, full_p_, true,
                                       n_full_g_, full_g_);
           ASSERT_EXCEPTION(retval, IpoptNLP::Eval_Error,
                            "All variables are fixed, but constraints cannot be evaluated at fixed point.");
@@ -1139,8 +1139,8 @@ namespace Ipopt
       Index* g_iRow = new Index[nz_full_jac_g_];
       Index* g_jCol = new Index[nz_full_jac_g_];
       tnlp_->eval_jac_g(n_full_x_, NULL, false,
-			n_full_p_, NULL, false,
-			n_full_g_, nz_full_jac_g_,
+                        n_full_p_, NULL, false,
+                        n_full_g_, nz_full_jac_g_,
                         g_iRow, g_jCol, NULL);
 
       if (index_style_ != TNLP::FORTRAN_STYLE) {
@@ -1270,10 +1270,10 @@ namespace Ipopt
         Index* h_iRow = new Index[nz_full_h_];
         Index* h_jCol = new Index[nz_full_h_];
         bool retval = tnlp_->eval_h(n_full_x_, NULL, false,
-				    n_full_p_, NULL, false,
-				    0, n_full_g_,
-				    NULL, false,
-				    nz_full_h_, full_h_iRow, full_h_jCol, NULL);
+                                    n_full_p_, NULL, false,
+                                    0, n_full_g_,
+                                    NULL, false,
+                                    nz_full_h_, full_h_iRow, full_h_jCol, NULL);
         if (!retval) {
           delete [] full_h_iRow;
           delete [] full_h_jCol;
@@ -1339,15 +1339,15 @@ namespace Ipopt
       Index* g_p_iRow = new Index[nz_full_jac_g_p_];
       Index* g_p_jCol = new Index[nz_full_jac_g_p_];
       tnlp_->eval_jac_g_p(n_full_x_, NULL, false,
-			  n_full_p_, NULL, false,
-			  n_full_g_, nz_full_jac_g_p_,
-			  g_p_iRow, g_p_jCol, NULL);
+                          n_full_p_, NULL, false,
+                          n_full_g_, nz_full_jac_g_p_,
+                          g_p_iRow, g_p_jCol, NULL);
 
       if (index_style_ != TNLP::FORTRAN_STYLE) {
-	for (Index i=0; i<nz_full_jac_g_p_; ++i) {
-	  g_p_iRow[i] += 1;
-	  g_p_jCol[i] += 1;
-	}
+        for (Index i=0; i<nz_full_jac_g_p_; ++i) {
+          g_p_iRow[i] += 1;
+          g_p_jCol[i] += 1;
+        }
       }
 
       // build matrix space for jac_c wrt parameters
@@ -1356,13 +1356,13 @@ namespace Ipopt
       jac_g_p_idx_map_ = new Index[nz_full_jac_g_p_];
       current_nz = 0;
       for (Index i=0; i<nz_full_jac_g_p_; ++i) {
-	const Index& c_row = c_row_pos[g_p_iRow[i]-1];
-	if (c_row != -1) {
-	  jac_g_p_idx_map_[current_nz] = i;
-	  jac_c_p_iRow[current_nz] = c_row + 1;
-	  jac_c_p_jCol[current_nz] = g_p_jCol[i];
-	  current_nz++;
-	}
+        const Index& c_row = c_row_pos[g_p_iRow[i]-1];
+        if (c_row != -1) {
+          jac_g_p_idx_map_[current_nz] = i;
+          jac_c_p_iRow[current_nz] = c_row + 1;
+          jac_c_p_jCol[current_nz] = g_p_jCol[i];
+          current_nz++;
+        }
       }
       nz_jac_c_p_ = current_nz;
       Jac_c_p_space_ = new GenTMatrixSpace(n_c, n_full_p_, nz_jac_c_p_, jac_c_p_iRow, jac_c_p_jCol);
@@ -1376,13 +1376,13 @@ namespace Ipopt
       Index* jac_d_p_jCol = new Index[nz_full_jac_g_p_];
       current_nz = 0;
       for (Index i=0; i<nz_full_jac_g_p_; ++i) {
-	const Index& d_row = d_row_pos[g_p_iRow[i]-1];
-	if (d_row != -1) {
-	  jac_g_p_idx_map_[current_nz] = i;
-	  jac_d_p_iRow[current_nz] = d_row + 1;
-	  jac_d_p_jCol[current_nz] = g_p_jCol[i];
-	  current_nz++;
-	}
+        const Index& d_row = d_row_pos[g_p_iRow[i]-1];
+        if (d_row != -1) {
+          jac_g_p_idx_map_[current_nz] = i;
+          jac_d_p_iRow[current_nz] = d_row + 1;
+          jac_d_p_jCol[current_nz] = g_p_jCol[i];
+          current_nz++;
+        }
       }
       nz_jac_d_p_ = current_nz;
       Jac_d_p_space_ = new GenTMatrixSpace(n_d, n_full_p_, nz_jac_d_p_, jac_d_p_iRow, jac_d_p_jCol);
@@ -1402,46 +1402,46 @@ namespace Ipopt
       Index* h_p_iRow = new Index[nz_full_h_p_];
       Index* h_p_jCol = new Index[nz_full_h_p_];
       retval = tnlp_->eval_L_xp(n_full_x_, NULL, false,
-				n_full_p_, NULL, false,
-				0.0, n_full_g_, NULL, false,
-				nz_full_h_p_, full_h_p_iRow,
-				full_h_p_jCol, NULL);
+                                n_full_p_, NULL, false,
+                                0.0, n_full_g_, NULL, false,
+                                nz_full_h_p_, full_h_p_iRow,
+                                full_h_p_jCol, NULL);
       if (!retval && nz_full_h_p_>0) { // If we have parameters, we need this function!
-	delete[] full_h_p_iRow;
-	delete[] full_h_p_jCol;
-	delete[] h_p_iRow;
-	delete[] h_p_jCol;
-	jnlst_->Printf(J_ERROR, J_INITIALIZATION,
-		       "Problem has parameters, but eval_L_xp is not implemented.\n");
-	THROW_EXCEPTION(INVALID_TNLP, "Number of parameters is greater than zero, but eval_h_xp is not implemented.\n");
+        delete[] full_h_p_iRow;
+        delete[] full_h_p_jCol;
+        delete[] h_p_iRow;
+        delete[] h_p_jCol;
+        jnlst_->Printf(J_ERROR, J_INITIALIZATION,
+                       "Problem has parameters, but eval_L_xp is not implemented.\n");
+        THROW_EXCEPTION(INVALID_TNLP, "Number of parameters is greater than zero, but eval_h_xp is not implemented.\n");
       }
       if (index_style_ != TNLP::FORTRAN_STYLE) {
-	for (Index i=0; i<nz_full_h_p_; ++i) {
-	  full_h_p_iRow[i] += 1;
-	  full_h_p_jCol[i] += 1;
-	}
+        for (Index i=0; i<nz_full_h_p_; ++i) {
+          full_h_p_iRow[i] += 1;
+          full_h_p_jCol[i] += 1;
+        }
       }
 
       current_nz = 0;
       if (IsValid(P_x_full_x_)) {
-	h_p_idx_map_ = new Index[nz_full_h_p_];
-	const Index* h_p_pos = P_x_full_x_->CompressedPosIndices();
-	for (Index i=0; i<nz_full_h_p_; ++i) {
-	  const Index& h_p_row = h_p_pos[full_h_p_iRow[i]-1];
-	  if (h_p_row != -1) {
-	    h_p_idx_map_[current_nz] = i;
-	    h_p_iRow[current_nz] = h_p_row +1;
-	    h_p_jCol[current_nz] = full_h_p_jCol[i];
-	    current_nz++;
-	  }
-	}
+        h_p_idx_map_ = new Index[nz_full_h_p_];
+        const Index* h_p_pos = P_x_full_x_->CompressedPosIndices();
+        for (Index i=0; i<nz_full_h_p_; ++i) {
+          const Index& h_p_row = h_p_pos[full_h_p_iRow[i]-1];
+          if (h_p_row != -1) {
+            h_p_idx_map_[current_nz] = i;
+            h_p_iRow[current_nz] = h_p_row +1;
+            h_p_jCol[current_nz] = full_h_p_jCol[i];
+            current_nz++;
+          }
+        }
       } else {
-	h_p_idx_map_ = NULL;
-	for (Index i=0; i<nz_full_h_p_; ++i) {
-	  h_p_iRow[i] = full_h_p_iRow[i];
-	  h_p_jCol[i] = full_h_p_jCol[i];
-	}
-	current_nz = nz_full_h_p_;
+        h_p_idx_map_ = NULL;
+        for (Index i=0; i<nz_full_h_p_; ++i) {
+          h_p_iRow[i] = full_h_p_iRow[i];
+          h_p_jCol[i] = full_h_p_jCol[i];
+        }
+        current_nz = nz_full_h_p_;
       }
       nz_h_p_ = current_nz;
       Hess_lagrangian_p_space_ = new GenTMatrixSpace(n_x_var, n_full_p_, nz_h_p_, h_p_iRow, h_p_jCol);
@@ -1482,12 +1482,12 @@ namespace Ipopt
       jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
                      "Number of nonzeros in Lagrangian Hessian.............:%9d\n\n", nz_h_);
       if (n_full_p_>0) {
-	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
-		       "Number of nonzeros in equality parameter Jacobian..:%9d\n", nz_jac_c_p_);
-	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
-		       "Number of nonzeros in inequality parameter Jacobian:%9d\n", nz_jac_d_p_);
-	jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
-		       "Number of nonzeros in parameter Lagrangian Hessian.:%9d\n\n", nz_h_p_);
+        jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+                       "Number of nonzeros in equality parameter Jacobian..:%9d\n", nz_jac_c_p_);
+        jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+                       "Number of nonzeros in inequality parameter Jacobian:%9d\n", nz_jac_d_p_);
+        jnlst_->Printf(J_ITERSUMMARY, J_STATISTICS,
+                       "Number of nonzeros in parameter Lagrangian Hessian.:%9d\n\n", nz_h_p_);
       }
     }
 
@@ -1647,8 +1647,8 @@ namespace Ipopt
 
   bool TNLPAdapter::GetStartingPoint(SmartPtr<Vector> x,
                                      bool need_x,
-				     SmartPtr<Vector> p,
-				     bool need_p,
+                                     SmartPtr<Vector> p,
+                                     bool need_p,
                                      SmartPtr<Vector> y_c,
                                      bool need_y_c,
                                      SmartPtr<Vector> y_d,
@@ -1671,9 +1671,9 @@ namespace Ipopt
     bool init_p = need_p;
     bool retvalue =
       tnlp_->get_starting_point(n_full_x_, init_x, full_x,
-				n_full_p_, init_p, full_p,
-				init_z, full_z_l, full_z_u,
-				n_full_g_, init_lambda,
+                                n_full_p_, init_p, full_p,
+                                init_z, full_z_l, full_z_u,
+                                n_full_g_, init_lambda,
                                 full_lambda);
 
     if (!retvalue) {
@@ -1799,14 +1799,14 @@ namespace Ipopt
       // If it has been called before, we don't need to do it again...
       Number* full_x = new Number[n_full_x_];
       tnlp_->get_starting_point(n_full_x_, true, full_x,
-				n_full_p_, true, full_p_,
-				false, NULL,
-				NULL, n_full_g_, false, NULL);
+                                n_full_p_, true, full_p_,
+                                false, NULL,
+                                NULL, n_full_g_, false, NULL);
       delete[] full_x;
       SmartPtr<DenseVector> dp = dynamic_cast<DenseVector*>(GetRawPtr(p));
       Number* p_values = dp->Values();
       for (Index k=0; k<n_full_p_; ++k) {
-	p_values[k] = full_p_[k];
+        p_values[k] = full_p_[k];
       }
     }
     return true;
@@ -1844,7 +1844,7 @@ namespace Ipopt
     if (IsValid(P_x_full_x_)) {
       Number* full_grad_f = new Number[n_full_x_];
       if (tnlp_->eval_grad_f(n_full_x_, full_x_, new_x,
-			     n_full_p_, full_p_, new_p, full_grad_f)) {
+                             n_full_p_, full_p_, new_p, full_grad_f)) {
         const Index* x_pos = P_x_full_x_->ExpandedPosIndices();
         for (Index i=0; i<g_f.Dim(); i++) {
           values[i] = full_grad_f[x_pos[i]];
@@ -1855,7 +1855,7 @@ namespace Ipopt
     }
     else {
       retvalue = tnlp_->eval_grad_f(n_full_x_, full_x_, new_x,
-				    n_full_p_, full_p_, new_p, values);
+                                    n_full_p_, full_p_, new_p, values);
     }
 
     return retvalue;
@@ -1975,8 +1975,25 @@ namespace Ipopt
     return false;
   }
 
+  bool TNLPAdapter::Eval_jac_d_p(const Vector& x, const Vector& p, Matrix& jac_d_p)
+  {
+    bool new_x = update_local_x(x);
+    bool new_p = update_local_p(p);
+
+    if (internal_eval_jac_g_p(new_x, new_p)) {
+      GenTMatrix* gt_jac_d_p = static_cast<GenTMatrix*>(&jac_d_p);
+      DBG_ASSERT(dynamic_cast<GenTMatrix*>(&jac_d_p));
+      Number* values = gt_jac_d_p->Values();
+      for (Index i=0; i<nz_jac_d_p_; i++) {
+        values[i] = jac_g_p_[jac_g_p_idx_map_[i]];
+      }
+      return true;
+    }
+    return false;
+  }
+
   bool TNLPAdapter::Eval_h(const Vector& x,
-			   const Vector& p,
+                           const Vector& p,
                            Number obj_factor,
                            const Vector& yc,
                            const Vector& yd,
@@ -2009,8 +2026,8 @@ namespace Ipopt
       Number* full_h = new Number[nz_full_h_];
 
       if (tnlp_->eval_h(n_full_x_, full_x_, new_x,
-			n_full_p_, full_p_, new_p,
-			obj_factor, n_full_g_,
+                        n_full_p_, full_p_, new_p,
+                        obj_factor, n_full_g_,
                         full_lambda_, new_y, nz_full_h_, NULL, NULL, full_h)) {
         for (Index i=0; i<nz_h_; i++) {
           values[i] = full_h[h_idx_map_[i]];
@@ -2021,8 +2038,8 @@ namespace Ipopt
     }
     else {
       retval = tnlp_->eval_h(n_full_x_, full_x_, new_x,
-			     n_full_p_, full_p_, new_p,
-			     obj_factor, n_full_g_,
+                             n_full_p_, full_p_, new_p,
+                             obj_factor, n_full_g_,
                              full_lambda_, new_y, nz_full_h_, NULL, NULL,
                              values);
     }
@@ -2031,11 +2048,11 @@ namespace Ipopt
   }
 
   bool TNLPAdapter::Eval_h_p(const Vector& x,
-			   const Vector& p,
-			   Number obj_factor,
-			   const Vector& yc,
-			   const Vector& yd,
-			   Matrix& h_p)
+                           const Vector& p,
+                           Number obj_factor,
+                           const Vector& yc,
+                           const Vector& yd,
+                           Matrix& h_p)
   {
     DBG_START_METH("TNLPAdapter::Eval_h_p", dbg_verbosity);
     if (obj_factor==0. && yc.Asum()==0. && yd.Asum()==0.) {
@@ -2043,7 +2060,7 @@ namespace Ipopt
       DBG_ASSERT(dynamic_cast<GenTMatrix*>(&h_p));
       Number* values = st_h_p->Values();
       for (Index i=0; i<nz_h_p_; i++) {
-	values[i] = 0.;
+        values[i] = 0.;
       }
       return true;
     }
@@ -2061,22 +2078,22 @@ namespace Ipopt
       Number * full_h_p = new Number[nz_full_h_p_];
 
       if (tnlp_->eval_L_xp(n_full_x_, full_x_, new_x,
-			   n_full_p_, full_p_, new_p,
-			   obj_factor, n_full_g_,
-			   full_lambda_, new_y, nz_full_h_p_,
-			   NULL, NULL, values)) {
-	for (Index i=0; i<nz_h_p_; ++i) {
-	  values[i] = full_h_p[h_p_idx_map_[i]];
-	}
-	retval = true;
+                           n_full_p_, full_p_, new_p,
+                           obj_factor, n_full_g_,
+                           full_lambda_, new_y, nz_full_h_p_,
+                           NULL, NULL, values)) {
+        for (Index i=0; i<nz_h_p_; ++i) {
+          values[i] = full_h_p[h_p_idx_map_[i]];
+        }
+        retval = true;
       }
       delete[] full_h_p;
     } else {
       retval = tnlp_->eval_L_xp(n_full_x_, full_x_, new_x,
-				n_full_p_, full_p_, new_p,
-				obj_factor, n_full_g_,
-				full_lambda_, new_y, nz_full_h_p_,
-				NULL, NULL, values);
+                                n_full_p_, full_p_, new_p,
+                                obj_factor, n_full_g_,
+                                full_lambda_, new_y, nz_full_h_p_,
+                                NULL, NULL, values);
     }
     return retval;
   }
@@ -2696,8 +2713,8 @@ namespace Ipopt
     x_tag_for_g_ = x_tag_for_iterates_;
 
     bool retval = tnlp_->eval_g(n_full_x_, full_x_, new_x,
-				n_full_p_, full_p_, new_p,
-				n_full_g_, full_g_);
+                                n_full_p_, full_p_, new_p,
+                                n_full_g_, full_g_);
 
     if (!retval) {
       x_tag_for_jac_g_ = 0;
@@ -2721,8 +2738,8 @@ namespace Ipopt
     bool retval;
     if (jacobian_approximation_ == JAC_EXACT) {
       retval = tnlp_->eval_jac_g(n_full_x_, full_x_, new_x,
-				 n_full_p_, full_p_, new_p,
-				 n_full_g_,
+                                 n_full_p_, full_p_, new_p,
+                                 n_full_g_,
                                  nz_full_jac_g_, NULL, NULL, jac_g_);
     }
     else {
@@ -2743,8 +2760,8 @@ namespace Ipopt
               full_x_pert[ivar] = xorig - this_perturbation;
             }
             retval = tnlp_->eval_g(n_full_x_, full_x_pert, true,
-				   n_full_p_, full_p_, false,
-				   n_full_g_, full_g_pert);
+                                   n_full_p_, full_p_, false,
+                                   n_full_g_, full_g_pert);
             if (!retval) break;
             for (Index i=findiff_jac_ia_[ivar]; i<findiff_jac_ia_[ivar+1]; i++) {
               const Index& icon = findiff_jac_ja_[i];
@@ -2779,9 +2796,9 @@ namespace Ipopt
     p_tag_for_jac_g_p_ = p_tag_for_iterates_;
 
     bool retval = tnlp_->eval_jac_g_p(n_full_x_, full_x_, new_x,
-				      n_full_p_, full_p_, new_p,
-				      n_full_g_, nz_full_jac_g_p_,
-				      NULL, NULL, jac_g_p_);
+                                      n_full_p_, full_p_, new_p,
+                                      n_full_g_, nz_full_jac_g_p_,
+                                      NULL, NULL, jac_g_p_);
     if (!retval) {
       x_tag_for_jac_g_p_ = 0;
       p_tag_for_jac_g_p_ = 0;
@@ -2931,8 +2948,8 @@ namespace Ipopt
       g_iRow = new Index[nz_jac_g];
       g_jCol = new Index[nz_jac_g];
       retval = tnlp_->eval_jac_g(nx, NULL, false,
-				 np, NULL, false,
-				 ng, nz_jac_g,
+                                 np, NULL, false,
+                                 ng, nz_jac_g,
                                  g_iRow, g_jCol, NULL);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: Jacobian structure could not be evaluated.");
@@ -2946,7 +2963,7 @@ namespace Ipopt
       // Obtain values at reference pont
       jac_g = new Number[nz_jac_g];
       retval = tnlp_->eval_jac_g(nx, xref, new_x,
-				 np, pref, new_p, ng,
+                                 np, pref, new_p, ng,
                                  nz_jac_g, NULL, NULL, jac_g);
       ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                        "In TNLP derivative test: Jacobian values could not be evaluated at reference point.");
@@ -3088,11 +3105,11 @@ namespace Ipopt
         }
         // Hessian at reference point
         new_x = true;
-	new_p = true;
+        new_p = true;
         bool new_y = true;
         retval = tnlp_->eval_h(nx, xref, new_x, np, pref, new_p, objfact, ng, lambda, new_y,
                                nz_hess_lag, NULL, NULL, h_values);
-	new_p = false;
+        new_p = false;
         new_x = false;
         new_y = false;
         ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
@@ -3113,7 +3130,7 @@ namespace Ipopt
           else {
             // this is the icon-th constraint
             retval = tnlp_->eval_jac_g(nx, xpert, new_x,
-				       np, pref, new_p, ng,
+                                       np, pref, new_p, ng,
                                        nz_jac_g, NULL, NULL, jacpert);
             ASSERT_EXCEPTION(retval, ERROR_IN_TNLP_DERIVATIVE_TEST,
                              "In TNLP derivative test: Jacobian values could not be evaluated at reference point.");
@@ -3223,8 +3240,8 @@ namespace Ipopt
     Index* g_iRow = new Index[nz_full_jac_g_];
     Index* g_jCol = new Index[nz_full_jac_g_];
     if (!tnlp_->eval_jac_g(n_full_x_, NULL, false,
-			   n_full_p_, NULL, false,
-			   n_full_g_, nz_full_jac_g_,
+                           n_full_p_, NULL, false,
+                           n_full_g_, nz_full_jac_g_,
                            g_iRow, g_jCol, NULL)) {
       delete [] g_iRow;
       delete [] g_jCol;
@@ -3284,10 +3301,10 @@ namespace Ipopt
     // First we evaluate the equality constraint Jacobian at the
     // starting point with some random perturbation (projected into bounds)
     if (!tnlp_->get_starting_point(n_full_x_, true, full_x_,
-				   n_full_p_, true, full_p_,
-				   false, NULL,
+                                   n_full_p_, true, full_p_,
+                                   false, NULL,
                                    NULL, n_full_g_, false, NULL) ) {
-	//!tnlp_->get_parameters(n_full_p_, full_p_)) {
+        //!tnlp_->get_parameters(n_full_p_, full_p_)) {
       delete [] jac_c_iRow;
       delete [] jac_c_jCol;
       delete [] jac_c_map;
@@ -3307,8 +3324,8 @@ namespace Ipopt
     if (dependency_detection_with_rhs_) {
       g_vals = new Number[n_full_g_];
       if (!tnlp_->eval_g(n_full_x_, full_x_, true,
-			 n_full_x_, full_p_, true,
-			 n_full_g_, g_vals)) {
+                         n_full_x_, full_p_, true,
+                         n_full_g_, g_vals)) {
         delete [] jac_c_iRow;
         delete [] jac_c_jCol;
         delete [] jac_c_map;
@@ -3317,7 +3334,7 @@ namespace Ipopt
       }
     }
     if (!tnlp_->eval_jac_g(n_full_x_, full_x_, false,
-			   n_full_p_, full_p_, false, n_full_g_,
+                           n_full_p_, full_p_, false, n_full_g_,
                            nz_full_jac_g_, NULL, NULL, jac_g_)) {
       delete [] jac_c_iRow;
       delete [] jac_c_jCol;

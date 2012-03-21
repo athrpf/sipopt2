@@ -72,9 +72,9 @@ namespace Ipopt
                            SmartPtr<const MatrixSpace>& Jac_c_space,
                            SmartPtr<const MatrixSpace>& Jac_d_space,
                            SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
-			   SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                           SmartPtr<const MatrixSpace>& Jac_c_p_space,
                            SmartPtr<const MatrixSpace>& Jac_d_p_space,
-			   SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space);
+                           SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space);
 
     /** Method for obtaining the bounds information */
     virtual bool GetBoundsInformation(const Matrix& Px_L,
@@ -91,6 +91,8 @@ namespace Ipopt
     virtual bool GetStartingPoint(
       SmartPtr<Vector> x,
       bool need_x,
+      SmartPtr<Vector> p,
+      bool need_p,
       SmartPtr<Vector> y_c,
       bool need_y_c,
       SmartPtr<Vector> y_d,
@@ -118,25 +120,27 @@ namespace Ipopt
 
     virtual bool Eval_jac_c(const Vector& x, const Vector& p, Matrix& jac_c);
 
-    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c);
+    virtual bool Eval_jac_c_p(const Vector& x, const Vector& p, Matrix& jac_c_p);
 
     virtual bool Eval_d(const Vector& x, const Vector& p, Vector& d);
 
     virtual bool Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d);
 
+    virtual bool Eval_jac_d_p(const Vector& x, const Vector& p, Matrix& jac_d_p);
+
     virtual bool Eval_h(const Vector& x,
-			const Vector& p,
+                        const Vector& p,
                         Number obj_factor,
                         const Vector& yc,
                         const Vector& yd,
                         SymMatrix& h);
 
     virtual bool Eval_h_p(const Vector& x,
-			  const Vector& p,
-			  Number obj_factor,
-			  const Vector& yc,
-			  const Vector& yd,
-			  Matrix& h_p);
+                          const Vector& p,
+                          Number obj_factor,
+                          const Vector& yc,
+                          const Vector& yd,
+                          Matrix& h_p);
 
     virtual void GetScalingParameters(
       const SmartPtr<const VectorSpace> x_space,
