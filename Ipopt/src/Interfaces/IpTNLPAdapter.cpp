@@ -484,14 +484,21 @@ namespace Ipopt
       StringMetaDataMapType var_string_md;
       IntegerMetaDataMapType var_integer_md;
       NumericMetaDataMapType var_numeric_md;
+      StringMetaDataMapType para_string_md;
+      IntegerMetaDataMapType para_integer_md;
+      NumericMetaDataMapType para_numeric_md;
       StringMetaDataMapType con_string_md;
       IntegerMetaDataMapType con_integer_md;
       NumericMetaDataMapType con_numeric_md;
       if (!tnlp_->get_var_con_metadata(n_full_x_, var_string_md, var_integer_md, var_numeric_md,
+                                       n_full_p_, para_string_md, para_integer_md, para_numeric_md,
                                        n_full_g_, con_string_md, con_integer_md, con_numeric_md)) {
         var_string_md.clear();
         var_integer_md.clear();
         var_numeric_md.clear();
+        para_string_md.clear();
+        para_integer_md.clear();
+        para_numeric_md.clear();
         con_string_md.clear();
         con_integer_md.clear();
         con_numeric_md.clear();
@@ -965,9 +972,19 @@ namespace Ipopt
       delete [] x_u_map;
       x_u_map = NULL;
 
-      // create the required c_space
+      // create the required p_space
       SmartPtr<DenseVectorSpace> dp_space = new DenseVectorSpace(n_full_p_);
       p_space = GetRawPtr(dp_space);
+      for (StringMetaDataMapType::iterator iter=para_string_md.begin(), end=para_string_md.end(); iter!=end; ++iter) {
+        dp_space->SetStringMetaData(iter->first, iter->second);
+      }
+      for (IntegerMetaDataMapType::iterator iter=para_integer_md.begin(), end=para_integer_md.end(); iter!=end; ++iter) {
+        dp_space->SetIntegerMetaData(iter->first, iter->second);
+      }
+      for (NumericMetaDataMapType::iterator iter=para_numeric_md.begin(), end=para_numeric_md.end(); iter!=end; ++iter) {
+        dp_space->SetNumericMetaData(iter->first, iter->second);
+      }
+
 
       // create the required c_space
 
