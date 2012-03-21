@@ -57,6 +57,7 @@ namespace Ipopt
 
   void EquilibrationScaling::DetermineScalingParametersImpl(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     const SmartPtr<const MatrixSpace> jac_c_space,
@@ -72,7 +73,9 @@ namespace Ipopt
     DBG_ASSERT(IsValid(nlp_));
 
     SmartPtr<Vector> x0 = x_space->MakeNew();
+    SmartPtr<Vector> p0 = p_space->MakeNew();
     if (!nlp_->GetStartingPoint(GetRawPtr(x0), true,
+				GetRawPtr(p0), true,
                                 NULL, false,
                                 NULL, false,
                                 NULL, false,
@@ -107,9 +110,9 @@ namespace Ipopt
       bool done = false;
       while (!done) {
         SmartPtr<Vector> xpert = perturber->MakeNewPerturbedPoint();
-        done = (nlp_->Eval_grad_f(*xpert, *grad_f) &&
-                nlp_->Eval_jac_c(*xpert, *jac_c) &&
-                nlp_->Eval_jac_d(*xpert, *jac_d));
+        done = (nlp_->Eval_grad_f(*xpert, *p0, *grad_f) &&
+                nlp_->Eval_jac_c(*xpert, *p0, *jac_c) &&
+                nlp_->Eval_jac_d(*xpert, *p0, *jac_d));
         if (!done) {
           Jnlst().Printf(J_WARNING, J_INITIALIZATION,
                          "Error evaluating first derivatives as at perturbed point for equilibration-based scaling.\n");

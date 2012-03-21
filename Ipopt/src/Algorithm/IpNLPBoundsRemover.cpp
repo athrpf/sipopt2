@@ -40,10 +40,13 @@ namespace Ipopt
                               SmartPtr<const MatrixSpace>& pd_l_space,
                               SmartPtr<const VectorSpace>& d_u_space,
                               SmartPtr<const MatrixSpace>& pd_u_space,
-			                  SmartPtr<const VectorSpace>& p_space,
+			      SmartPtr<const VectorSpace>& p_space,
                               SmartPtr<const MatrixSpace>& Jac_c_space,
                               SmartPtr<const MatrixSpace>& Jac_d_space,
-                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space)
+                              SmartPtr<const SymMatrixSpace>& Hess_lagrangian_space,
+                              SmartPtr<const MatrixSpace>& Jac_c_p_space,
+                              SmartPtr<const MatrixSpace>& Jac_d_p_space,
+                              SmartPtr<const MatrixSpace>& Hess_lagrangian_p_space)
   {
     DBG_START_METH("NLPBoundsRemover::GetSpaces", dbg_verbosity);
     SmartPtr<const VectorSpace> d_space_orig;
@@ -56,15 +59,20 @@ namespace Ipopt
     SmartPtr<const VectorSpace> d_u_space_orig;
     SmartPtr<const MatrixSpace> pd_u_space_orig;
     SmartPtr<const MatrixSpace> Jac_d_space_orig;
+    SmartPtr<const MatrixSpace> Jac_c_p_space_orig;
+    SmartPtr<const MatrixSpace> Jac_d_p_space_orig;
 
     bool retval = nlp_->GetSpaces(x_space, c_space, d_space_orig,
                                   x_l_space_orig, px_l_space_orig,
                                   x_u_space_orig, px_u_space_orig,
                                   d_l_space_orig, pd_l_space_orig,
                                   d_u_space_orig, pd_u_space_orig,
-				                  p_space,
+				  p_space,
                                   Jac_c_space, Jac_d_space_orig,
-                                  Hess_lagrangian_space);
+                                  Hess_lagrangian_space,
+				  Jac_c_p_space_orig,
+				  Jac_d_p_space_orig,
+				  Hess_lagrangian_p_space);
     if (!retval) {
       return retval;
     }
@@ -152,6 +160,20 @@ namespace Ipopt
     Jac_d_space_new->SetCompSpace(2, 0, *trans_px_u_space_orig, true);
     Jac_d_space = GetRawPtr(Jac_d_space_new);
 
+    // Jacobian for inequalities w.r.t. parameters matrix space
+    total_cols = p_space->Dim();
+    SmartPtr<CompoundMatrixSpace> Jac_d_p_space_new =
+      new CompoundMatrixSpace(3, 1, total_rows, total_cols);
+    Jac_d_p_space_new->SetBlockRows(0, d_space_orig->Dim());
+    Jac_d_p_space_new->SetBlockRows(1, x_l_space_orig->Dim());
+    Jac_d_p_space_new->SetBlockRows(2, x_u_space_orig->Dim());
+    Jac_d_p_space_new->SetBlockCols(0, p_space->Dim());
+    Jac_d_p_space_new->SetCompSpace(0, 0, *Jac_d_p_space_orig);
+    //SmartPtr<MatrixSpace> pxp_l_space = new ZeroMatrixSpace(p_space->Dim(),0);
+    Jac_d_p_space_new->SetCompSpace(1, 0, *trans_px_l_space_orig);
+    Jac_d_p_space_new->SetCompSpace(2, 0, *trans_px_u_space_orig);
+    Jac_d_p_space = GetRawPtr(Jac_d_p_space_new);
+
     // We keep the original d_space around in order to be able to do
     // the sanity check later
     d_space_orig_ = d_space_orig;
@@ -215,6 +237,8 @@ namespace Ipopt
   bool
   NLPBoundsRemover::GetStartingPoint(SmartPtr<Vector> x,
                                      bool need_x,
+				     SmartPtr<Vector> p,
+				     bool need_p,
                                      SmartPtr<Vector> y_c,
                                      bool need_y_c,
                                      SmartPtr<Vector> y_d,
@@ -235,19 +259,19 @@ namespace Ipopt
       z_U_orig = comp_y_d->GetCompNonConst(2);
     }
     bool retval =
-      nlp_->GetStartingPoint(x, need_x, y_c, need_y_c, y_d_orig, need_y_d,
+      nlp_->GetStartingPoint(x, need_x, p, need_p, y_c, need_y_c, y_d_orig, need_y_d,
                              z_L_orig, need_y_d, z_U_orig, need_y_d);
     return retval;
   }
 
   bool
-  NLPBoundsRemover::Eval_d(const Vector& x, Vector& d)
+  NLPBoundsRemover::Eval_d(const Vector& x, const Vector& p, Vector& d)
   {
     CompoundVector* comp_d = static_cast<CompoundVector*>(&d);
     DBG_ASSERT(dynamic_cast<CompoundVector*>(&d));
     SmartPtr<Vector> d_orig = comp_d->GetCompNonConst(0);
 
-    bool retval = nlp_->Eval_d(x, *d_orig);
+    bool retval = nlp_->Eval_d(x, p, *d_orig);
     if (retval) {
       SmartPtr<Vector> x_L = comp_d->GetCompNonConst(1);
       SmartPtr<Vector> x_U = comp_d->GetCompNonConst(2);
@@ -258,7 +282,7 @@ namespace Ipopt
   }
 
   bool
-  NLPBoundsRemover::Eval_jac_d(const Vector& x, Matrix& jac_d)
+  NLPBoundsRemover::Eval_jac_d(const Vector& x, const Vector& p, Matrix& jac_d)
   {
     CompoundMatrix* comp_jac_d = static_cast<CompoundMatrix*>(&jac_d);
     DBG_ASSERT(dynamic_cast<CompoundMatrix*>(&jac_d));
@@ -267,7 +291,7 @@ namespace Ipopt
       static_cast<const CompoundMatrixSpace*>(GetRawPtr(jac_d_space));
     DBG_ASSERT(dynamic_cast<const CompoundMatrixSpace*>(GetRawPtr(jac_d_space)));
     SmartPtr<Matrix> jac_d_orig = comp_jac_d_space->GetCompSpace(0,0)->MakeNew();
-    bool retval = nlp_->Eval_jac_d(x, *jac_d_orig);
+    bool retval = nlp_->Eval_jac_d(x, p, *jac_d_orig);
     if (retval) {
       comp_jac_d->SetComp(0, 0, *jac_d_orig);
     }
@@ -275,14 +299,14 @@ namespace Ipopt
   }
 
   bool
-  NLPBoundsRemover::Eval_h(const Vector& x, Number obj_factor,
+  NLPBoundsRemover::Eval_h(const Vector& x, const Vector& p, Number obj_factor,
                            const Vector& yc, const Vector& yd, SymMatrix& h)
   {
     const CompoundVector* comp_yd = static_cast<const CompoundVector*>(&yd);
     DBG_ASSERT(dynamic_cast<const CompoundVector*>(&yd));
     SmartPtr<const Vector> yd_orig = comp_yd->GetComp(0);
 
-    bool retval = nlp_->Eval_h(x, obj_factor, yc, *yd_orig, h);
+    bool retval = nlp_->Eval_h(x, p, obj_factor, yc, *yd_orig, h);
     return retval;
   }
 
@@ -316,6 +340,7 @@ namespace Ipopt
   void
   NLPBoundsRemover::GetScalingParameters(
     const SmartPtr<const VectorSpace> x_space,
+    const SmartPtr<const VectorSpace> p_space,
     const SmartPtr<const VectorSpace> c_space,
     const SmartPtr<const VectorSpace> d_space,
     Number& obj_scaling,
@@ -329,7 +354,7 @@ namespace Ipopt
     SmartPtr<const VectorSpace> d_space_orig = comp_d_space->GetCompSpace(0);
 
     SmartPtr<Vector> d_scaling_orig;
-    nlp_->GetScalingParameters(x_space, c_space, d_space_orig, obj_scaling,
+    nlp_->GetScalingParameters(x_space, p_space, c_space, d_space_orig, obj_scaling,
                                x_scaling, c_scaling, d_scaling_orig);
 
     if (IsValid(x_scaling) || IsValid(d_scaling_orig)) {
