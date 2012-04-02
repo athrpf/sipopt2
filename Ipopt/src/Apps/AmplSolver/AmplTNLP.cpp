@@ -268,7 +268,7 @@ namespace Ipopt
     for (Index i=0; i<n_var; ++i) {
       if (parameter_flags_[i]){
         index_in_var_or_para_[i] = paraI;
-      	para_x_[paraI++] = i;
+        para_x_[paraI++] = i;
       }else{
         index_in_var_or_para_[i] = varI;
         var_x_[varI++] = i;
@@ -405,16 +405,16 @@ namespace Ipopt
         havepi0 = NULL;
       }
       if (var_and_para_x_) {
-    	delete [] var_and_para_x_;
-    	var_and_para_x_ = NULL;
+        delete [] var_and_para_x_;
+        var_and_para_x_ = NULL;
       }
       if (var_x_) {
-      	delete [] var_x_;
-       	var_x_ = NULL;
+        delete [] var_x_;
+        var_x_ = NULL;
       }
       if (para_x_) {
-       	delete [] para_x_;
-       	para_x_ = NULL;
+        delete [] para_x_;
+        para_x_ = NULL;
       }
       if(jac_row_all_) {
         delete [] jac_row_all_;
@@ -497,7 +497,7 @@ namespace Ipopt
 
   bool AmplTNLP::get_nlp_info(Index& n, Index& np, Index& m, Index& nnz_jac_g,
                               Index& nnz_h_lag, Index& nnz_jac_g_p,
-			      Index& nnz_h_lag_p, IndexStyleEnum& index_style)
+                              Index& nnz_h_lag_p, IndexStyleEnum& index_style)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
@@ -523,6 +523,10 @@ namespace Ipopt
                                       StringMetaDataMapType& var_string_md,
                                       IntegerMetaDataMapType& var_integer_md,
                                       NumericMetaDataMapType& var_numeric_md,
+                                      Index np,
+                                      StringMetaDataMapType& para_string_md,
+                                      IntegerMetaDataMapType& para_integer_md,
+                                      NumericMetaDataMapType& para_numeric_md,
                                       Index m,
                                       StringMetaDataMapType& con_string_md,
                                       IntegerMetaDataMapType& con_integer_md,
@@ -616,9 +620,9 @@ namespace Ipopt
   }
 
   bool AmplTNLP::get_starting_point(Index n, bool init_x, Number* x,
-				    Index np, bool init_p, Number* p,
-				    bool init_z, Number* z_L, Number* z_U, Index m,
-				    bool init_lambda, Number* lambda)
+                                    Index np, bool init_p, Number* p,
+                                    bool init_z, Number* z_L, Number* z_U, Index m,
+                                    bool init_lambda, Number* lambda)
   {
     ASL_pfgh* asl = asl_;
     DBG_ASSERT(asl_);
@@ -641,11 +645,11 @@ namespace Ipopt
       for (Index i=0; i<paraCnt_; i++) {
         if (havex0[para_x_[i]]) {
           p[i] = X0[para_x_[i]];
-	}
+        }
         else {
-	  THROW_EXCEPTION(TNLP::INVALID_TNLP, "A parameter was not set explicitly!\n");
+          THROW_EXCEPTION(TNLP::INVALID_TNLP, "A parameter was not set explicitly!\n");
           p[i] = 0.0;
-	}
+        }
       }
     }
 
@@ -691,8 +695,8 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_f(Index n, const Number* x, bool new_x,
-			                  Index np, const Number* p, bool new_p,
-			                  Number& obj_value)
+                        Index np, const Number* p, bool new_p,
+                        Number& obj_value)
     {
       DBG_START_METH("AmplTNLP::eval_f (parametric overload)",
                      dbg_verbosity);
@@ -704,8 +708,8 @@ namespace Ipopt
     }
 
   bool AmplTNLP::eval_grad_f(Index n, const Number* x, bool new_x,
-			                       Index np, const Number* p, bool new_p,
-			                       Number* grad_f)
+                             Index np, const Number* p, bool new_p,
+                             Number* grad_f)
   {
     DBG_START_METH("AmplTNLP::eval_grad_f",
                    dbg_verbosity);
@@ -743,8 +747,8 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_g(Index n, const Number* x, bool new_x,
-			                  Index np, const Number* p, bool new_p,
-			                  Index m, Number* g)
+                        Index np, const Number* p, bool new_p,
+                        Index m, Number* g)
   {
     DBG_START_METH("AmplTNLP::eval_g", dbg_verbosity);
     DBG_DO(ASL_pfgh* asl = asl_);
@@ -759,7 +763,7 @@ namespace Ipopt
   }
 
   bool AmplTNLP::eval_jac_g(Index n, const Number* x, bool new_x,
-			                      Index np, const Number* p, bool new_p,
+                            Index np, const Number* p, bool new_p,
                             Index m, Index nele_jac, Index* iRow,
                             Index *jCol, Number* values)
   {
@@ -967,7 +971,7 @@ namespace Ipopt
   {
     ASL_pfgh* asl = asl_;
     apply_new_xp(true, n, x,
-		 false, paraCnt_, NULL);
+                 false, paraCnt_, NULL);
     /* x_sol_ is not needed anymore - we have var_and_para_x_
     if (!x_sol_) {
       x_sol_ = new Number[n];
@@ -1127,7 +1131,7 @@ namespace Ipopt
   }
 
   bool AmplTNLP::apply_new_xp(bool new_x, Index n, const Number* x,
-			      bool new_p, Index np, const Number* p)
+                              bool new_p, Index np, const Number* p)
   {
     DBG_START_METH("AmplTNLP::apply_new_xp",
                    dbg_verbosity);
