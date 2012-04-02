@@ -555,6 +555,10 @@ namespace Ipopt
       con_string_md_["idx_names"] = con_names;
     }
 
+    // if (np > 0) {
+    //  const double* perturbed =
+    // }
+
     if (var_string_md_.size() > 0 || var_integer_md_.size() > 0 || var_numeric_md_.size() > 0
         || con_string_md_.size() > 0 || con_integer_md_.size() > 0 || con_numeric_md_.size() > 0) {
       var_string_md = var_string_md_;
