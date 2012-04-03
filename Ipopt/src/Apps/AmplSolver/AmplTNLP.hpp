@@ -618,6 +618,9 @@ namespace Ipopt
     StringMetaDataMapType var_string_md_;
     IntegerMetaDataMapType var_integer_md_;
     NumericMetaDataMapType var_numeric_md_;
+    StringMetaDataMapType para_string_md_;
+    IntegerMetaDataMapType para_integer_md_;
+    NumericMetaDataMapType para_numeric_md_;
     StringMetaDataMapType con_string_md_;
     IntegerMetaDataMapType con_integer_md_;
     NumericMetaDataMapType con_numeric_md_;

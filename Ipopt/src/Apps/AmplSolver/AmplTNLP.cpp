@@ -542,9 +542,15 @@ namespace Ipopt
     if (rlen > 0) {
       std::vector<std::string> var_names(n);
       for (Index i=0; i<n; i++) {
-        var_names[i] = var_name(i);
+        var_names[i] = var_name(var_x_[i]);
       }
       var_string_md_["idx_names"] = var_names;
+
+      std::vector<std::string> para_names(np);
+      for (Index i=0; i<np; i++) {
+        para_names[i] = var_name(para_x_[i]);
+      }
+      para_string_md_["idx_names"] = para_names;
     }
 
     if (clen > 0) {
@@ -555,15 +561,15 @@ namespace Ipopt
       con_string_md_["idx_names"] = con_names;
     }
 
-    // if (np > 0) {
-    //  const double* perturbed =
-    // }
-
     if (var_string_md_.size() > 0 || var_integer_md_.size() > 0 || var_numeric_md_.size() > 0
+        || para_string_md_.size() > 0 || para_integer_md_.size() > 0 || para_numeric_md_.size() > 0
         || con_string_md_.size() > 0 || con_integer_md_.size() > 0 || con_numeric_md_.size() > 0) {
       var_string_md = var_string_md_;
       var_integer_md = var_integer_md_;
       var_numeric_md = var_numeric_md_;
+      para_string_md = para_string_md_;
+      para_integer_md = para_integer_md_;
+      para_numeric_md = para_numeric_md_;
       con_string_md = con_string_md_;
       con_integer_md = con_integer_md_;
       con_numeric_md = con_numeric_md_;
