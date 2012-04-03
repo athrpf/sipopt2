@@ -1,0 +1,21 @@
+
+* Algorithms
+** Compute variance of the optimal solution
+*** Hessian Approximation
+    Using the formula
+    \[E^T\partial_s K^{-1}E\]
+    This is only valid for special problems
+*** Real first order variance
+    For the real / correct first order variance, the covariance of the data needs to be taken into account.
+    This is done by computing
+    \[E^T(\partial_s K^{-1}\partial_p K)V_p(\partial_s K^{-1}\partial_p K)E\]
+    where $V_p$ is the covariance matrix of the data $p$
+
+** Compute a 1-D parametric perturbation
+   Suppose a $\Delta p$ is given by an AMPL suffix .perturbed
+   The fix-relax strategy would work on this.
+
+* Details
+** MakeNewFromNumericMetaData
+   Should be written as a member for DenseVectorSpace.
+   This would for example make the generation of $\Delta p$ from an AMPL suffix very easy.
