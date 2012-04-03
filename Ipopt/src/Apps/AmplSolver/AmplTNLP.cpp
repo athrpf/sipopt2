@@ -581,9 +581,11 @@ namespace Ipopt
     DBG_ASSERT(n == n_var);
     DBG_ASSERT(m == n_con);
 
+    Index k;
     for (Index i=0; i<n; i++) {
-      x_l[i] = LUv[2*i];
-      x_u[i] = LUv[2*i+1];
+      k = var_x_[i];
+      x_l[i] = LUv[2*k];
+      x_u[i] = LUv[2*k+1];
     }
 
     for (Index i=0; i<m; i++) {
@@ -593,17 +595,6 @@ namespace Ipopt
 
     return true;
   }
-  /*
-  bool AmplTNLP::get_parameters(Index np, Number* p)
-  {
-    DBG_ASSERT(np == paraCnt_);
-
-    for (Index i = 0; i < paraCnt_; ++i){
-      p[i] = var_and_para_x_[para_x_[i]];
-    }
-    return true;
-    }*/
-
 
   bool AmplTNLP::get_constraints_linearity(Index n,
       LinearityType* const_types)
