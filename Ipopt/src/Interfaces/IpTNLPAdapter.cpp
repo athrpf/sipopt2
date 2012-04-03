@@ -985,6 +985,41 @@ namespace Ipopt
         dp_space->SetNumericMetaData(iter->first, iter->second);
       }
 
+      if (para_string_md.size() > 0) {
+        StringMetaDataMapType::iterator iter=para_string_md.begin(), end=para_string_md.end();
+        std::vector<std::string> string_md(n_full_p_);
+        for (; iter!=end; ++iter) {
+          for (Index i=0; i<n_full_p_; ++i) {
+            string_md[i] = iter->second[i];
+          }
+          dp_space->SetStringMetaData(iter->first, string_md);
+          string_md.clear();
+        }
+      }
+
+      if (para_integer_md.size() > 0) {
+        IntegerMetaDataMapType::iterator iter=para_integer_md.begin(), end=para_integer_md.end();
+        for (; iter!=end; ++iter) {
+          std::vector<Index> integer_md(n_full_p_);
+          for (Index i=0; i<n_full_p_; ++i) {
+            integer_md[i] = iter->second[i];
+          }
+          dp_space->SetIntegerMetaData(iter->first, integer_md);
+          integer_md.clear();
+        }
+      }
+
+      if (para_numeric_md.size() > 0) {
+        NumericMetaDataMapType::iterator iter=para_numeric_md.begin(), end=para_numeric_md.end();
+        for (; iter!=end; ++iter) {
+          std::vector<Number> numeric_md(n_full_p_);
+          for (Index i=0; i<n_full_p_; ++i) {
+            numeric_md[i] = iter->second[i];
+          }
+          dp_space->SetNumericMetaData(iter->first, numeric_md);
+          numeric_md.clear();
+        }
+      }
 
       // create the required c_space
 
