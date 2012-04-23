@@ -1,7 +1,15 @@
+This is sIpopt version 2.0
 
-To install this package, please look at the INSTALL file. 
+sIpopt 2.0 is a fork of the popular NLP solver IPOPT (https://projects.coin-or.org/Ipopt). The difference between the two is that sIpopt 2.0 allows the explicitly declaration of parameters in the optimization problem. This enables the implementation of algorithms that are based on the partial derivatives of the lagrangian and the constraints w.r.t. these parameters, such as sensitivity calculation, etc.
+
+sIpopt 2.0 was developed in an effort to make the implementation of sensitivity calculations cleaner and more efficient than it would be without changing some core elements of Ipopt. If you would like to calculate sensitivities of the optimal solution, but would like to use the original version of Ipopt, there is sIpopt 1.0, which is in the contrib subdirectory of the Ipopt trunk.
+
+For more information on the theory behind this, see
+H. Pirnay, R. Lopez-Negrete, and L.T. Biegler, ​Optimal Sensitivity Based on IPOPT, Submitted for publication to Math Prog Comp, (Apr. 2011)
+
+To install this package, please look at the INSTALL file.
 
 This package contains several subdirectories corresponding to COIN-OR
-projects (www.coin-or.org). The AUTHORS, LICENSE and README files in 
+projects (www.coin-or.org). The AUTHORS, LICENSE and README files in
 each of the subdirectories give more information about these projects.
 
