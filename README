@@ -1,4 +1,5 @@
 This is sIpopt version 2.0
+==========================
 
 sIpopt 2.0 is a fork of the popular NLP solver IPOPT (https://projects.coin-or.org/Ipopt). The difference between the two is that sIpopt 2.0 allows the explicitly declaration of parameters in the optimization problem. This enables the implementation of algorithms that are based on the partial derivatives of the lagrangian and the constraints w.r.t. these parameters, such as sensitivity calculation, etc.
 
@@ -7,9 +8,67 @@ sIpopt 2.0 was developed in an effort to make the implementation of sensitivity 
 For more information on the theory behind this, see
 H. Pirnay, R. Lopez-Negrete, and L.T. Biegler, ​Optimal Sensitivity Based on IPOPT, Submitted for publication to Math Prog Comp, (Apr. 2011)
 
-To install this package, please look at the INSTALL file.
+Installation
+------------
+
+So far, sIPOPT2.0 has only been tested on linux. However, the issues for getting it to work on other operating systems should be exactly the same as those you encounter when installing regular IPOPT, so the same solutions should be applicable.
+
+In the following $SIPOPT2 is supposed to be the base directory for sIPOPT2.
+
+To install sIPOPT2, the follow these steps:
+
+1. clone sIPOPT
+----------------
+
+for example, run
+
+git clone https://github.com/athrpf/sipopt2.git $sIPOPT2
+
+on the terminal.
+
+2. get the ThirdParty stuff
+----------------------------
+
+You don't need to install it, just check out the trunk from svn (version 3.10.x should work as well).
+Follow the directions for getting all the ThirdParty code that you'd like to use, just like when building Ipopt in
+
+http://www.coin-or.org/Ipopt/documentation/node14.html
+
+Now execute the following code:
+
+cd $sIPOPT2/
+ln -s $IPOPT_DIR/ThirdParty .
+
+3. configure, build
+--------------------
+
+It makes sense to separate source and build files. Therefore, start with
+
+mkdir build
+cd build
+
+For the configure step, the same options apply as for Ipopt. When testing the code, I usually compile with these flags:
+
+configure ../ --with-blas="-lblas" --with-lapack="-llapack" --enable-debug --with-ipopt-verbosity=10
+
+then
+
+make && make install
+
+and you're ready to go!
+
+4. running the AMPL interface
+-----------
+
+If you arrived at this point, you successfully built the AMPL executable and the Ipopt/sIpopt2 library.
+To run the AMPL interface, put $sIPOPT2/build/bin/ipopt into your $PATH.
+
+Caveat
+------------
+* Make sure you obey all copyrights / licenses
+* This is a development code. Do not trust its results!
+
 
 This package contains several subdirectories corresponding to COIN-OR
 projects (www.coin-or.org). The AUTHORS, LICENSE and README files in
 each of the subdirectories give more information about these projects.
-
