@@ -38,9 +38,12 @@
 #include "IpMultiVectorMatrix.hpp"
 #include "IpDenseVector.hpp"
 
+using namespace Ipopt;
+SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app);
+SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app, SmartPtr<Matrix> sens_matrix);
+
 int main(int argc, char**args)
 {
-  using namespace Ipopt;
 
   SmartPtr<IpoptApplication> app = IpoptApplicationFactory();
 
@@ -87,6 +90,7 @@ int main(int argc, char**args)
   suffix_handler->AddAvailableSuffix("ipopt_zU_in", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
   // Add the suffix for parameter-marking
   suffix_handler->AddAvailableSuffix("parameter", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
+  suffix_handler->AddAvailableSuffix("perturbed", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
 
   SmartPtr<ParaTNLP> ampl_tnlp = new AmplTNLP(ConstPtr(app->Jnlst()),
                                           app->Options(),
@@ -104,6 +108,15 @@ int main(int argc, char**args)
     retval = app->OptimizeTNLP(ampl_tnlp);
   }
 
+  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
+  SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
+  if (IsValid(delta_s))
+    delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
+  return 0;
+}
+
+SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app)
+{
   // finalize_solution method in AmplTNLP writes the solution file
 
   SmartPtr<const Vector> x = app->IpoptDataObject()->curr()->x();
@@ -129,10 +142,10 @@ int main(int argc, char**args)
   Index np = orig_nlp->p()->Dim();
   SmartPtr<MultiVectorMatrixSpace> mv_space = new MultiVectorMatrixSpace(np, *x->OwnerSpace());
   SmartPtr<MultiVectorMatrix> mv = dynamic_cast<MultiVectorMatrix*>(mv_space->MakeNew());
+  Number* dp_values = new Number[np];
   for (int k=0; k<np; ++k) {
     // set up current dp vector as unit vector with entry at index k
     SmartPtr<DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()))->MakeNewDenseVector();
-    Number* dp_values = new Number[np];
     for (int j=0; j<np; ++j)
       dp_values[j] = 0.0;
     dp_values[k] = 1.0;
@@ -157,7 +170,38 @@ int main(int argc, char**args)
     pd_solver->Solve(1.0, 0.0, *it_vec, *lhs);
     mv->SetVector(k, *lhs->x());
   }
-
+  delete[] dp_values;
   mv->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "dxdp");
-  return 0;
+  SmartPtr<Matrix> retval(GetRawPtr(mv));
+  return retval;
+}
+
+SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app, SmartPtr<Matrix> sens_matrix) {
+  SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
+
+  SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
+  SmartPtr<OrigIpoptNLP> orig_nlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp));
+
+  // if perturbed values are given, compute the step and print it
+  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+  SmartPtr<DenseVector> delta_p;
+  if (dp_space->HasNumericMetaData("perturbed")) {
+    const std::vector<Number> perturbed = dp_space->GetNumericMetaData("perturbed");
+    delta_p = dp->MakeNewDenseVector();
+    const Number* dp_values = dp->Values();
+    Number* new_values = new Number[dp->Dim()];
+    for (int k=0; k<dp->Dim(); ++k) {
+      new_values[k] = perturbed[k] - dp_values[k];
+    }
+    delta_p->SetValues(new_values);
+    delete[] new_values;
+    SmartPtr<Vector> delta_x = curr->x()->MakeNewCopy();
+
+    sens_matrix->MultVector(1.0, *delta_p, 0.0, *delta_x);
+    return delta_x;
+  }
+  else {
+    return NULL;
+  }
 }

@@ -561,6 +561,15 @@ namespace Ipopt
       con_string_md_["idx_names"] = con_names;
     }
 
+    const Number* perturbed = suffix_handler_->GetNumberSuffixValues("perturbed", AmplSuffixHandler::Variable_Source);
+    if (paraCnt_>0 && perturbed) {
+      std::vector<double> perturbed_vec(paraCnt_);
+      for (int k=0; k<paraCnt_; ++k) {
+        perturbed_vec[k] = perturbed[para_x_[k]];
+      }
+      para_numeric_md["perturbed"] = perturbed_vec;
+    }
+
     if (var_string_md_.size() > 0 || var_integer_md_.size() > 0 || var_numeric_md_.size() > 0
         || para_string_md_.size() > 0 || para_integer_md_.size() > 0 || para_numeric_md_.size() > 0
         || con_string_md_.size() > 0 || con_integer_md_.size() > 0 || con_numeric_md_.size() > 0) {
@@ -1973,6 +1982,3 @@ namespace Ipopt
   }
 
 } // namespace Ipopt
-
-
-
