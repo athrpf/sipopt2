@@ -1,0 +1,8 @@
+#!/bin/bash
+
+echo "number of arguments is $#"
+if [ "$#" -eq 2 ]
+then
+    echo "$0 $1 $2"
+    valgrind --leak-check=full sipopt $1 $2 2>valout.out
+fi
