@@ -567,7 +567,7 @@ namespace Ipopt
       for (int k=0; k<paraCnt_; ++k) {
         perturbed_vec[k] = perturbed[para_x_[k]];
       }
-      para_numeric_md["perturbed"] = perturbed_vec;
+      para_numeric_md_["perturbed"] = perturbed_vec;
     }
 
     if (var_string_md_.size() > 0 || var_integer_md_.size() > 0 || var_numeric_md_.size() > 0
