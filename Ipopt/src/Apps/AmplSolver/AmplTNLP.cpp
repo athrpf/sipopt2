@@ -17,6 +17,11 @@
 #include "IpSymTMatrix.hpp"
 #include "IpBlas.hpp"
 
+/* //bewa01 giving his best
+   #ifdef HAVE_LIST_H
+   #  include <list.h>
+   #else
+   #  error "don't have header file for list" */
 #ifdef HAVE_CSTRING
 # include <cstring>
 #else
@@ -1980,5 +1985,322 @@ namespace Ipopt
     }
     return ret;
   }
+
+  //////////////////////////////////////////////////////////////////////////////////
+  ////////bewa01 setup of a storage for intervallization data //////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
+
+
+
+  IntervallInfo::IntervallInfo() {}
+
+  IntervallInfo::IntervallInfo(const Index nint, const Index ninc, const std::vector<std::string> pnames, const std::vector<Number> pvalues)
+  {
+    nintervalls_ = nint;
+    nincludes_ = ninc;
+    //printf("\n pnames_ size() ist %d   pnames size() ist   %d \n",pnames_.size(),pnames.size());
+
+    for (int i=0;i<pnames.size();i++){
+      std::string tmp_name = pnames[i].c_str();
+      std::size_t cbrack_idx,obrack_idx,komma_idx;
+      // get position of last ] in name
+      cbrack_idx = tmp_name.rfind(']');
+      obrack_idx = tmp_name.rfind('[');
+      komma_idx = tmp_name.rfind(',');
+      // valid bracket expression of the form [..] or [..,..] or no?
+      bool nobrackets = false;
+      if (cbrack_idx==std::string::npos||obrack_idx==std::string::npos)
+	nobrackets = true;
+      else if (komma_idx==std::string::npos){
+	if (obrack_idx>cbrack_idx)
+	  nobrackets = true;
+      } else if (komma_idx>cbrack_idx)
+	nobrackets = true;
+      else if (komma_idx<obrack_idx)
+	nobrackets = true;
+      //printf("\n nobrackets hat den Wert %d \n",nobrackets);
+      if (nobrackets){
+	//if theres no  [...] at the end of the name, it should be addable to names without further changes. NOTICE:::::: THIS WILL LEAD TO WRONG OUTPUT INTO .INT FILE ([k] will be added even if it wasnt there in the first place)
+	for (int j=0;j<pnames_.size();j++) {
+	  if (pnames_[j]==tmp_name) {
+	    pvalues_[j].push_back(pvalues[i]);
+	    j=pnames_.size();
+	    //printf("\n AmplTNLP.cpp: Not-first-intervall parameter data written.");
+	  } else if (j==(pnames_.size()-1)){
+	    pnames_.push_back(tmp_name.c_str());
+	    std::vector<Number> tmp_value;   // bew01: this would prefer to be a list
+	    tmp_value.push_back(pvalues[i]);
+	    pvalues_.push_back(tmp_value);
+	    j++;
+	    //printf("\n AmplTNLP.cpp: First-intervall parameter data written.");
+	  }
+	}
+	//the very first value and name can be added anyway
+	if (!pnames_.size()){
+	  pnames_.push_back(tmp_name.c_str());
+	  std::vector<Number> tmp_value;   // bew01: this would prefer to be a list
+	  tmp_value.push_back(pvalues[i]);
+	  pvalues_.push_back(tmp_value);
+	  //	  printf("\n AmplTNLP.cpp: First-ever-intervall parameter data written. No [...] or [..,..]");
+	}
+	// usual string transformation algorithm for valid [..] expression at the end of pname
+      } else {
+
+	if (komma_idx!=std::string::npos)
+	  // if there is more than 1 argument, only the last one is considered unnecessary interval information, the rest needs to stay part of the shortened name
+	  tmp_name.erase(komma_idx,cbrack_idx);
+	else
+	  tmp_name.erase(obrack_idx);
+	// printf("\n tmp_name ist zur Zeit: %s \n", tmp_name.c_str());
+	for (int j=0;j<pnames_.size();j++){
+	  // check if the name was stored already
+	  if (pnames_[j]==tmp_name) {
+	    pvalues_[j].push_back(pvalues[i]);
+	    j = pnames_.size();
+	    //	    printf("\n AmplTNLP.cpp: Not-first-intervall parameter data written.");
+	  } else if (j==(pnames_.size()-1)){
+	    pnames_.push_back(tmp_name.c_str());
+	    std::vector<Number> tmp_value;   // bew01: this would prefer to be a list
+	    tmp_value.push_back(pvalues[i]);
+	    pvalues_.push_back(tmp_value);
+	    j++;
+	    // printf("\n AmplTNLP.cpp: First-intervall parameter data written.");
+	  }
+	}
+	//the very first value and name can be added anyway
+	if (!pnames_.size()){
+	  pnames_.push_back(tmp_name.c_str());
+	  // printf("\n pnames_[0] ist %s  \n",pnames_[0].c_str());
+	  std::vector<Number> tmp_value;   // bew01: this would prefer to be a list
+	  tmp_value.push_back(pvalues[i]);
+	  pvalues_.push_back(tmp_value);
+	  // printf("\n AmplTNLP.cpp: First-ever-intervall parameter data written.");
+	}
+      }
+    }
+
+    nparameters_ = pnames.size();
+
+  }
+
+  IntervallInfo:: ~IntervallInfo() {}
+
+  void IntervallInfo::SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues) {/*
+														 pnames_ = pnames;
+														 pvalues_= pvalues;
+														 nparameters_ = pnames.size();
+														 nintervalls_ = 0;*/
+  }
+
+  void IntervallInfo::AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues) {/*
+														for (int i=0; i<pnames.size();i++)
+														pnames_.push_back(pnames[i]);
+														nparameters_ = nparameters_+pnames.size()+1;
+
+														for (int i=0; i<pvalues.size();i++)
+														pvalues_.push_back(pvalues[i]);*/
+  }
+
+  void IntervallInfo::GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues) {
+    *pnames = pnames_;
+    std::vector<Number> tmp_pvalues_;
+    for (int i =0; i<pvalues_.size();i++) {
+      for (int j=0;j<pvalues_[i].size();j++){
+	tmp_pvalues_.push_back(pvalues_[i][j]);
+      }
+    }
+    *pvalues = tmp_pvalues_;
+  }
+
+  void IntervallInfo::GetIntervals(Index * nint) {
+    *nint = nintervalls_;
+  }
+
+  void IntervallInfo::SetIntervals(const Index nint) {
+    nintervalls_ = nint;
+  }
+
+  bool IntervallInfo::WriteIntFile(const std::string path, const std::string fname, const bool incfilesetupintIDs) {
+    bool retval = false;
+    std::string fullname;
+    std::string tmp_path = path.c_str();
+    std::size_t fstring = tmp_path.rfind('/');
+    /* giving a path doesn't seem to work atm*/ /*
+       if (fstring!=(tmp_path.length()-1))
+       tmp_path.append("/");
+       fullname.append(tmp_path);*/
+    fullname.append(fname.c_str());
+    std::ofstream intervalls;
+    intervalls.open(fullname.c_str(),std::ios::trunc);
+    if (intervalls.is_open()){
+      printf("\n %s has been opened successfully. \n", fullname.c_str());
+      intervalls << "# AMPL include .inc file automatically generated by sIpopt2 Intervallization Interface \n# Ben Waldecker Sep 2012 \n\n";
+      intervalls << "let nint := " <<  nintervalls_ << ";\n";
+      char buffer [63];
+      std::string tmp_name;
+      std::string tmp_bracket;
+      for (int i=0;i<pvalues_.size();i++) {
+	// setup intervalIDs (only if flag "incfilesetupintIDs" is set)
+	if (incfilesetupintIDs) {
+	  tmp_name = pnames_[i].c_str();
+	  fstring = tmp_name.rfind(']');
+	  if (fstring == std::string::npos || fstring != (tmp_name.length()-1) ){
+	    // no [..] expression in the name, simply add [q]
+	    sprintf(buffer,"%s[q]",tmp_name.c_str());
+	  } else {
+	    // [..] expression in the name, insert ,q
+	    sprintf(buffer,",q");
+	    tmp_name.insert(fstring,buffer);
+	    sprintf(buffer,"%s", tmp_name.c_str());
+	  }
+	  intervalls << "\nlet {q in 1.."<< nintervalls_ << "} " << buffer << ".intervalID :=  q;\n";
+	  intervalls << "let {q in 1.."<< nintervalls_ << "} " << buffer << ".includeID := " << nincludes_  << ";\n\n";
+	}
+	//set up parameter value assignment
+	for (int j=0;j<pvalues_[i].size();j++) {
+	  tmp_name = pnames_[i].c_str();
+	  fstring = tmp_name.rfind(']');
+	  if (fstring == std::string::npos || fstring != (tmp_name.length()-1) ){
+	    // no [...] expression in the name, just add [j+1]
+	    sprintf(buffer,"%s[%d]",tmp_name.c_str(),j+1);
+	  } else {
+	    // still a [...] expression, insert ,j+1
+	    sprintf(buffer,",%d",j+1);
+	    tmp_name.insert(fstring,buffer);
+	    sprintf(buffer,"%s", tmp_name.c_str());
+	  }
+	  intervalls <<"let " <<  buffer << " := " << pvalues_[i][j] << ";\n";
+	}
+      }
+      intervalls << "\n\n# end of file ";
+      intervalls.close();
+      retval = true;
+    } else
+      printf("\n  AmplTNLP.cpp: ERROR: Unable to open file %s! \n",fullname.c_str());
+
+    // setting up the pseudo-recursive loop routine to get AMPL to do multiple iterations
+    // the loop is supposed to come to an end at a threshold of intervallization iterations. arbitrarilly we chose :
+    int n_it_max = 10; //maximum number of intervallizing iterations
+    std::ofstream inclu1;
+    std::ofstream inclu2;
+    std::string fname1 = "include1.inc";
+    std::string fname2 = "include2.inc";
+    inclu1.open(fname1.c_str());
+    inclu2.open(fname2.c_str());
+
+    if (nintervalls_ < n_it_max) {
+      if (inclu1.is_open()){
+	inclu1 << "# AMPL include .inc file automatically generated by sIpopt2 Intervallization Interface \n# Ben Waldecker Sep 2012\n\n";
+	//include intervals
+	inclu1 << "include " << fullname.c_str() << ";\n";
+	//solve and display solution. bewa01: this is supposed to be user controlled eventually
+	inclu1 << "\nsolve;\n" << "\ndisplay xAL, xAU, xBL, xBU; \n" << "\ndisplay time, xCU;\n";
+	// include other loop inc file
+	inclu1 << "\ninclude " << fname2.c_str() << ";\n";
+      } else
+	//print error in output file
+	printf("\n  AmplTNLP.cpp: ERROR: Unable to open file %s! \n",fname1.c_str());
+      if (inclu2.is_open()){
+	inclu2 << "# AMPL include .inc file automatically generated by sIpopt2 Intervallization Interface \n# Ben Waldecker Sep 2012 \n\n";
+	//include intervals
+	inclu2 << "include " << fullname.c_str() << ";\n";
+	//solve and display solution. bewa01: this is supposed to be user controlled eventually
+	inclu2 << "\nsolve;\n" << "\ndisplay xAL, xAU, xBL, xBU; \n" << "\ndisplay time, xCU;\n";
+	// include other loop inc file
+	// inclu2 << "\ninclude " << fname1.c_str() << ";\n";
+      } else
+	//print error in output file
+	printf("\n  AmplTNLP.cpp: ERROR: Unable to open file %s! \n",fname2.c_str());
+    } else {
+      //tell user via output file, that solution with maximum number of intervalls is complete
+      printf ("\n\n  AmplTNLP.cpp: Number of intervalls equals or exceeds maximum intervall threshold. Ending iteration loop.\n\n");
+      if (inclu1.is_open()) {
+	inclu1 << "# AMPL include .inc file automatically generated by sIpopt2 Intervallization Interface \n# Ben Waldecker Sep 2012\n\n";
+	inclu1 << "\n# Maximum amount of intervalls reached, ending iteration loop.\n";
+	inclu1 << "\n# end of file";
+      }
+      if (inclu2.is_open()) {
+	inclu2 << "# AMPL include .inc file automatically generated by sIpopt2 Intervallization Interface \n# Ben Waldecker Sep 2012\n\n";
+	inclu2 << "\n# Maximum amount of intervalls reached, ending iteration loop.\n";
+	inclu2 << "\n# end of file";
+      }
+    }
+
+    return retval;
+  }
+
+  /** Duping parameters at intervall nint (starting at 0!), adding them to the existing parameter values, effectively increasing the number of intervalls by 1
+      std::vector<std::vector<Number> >  DupeIntPValuesAt(const Index nint,
+      std::vector<std::vector<Number> >  pvalues) {
+      if (nint>(pvalues[0].size()-1))
+      //  ERROR THE F*C* OUT OF HERE!
+      ;
+      std::vector<std::vector<Number> > duped_pvalues;
+      std::vector<Number> dupe_vec;
+      std::vector<Number>::iterator dupe_it;
+      for (int i=0;i<pvalues.size();i++){
+      dupe_vec = pvalues[i];
+      dupe_it = dupe_vec.begin();
+      for (int j=0;j<nint;j++)
+      dupe_it++;
+      dupe_vec.insert(dupe_it,1,pvalues[i][nint-1]);
+      duped_pvalues.push_back(dupe_vec);
+      }
+      return duped_pvalues;
+      }
+  */
+
+  /** function that nint times (default is 1) randomly selects an intervall and a parameter to split in halves with respect to that parameter */
+  bool IntervallInfo::AddRandomInts(const Index nint) {
+    bool retval = false;
+
+    /*
+      std::vector<std::vector<Number> > tmp_pvalues_ = DupeIntValuesAt(rnd_int,pvalues_);
+      pvalues_ = tmp_p_values;
+    */
+
+    std::vector<std::vector<Number> > duped_pvalues_;
+    std::vector<Number> dupe_vec_;
+    std::vector<Number>::iterator dupe_it_;
+    int rnd_int,npars_,rnd_par,rnd_idx;
+    double intermediate;
+    for (int i=0; i<nint; i++) {
+      //determine which intervall to clone
+      rnd_int = ((rand() % nintervalls_) + nintervalls_-(rand() % nintervalls_) + rand())% nintervalls_;
+      // printf("\n Im %d. Durchlauf wurde das %d. Intervall dupliziert \n",i+1,rnd_int);
+      npars_ = floor(nparameters_/2);
+      // printf("\n floor done. npars_( C-style): %d \n",npars_);
+      //determine which parameter to split
+      rnd_par = ((rand() % npars_) + npars_-(rand() % npars_) + rand())% npars_;
+      // printf("\n rnd par done: %d \n", rnd_par);
+      rnd_idx = rnd_par*2;
+      for (int k=0;k<pvalues_.size();k++){
+	dupe_vec_ = pvalues_[k];
+	dupe_it_ = dupe_vec_.begin();
+	for (int j=0;j<rnd_int;j++)
+	  dupe_it_++;
+	dupe_vec_.insert(dupe_it_,1,pvalues_[k][rnd_int]);
+	duped_pvalues_.push_back(dupe_vec_);
+      }
+      // printf("\n rnd idx done: %d \n duped_pvalues_.size() is %d \n duped_pvalues_[0].size is   %d   \n ",rnd_idx, duped_pvalues_.size(),duped_pvalues_[0].size());
+      //calculate intermediate value (new upper bound for old intervall, new lower bound for inserted intervall)
+      intermediate =(duped_pvalues_[rnd_idx][rnd_int]+duped_pvalues_[rnd_idx+1][rnd_int])/2;
+      // printf("\n intermediate done  \n");
+      duped_pvalues_[rnd_idx][rnd_int+1] = intermediate;
+      // printf("\n duped rnd idx \n");
+      duped_pvalues_[rnd_idx+1][rnd_int] = intermediate;
+      // printf("\n dubed rnd idx+1 \n");
+      nintervalls_++;
+      pvalues_ = duped_pvalues_;
+      duped_pvalues_.clear();
+      dupe_vec_.clear();
+      retval = true;
+    }
+    return retval;
+  }
+
+
+
+  //////////////////////////END OF INTERVALL PART///////////////////////////////////
 
 } // namespace Ipopt

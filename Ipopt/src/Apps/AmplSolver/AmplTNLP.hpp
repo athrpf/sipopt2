@@ -16,6 +16,8 @@
 
 #include <map>
 #include <string>
+#include <iostream>
+#include <fstream>
 
 /* non Ipopt forward declaration */
 struct ASL_pfgh;
@@ -626,6 +628,36 @@ namespace Ipopt
     NumericMetaDataMapType con_numeric_md_;
   };
 
+  //////////////////////////////////////////////////////////////////////////////////
+  ////////bewa01 setup of a storage for intervallization data //////////////////////
+  //////////////////////////////////////////////////////////////////////////////////
+
+  class IntervallInfo : public ReferencedObject
+  {
+  public:
+    IntervallInfo();
+    IntervallInfo(const Index nint, const Index ninc, const std::vector<std::string> pnames, const std::vector<Number> pvalues);
+    /* virtual*/ ~IntervallInfo();
+    void SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
+    void AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
+    void GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues);
+    void GetIntervals (Index * nint);
+    void SetIntervals(const Index nint);
+    bool WriteIntFile(const std::string path="", const std::string fname="intervalls.inc", const bool incfilesetupintIDs=1);
+    // std::vector<std::vector<Number> > DupeIntPValuesAt(const Index nint,
+    //						  std::vector<std::vector<Number> > pvalues);
+    bool AddRandomInts(const Index nint=1);
+
+  private:
+
+    Index nparameters_;
+    Index nintervalls_;
+    Index nincludes_;
+    std::vector<std::vector<Number> > pvalues_;    // bew01: the latter would prefer to be a list
+    std::vector<std::string> pnames_;
+
+  };
+  //////////////////////////END OF INTERVALL PART///////////////////////////////////
 
 
 } // namespace Ipopt

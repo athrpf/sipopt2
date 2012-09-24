@@ -31,7 +31,7 @@
 # endif
 #endif
 
-// for parametric stupff at the end
+// for parametric stuff at the end
 #include "IpPDSearchDirCalc.hpp"
 #include "IpIpoptAlg.hpp"
 #include "IpOrigIpoptNLP.hpp"
@@ -40,7 +40,11 @@
 
 using namespace Ipopt;
 SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app);
-SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app, SmartPtr<Matrix> sens_matrix);
+SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app,
+					                      SmartPtr<Matrix> sens_matrix);
+// bewa01 starting to do stuff
+bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandler> suffix_handler,
+			            SmartPtr<ParaTNLP> ampl_tnlp);
 
 int main(int argc, char**args)
 {
@@ -204,4 +208,226 @@ SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app, SmartP
   else {
     return NULL;
   }
+}
+
+
+bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandler> suffix_handler,  SmartPtr<ParaTNLP> ampl_tnlp)
+{
+
+  /////////////////////////////////////////////////////////////////////
+  //bewa01 : trying to get a hold of the intervallisation suffix data//
+  /////////////////////////////////////////////////////////////////////
+
+
+  SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
+
+  SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
+  SmartPtr<OrigIpoptNLP> orig_nlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp));
+
+  // trying to determine parameter positions and intervalIDs in the NLP object
+  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+
+  // set up vars to store ampl tnlp information
+  Index n = 0;
+  Index np = 0;
+  Index m = 0;
+  Index nnz_jac_g = 0;
+  Index nnz_h_lag = 0;
+  Index nnz_jac_g_p = 0;
+  Index nnz_h_lag_ = 0;
+  AmplTNLP::IndexStyleEnum index_style;
+  bool info_status = false;
+
+  // fill the vars with available ampl tnlp information
+  info_status = ampl_tnlp->get_nlp_info(n, np, m, nnz_jac_g,
+                              nnz_h_lag, nnz_jac_g_p,
+  				       nnz_h_lag_,index_style);
+  Index nn = n+np;
+
+  // output of variable indexes with or without parameter and intervalID tags
+  const Index* parameter = suffix_handler->GetIntegerSuffixValues("parameter",
+								 AmplSuffixHandler::Variable_Source);
+  std::vector<Index> parameter_vec(nn);
+  std::vector<Index> par_index;
+  if (!parameter) {
+    return 0;  // NO PARAMETERs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT PARAMETERs???
+  }
+  std::copy(parameter, parameter+nn, &parameter_vec[0]);
+  //var_integer_md["parameter"] = parameter_vec;
+  for (Index k_it=0;k_it<nn; k_it++){
+    if (parameter_vec[k_it]) {
+      // printf("Ipopt variable no %d ist ein Parameter.\n",k_it,parameter_vec[k_it]);
+      par_index.push_back(k_it);
+    }
+  }
+
+  const Index* intervalID = suffix_handler->GetIntegerSuffixValues("intervalID",
+								 AmplSuffixHandler::Variable_Source);
+  Index int_obj_idx = 0;
+  std::vector<Index> intervalID_vec(nn);
+  if (!intervalID) {
+    return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
+  }
+  Index nint_tmp = 0;
+  std::copy(intervalID, intervalID+nn, &intervalID_vec[0]);
+  //var_integer_md["intervalID"] = intervalID_vec;
+  for (Index k_it=0;k_it<nn; k_it++){
+    if (intervalID_vec[k_it]){
+      //      printf("IntervalID no %d is %d\n",k_it,intervalID_vec[k_it]);
+      if (parameter_vec[k_it]!=1 && !int_obj_idx)
+	int_obj_idx = k_it;
+      if (intervalID_vec[k_it]>nint_tmp)
+	nint_tmp = intervalID_vec[k_it];
+    }
+  }
+  const Index nint = nint_tmp;
+
+  const Index* includeID = suffix_handler->GetIntegerSuffixValues("includeID",
+								 AmplSuffixHandler::Variable_Source);
+  std::vector<Index> includeID_vec(nn);
+  if (!includeID) {
+    return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
+  }
+  Index ninc_tmp = 0;
+  std::copy(includeID, includeID+nn, &includeID_vec[0]);
+  //var_integer_md["includeID"] = includeID_vec;
+  for (Index k_it=0;k_it<nn; k_it++){
+    if (includeID_vec[k_it]){
+      //      printf("IncludeID no %d is %d\n",k_it,includeID_vec[k_it]);
+	ninc_tmp = includeID_vec[k_it];
+    }
+  }
+  const Index ninc = ninc_tmp;
+
+  printf("\n\n\n\n ninc: %d \n\n\n\n",ninc);
+ // output of info variable content
+  //  printf("\n\n The values of the infovariables are now:\n n = %d \n np = %d \n m = %d \n nnz_jac_g = %d \n nnz_h_lag = %d \n nnz_jac_g_p = %d \n nnz_h_lag_ = %d\n\n",n,np,m,nnz_jac_g,nnz_h_lag,nnz_jac_g_p,nnz_h_lag_);
+
+  AmplTNLP::StringMetaDataMapType var_string_md;
+  AmplTNLP::IntegerMetaDataMapType var_integer_md;
+  AmplTNLP::NumericMetaDataMapType var_numeric_md;
+  AmplTNLP::StringMetaDataMapType para_string_md;
+  AmplTNLP::IntegerMetaDataMapType para_integer_md;
+  AmplTNLP::NumericMetaDataMapType para_numeric_md;
+  AmplTNLP::StringMetaDataMapType con_string_md;
+  AmplTNLP::IntegerMetaDataMapType con_integer_md;
+  AmplTNLP::NumericMetaDataMapType con_numeric_md;
+
+  bool var_con_metadata_status = 0;
+  var_con_metadata_status = ampl_tnlp->get_var_con_metadata(n,var_string_md,var_integer_md,
+				var_numeric_md,np,para_string_md,para_integer_md,para_numeric_md,
+				m,con_string_md,con_integer_md,con_numeric_md);
+
+
+  // get parameter names
+  const std::vector<std::string> parnames = dynamic_cast<const DenseVectorSpace*>
+                       (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
+
+  //bewa01: this should always be interchangable with np and hence deleted or edited someday
+  Index i_p = parnames.size();
+  std::vector<std::string> par_names_tmp;
+  for (int i=0;i<i_p;i++)
+    par_names_tmp.push_back(parnames[i].c_str());
+  const std::vector<std::string> par_names = par_names_tmp;
+  // get parameter values
+  const Number* p_val = dp->Values();
+  std::vector<Number> par_values(i_p);
+  std::copy(p_val, p_val+i_p,&par_values[0]);
+
+  // output of gathered parameter information
+
+  /*  for (Index i=0; i<i_p;i++)
+    printf("Der %d. Parametereintrag schimpft sich %s. Sein Wert ist %f. Er hat im Ipopt Problem den Variablenplatz %d und die Intervalnummer %d.\n",i+1,parnames[i].c_str(), par_values[i], par_index[i], intervalID_vec[par_index[i]]);
+  SmartPtr<const Vector> x = curr->x();
+  std::vector<Number> var_values(nn);
+  */ //  printf("\n x hat %d Einträge. \n", x->Dim());
+
+  IntervallInfo IntInfo = IntervallInfo(nint, ninc,  par_names, par_values);
+
+
+  std::vector<std::string> * ipnames = new std::vector<std::string>;
+  std::vector<Number> * ipvalues = new std::vector<Number>;
+  /*
+  IntInfo.GetParameters(&*ipnames,&*ipvalues);
+  // int i=0;
+    if (ipnames)
+     for (int i=0;i<ipnames->size();i++)
+      printf("\n Die gespeicherten Namen lauten: %s", ipnames->at(i).c_str());
+
+  if (ipvalues)
+         for (int i=0;i<ipvalues->size();i++)
+      printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
+  */
+  const Index nop =3;
+  IntInfo.AddRandomInts(nop);
+
+  IntInfo.GetParameters(&*ipnames,&*ipvalues);
+  IntInfo.WriteIntFile();
+
+
+  /*   // int i=0;
+  if (ipnames)
+     for (int i=0;i<ipnames->size();i++)
+      printf("\n Die gespeicherten Namen lauten: %s", ipnames->at(i).c_str());
+
+  if (ipvalues)
+         for (int i=0;i<ipvalues->size();i++)
+      printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
+*/
+  //get the value of arbitrary objective variable at the solution point
+  // Number * p_vv = NULL;
+  // bool get_x_status = false;
+  // *p_vv = &var_values[0];
+  //  get_x_status = ampl_tnlp->get_var_and_para_x(const nn, p_vv);
+
+  // SmartPtr<const IteratesVector> curr = app->IpoptDataobject()->curr();
+
+
+  //  SmartPtr<const DenseVector> dx = x->MakeNewDenseVector();
+  // SmartPtr<const DenseVectorSpace> x_space = dynamic_cast<const VectorSpace*>(GetRawPtr(x->Ownerspace()));
+  // get var values
+
+  // const Number* v_values = x->Values();
+
+  // const std::vector<std::string> varnames = x_space->GetStringMetaData("idx_names");
+    // dynamic_cast<const DenseVectorSpace*>
+    //                 (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
+
+  //bewa01: this should be interchangable with n and hence deleted or edited someday
+  //Index i_v = varnames.size();
+
+  // std::copy(x,x+n,&var_values[0]);
+  // std::copy(v_values,v_values+nn,&var_values[0]);
+  // get parameter values
+  // const Number* p_val = dp->Values();
+  // std::vector<Number> par_values(i_p);
+  // std::copy(p_val, p_val+i_p,&par_values[0]);
+
+
+  /*
+
+  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+
+
+
+
+    const std::vector<int> pariIDs = dynamic_cast<const DenseVectorSpace*>
+                       (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
+
+ const std::vector<std::string> varnames = dynamic_cast<const DenseVectorSpace*>
+                       (GetRawPtr(orig_nlp->x()->OwnerSpace()))->GetStringMetaData("idx_names");
+  Index i_v = varnames.size();
+  for (Index i=0; i<i_v;i++)
+    printf("\n Der %d. Variableneintrag schimpft sich %s.",i+1,varnames[i].c_str());
+
+  */
+
+
+
+
+
+  //////////////////////////end of bewa striking//////////////
+  return 1;
 }
