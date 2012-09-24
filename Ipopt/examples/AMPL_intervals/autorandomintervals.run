@@ -1,0 +1,35 @@
+#automatic intervallization loop start .inc file 
+#Ben Waldecker Sep 2012
+
+suffix parameter, IN;
+suffix perturbed, IN;
+suffix intervalID, IN;
+suffix includeID, IN;
+
+model parameterfree.mod;
+
+include interval.inc;
+
+data parameterfree.dat;
+
+option solver sipopt;
+
+option solver  sipopt, sipopt_auxfiles rc;
+
+include parameterresults.inc;
+
+solve;
+
+display xAL,xAU,xBL,xBU;
+
+display time,xCU;
+
+include include1.inc;
+
+
+
+
+
+
+
+

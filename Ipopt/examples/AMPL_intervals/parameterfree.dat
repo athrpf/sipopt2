@@ -1,0 +1,39 @@
+# ===================================================================
+# dynamic optimization formulation of the hicks-ray reactor
+# data declaration
+# victor m zavala  march 2006
+# adapted for asNMPC by Hans Pirnay 2009, 2011
+# ===================================================================
+
+param  a:        1                  2                  3 :=         #
+      1  0.19681547722366   0.39442431473909   0.37640306270047
+      2 -0.06553542585020   0.29207341166523   0.51248582618842
+      3  0.02377097434822  -0.04154875212600   0.11111111111111;
+
+# mathematical model parameters
+#include interval.inc;
+let nfe       := 40          ;
+let ncp       := 3            ;
+let r1 := 0.15505102572168    ;
+let r2 := 0.64494897427832    ;
+let r3 := 1                   ;
+
+# initial and end transition points
+let xAL_init := 1.0;
+let xAU_init := 1.0;
+let xBL_init := 0.0;
+let xBU_init := 0.0;
+
+let{k in int} p1L[k].parameter := 1;
+let{k in int} p1U[k].parameter := 1;
+let{k in int} p2L[k].parameter := 1;
+let{k in int} p2U[k].parameter := 1;
+
+let{k in int} xCU[k].intervalID := k;
+
+#include perturb.inc;
+
+for {i in fe}
+{
+let h[i] := 1/nfe ;
+}

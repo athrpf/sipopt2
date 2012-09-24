@@ -1,0 +1,34 @@
+
+suffix parameter, IN;
+suffix perturbed, IN;
+suffix intervalID, IN;
+suffix includeID, IN;
+
+model parameterfree.mod;
+include interval.inc;
+data parameterfree.dat;
+
+option solver sipopt;
+
+option solver  sipopt, sipopt_auxfiles rc;
+
+include parameterresults.inc;
+
+solve;
+
+display time, xCU;
+
+#include ainterval.inc;
+#option solver sipopt;
+
+#option solver sipopt, sipopt_auxfiles rc;
+
+#display xAL, xAU, xBL, xBU;
+
+#include parameterresults.inc;
+
+#solve;
+
+#display time, xCU;
+
+
