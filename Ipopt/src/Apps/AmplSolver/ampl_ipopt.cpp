@@ -95,7 +95,10 @@ int main(int argc, char**args)
   // Add the suffix for parameter-marking
   suffix_handler->AddAvailableSuffix("parameter", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
   suffix_handler->AddAvailableSuffix("perturbed", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Number_Type);
-
+  // Add the suffix for intervall-organization
+  suffix_handler->AddAvailableSuffix("intervalID", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
+  // Add the suffix for include-order organization
+  suffix_handler->AddAvailableSuffix("includeID", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
   SmartPtr<ParaTNLP> ampl_tnlp = new AmplTNLP(ConstPtr(app->Jnlst()),
                                           app->Options(),
                                           args, suffix_handler);
@@ -112,11 +115,17 @@ int main(int argc, char**args)
     retval = app->OptimizeTNLP(ampl_tnlp);
   }
 
-  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
-  SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
-  if (IsValid(delta_s))
+  /*  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
+   SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
+  if (IsValid(delta_s)) {
     delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
-  return 0;
+    } */
+  //bewa01
+  printf("\n AmplTNLP::doIntervallization started.\n");
+  doIntervallization(app, suffix_handler,ampl_tnlp);
+  printf("\n AmplTNLP::doIntervallization closed.\n");
+
+ return 0;
 }
 
 SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app)
