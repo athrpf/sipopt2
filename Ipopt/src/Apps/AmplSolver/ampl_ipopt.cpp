@@ -98,7 +98,7 @@ int main(int argc, char**args)
   // Add the suffix for intervall-organization
   suffix_handler->AddAvailableSuffix("intervalID", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
   // Add the suffix for include-order organization
-  suffix_handler->AddAvailableSuffix("includeID", AmplSuffixHandler::Variable_Source, AmplSuffixHandler::Index_Type);
+
   SmartPtr<ParaTNLP> ampl_tnlp = new AmplTNLP(ConstPtr(app->Jnlst()),
                                           app->Options(),
                                           args, suffix_handler);
@@ -292,24 +292,6 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   }
   const Index nint = nint_tmp;
 
-  const Index* includeID = suffix_handler->GetIntegerSuffixValues("includeID",
-								 AmplSuffixHandler::Variable_Source);
-  std::vector<Index> includeID_vec(nn);
-  if (!includeID) {
-    return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
-  }
-  Index ninc_tmp = 0;
-  std::copy(includeID, includeID+nn, &includeID_vec[0]);
-  //var_integer_md["includeID"] = includeID_vec;
-  for (Index k_it=0;k_it<nn; k_it++){
-    if (includeID_vec[k_it]){
-      //      printf("IncludeID no %d is %d\n",k_it,includeID_vec[k_it]);
-	ninc_tmp = includeID_vec[k_it];
-    }
-  }
-  const Index ninc = ninc_tmp;
-
-  printf("\n\n\n\n ninc: %d \n\n\n\n",ninc);
  // output of info variable content
   //  printf("\n\n The values of the infovariables are now:\n n = %d \n np = %d \n m = %d \n nnz_jac_g = %d \n nnz_h_lag = %d \n nnz_jac_g_p = %d \n nnz_h_lag_ = %d\n\n",n,np,m,nnz_jac_g,nnz_h_lag,nnz_jac_g_p,nnz_h_lag_);
 
@@ -352,13 +334,24 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   std::vector<Number> var_values(nn);
   */ //  printf("\n x hat %d Einträge. \n", x->Dim());
 
-  IntervallInfo IntInfo = IntervallInfo(nint, ninc,  par_names, par_values);
+
+  // this would prefer to be a list
+  std::vector<IntervallInfo> ParameterSet;
+
+  // add single intervals to the parameter set
+
+  /* for (int i=0;i<parametercount;i++) {
+
+IntervallInfo IntInfo = IntervallInfo(paraID[i],intID[i],vec_idx[i],is_upper );
+  ParameterSet->push_back(IntInfo);
+  }*/
+
 
 
   std::vector<std::string> * ipnames = new std::vector<std::string>;
   std::vector<Number> * ipvalues = new std::vector<Number>;
   /*
-  IntInfo.GetParameters(&*ipnames,&*ipvalues);
+
   // int i=0;
     if (ipnames)
      for (int i=0;i<ipnames->size();i++)
@@ -368,12 +361,6 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
          for (int i=0;i<ipvalues->size();i++)
       printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
   */
-  const Index nop =3;
-  IntInfo.AddRandomInts(nop);
-
-  IntInfo.GetParameters(&*ipnames,&*ipvalues);
-  IntInfo.WriteIntFile();
-
 
   /*   // int i=0;
   if (ipnames)

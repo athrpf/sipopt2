@@ -636,25 +636,19 @@ namespace Ipopt
   {
   public:
     IntervallInfo();
-    IntervallInfo(const Index nint, const Index ninc, const std::vector<std::string> pnames, const std::vector<Number> pvalues);
-    /* virtual*/ ~IntervallInfo();
+    IntervallInfo(const Index parameterID, const Index intervalID, const Index vector_index, const bool is_upper);
+    ~IntervallInfo();
     void SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
     void AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
     void GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues);
     void GetIntervals (Index * nint);
     void SetIntervals(const Index nint);
-    bool WriteIntFile(const std::string path="", const std::string fname="intervalls.inc", const bool incfilesetupintIDs=1);
-    // std::vector<std::vector<Number> > DupeIntPValuesAt(const Index nint,
-    //						  std::vector<std::vector<Number> > pvalues);
-    bool AddRandomInts(const Index nint=1);
 
   private:
-
-    Index nparameters_;
-    Index nintervalls_;
-    Index nincludes_;
-    std::vector<std::vector<Number> > pvalues_;    // bew01: the latter would prefer to be a list
-    std::vector<std::string> pnames_;
+    Index parameterID_;
+    Index intervalID_;
+    Index index_;
+    bool is_upper_;
 
   };
   //////////////////////////END OF INTERVALL PART///////////////////////////////////
