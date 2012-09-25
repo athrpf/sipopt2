@@ -11,7 +11,7 @@ param  a:        1                  2                  3 :=         #
       3  0.02377097434822  -0.04154875212600   0.11111111111111;
 
 # mathematical model parameters
-#include interval.inc;
+
 let nfe       := 40          ;
 let ncp       := 3            ;
 let r1 := 0.15505102572168    ;
@@ -24,12 +24,17 @@ let xAU_init := 1.0;
 let xBL_init := 0.0;
 let xBU_init := 0.0;
 
-let{k in int} p1L[k].parameter := 1;
-let{k in int} p1U[k].parameter := 1;
-let{k in int} p2L[k].parameter := 1;
-let{k in int} p2U[k].parameter := 1;
+# tag variables for interval assignment
+let {kk in int, i in fe diff{1}, j in cp} xAL[kk,i,j].intervalID := kk;
+let {kk in int, i in fe diff{1}, j in cp} xAU[kk,i,j].intervalID := kk;
+let {kk in int, i in fe diff{1}, j in cp} xBL[kk,i,j].intervalID := kk;
+let {kk in int, i in fe diff{1}, j in cp} xBU[kk,i,j].intervalID := kk;
 
-let{k in int} xCU[k].intervalID := k;
+# tag variables for interval assignment
+let {kk in int, i in 1..1,j in cp} x[kk,i,j].intervalID := kk;
+let {kk in int, i in 1..1,j in cp} xAU[kk,i,j].intervalID := kk;
+let {kk in int, i in 1..1,j in cp} xBL[kk,i,j].intervalID := kk;
+let {kk in int, i in 1..1,j in cp} xBU[kk,i,j].intervalID := kk;
 
 #include perturb.inc;
 

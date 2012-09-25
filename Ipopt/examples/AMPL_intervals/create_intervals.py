@@ -54,11 +54,11 @@ class AmplSet: # an ampl setup: ampl srcipt and feasible set of intervals
 
     def call_ampl(self): # one run of ampl: write inc file and run ampl with the specified setup
         self.write_include_file()
-        # try:
-        #     subprocess.check_call(['ampl', self.ampl_script])
-        # except subprocess.CalledProcessError as e:
-        #     print e
-        #     sys.exit(1)
+        try:
+            subprocess.check_call(['ampl', self.ampl_script])
+        except subprocess.CalledProcessError as e:
+            print e
+            sys.exit(1)
 
     def split(self, interval_idx, para_idx): # split interval at interval_idx with respect to parameter para_idx
         split_interval = self.intervals.pop(interval_idx)
@@ -71,6 +71,7 @@ class AmplSet: # an ampl setup: ampl srcipt and feasible set of intervals
             nint = random.randint(0,(len(self.intervals)-1))
             npar = random.randint(0,(len(self.pLnames)-1))
             self.split(nint,npar)
+            print '\n\nIn Durchgang {} wurde Intervall {} und dort Parameter {} gesplittet!\n\n'.format(ir+1,nint+1,npar+1)
 
 
 def run():
@@ -80,7 +81,7 @@ def run():
     pLvalues = [0.9, 0.8]
     pUvalues = [1.1, 1.2]
     info = AmplSet(ampl_script, pLnames, pUnames, pLvalues, pUvalues)
-    info.randomize(3)
+    info.randomize(8)
 
 if __name__=='__main__':
     run()

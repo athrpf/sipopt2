@@ -226,16 +226,7 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   /////////////////////////////////////////////////////////////////////
   //bewa01 : trying to get a hold of the intervallisation suffix data//
   /////////////////////////////////////////////////////////////////////
-
-
-  SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
-
-  SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
-  SmartPtr<OrigIpoptNLP> orig_nlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp));
-
-  // trying to determine parameter positions and intervalIDs in the NLP object
-  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
-  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+  /*
 
   // set up vars to store ampl tnlp information
   Index n = 0;
@@ -309,14 +300,22 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   var_con_metadata_status = ampl_tnlp->get_var_con_metadata(n,var_string_md,var_integer_md,
 				var_numeric_md,np,para_string_md,para_integer_md,para_numeric_md,
 				m,con_string_md,con_integer_md,con_numeric_md);
+*/
 
+  SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
+  SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
+  SmartPtr<OrigIpoptNLP> orig_nlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp));
+
+  // trying to determine parameter positions and intervalIDs in the NLP object
+  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
 
   // get parameter names
   const std::vector<std::string> parnames = dynamic_cast<const DenseVectorSpace*>
                        (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
 
-  //bewa01: this should always be interchangable with np and hence deleted or edited someday
-  Index i_p = parnames.size();
+  const Index i_p = dp_space->Dim();
+  printf("\nDer Parametervektor hat %d Einträge.\n\n", i_p);
   std::vector<std::string> par_names_tmp;
   for (int i=0;i<i_p;i++)
     par_names_tmp.push_back(parnames[i].c_str());
@@ -330,6 +329,8 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
 
   /*  for (Index i=0; i<i_p;i++)
     printf("Der %d. Parametereintrag schimpft sich %s. Sein Wert ist %f. Er hat im Ipopt Problem den Variablenplatz %d und die Intervalnummer %d.\n",i+1,parnames[i].c_str(), par_values[i], par_index[i], intervalID_vec[par_index[i]]);
+
+
   SmartPtr<const Vector> x = curr->x();
   std::vector<Number> var_values(nn);
   */ //  printf("\n x hat %d Einträge. \n", x->Dim());
@@ -409,7 +410,9 @@ IntervallInfo IntInfo = IntervallInfo(paraID[i],intID[i],vec_idx[i],is_upper );
 
 
 
-    const std::vector<int> pariIDs = dynamic_cast<const DenseVectorSpace*>
+    const std::vector<int> pariIDs = dynamic_
+
+cast<const DenseVectorSpace*>
                        (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
 
  const std::vector<std::string> varnames = dynamic_cast<const DenseVectorSpace*>
