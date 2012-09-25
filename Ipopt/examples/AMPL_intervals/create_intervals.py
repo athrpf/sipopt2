@@ -1,13 +1,14 @@
 import subprocess
 import sys
+import random
 
-class Interval:
-    def __init__(self, pL, pU):
+class Interval:    # 1 intervall: upper and lower bound
+    def __init__(self, pL, pU): # standard constructor
         assert(len(pL)==len(pU))
         self.pL = pL
         self.pU = pU
 
-    def split(self, idx):
+    def split(self, idx): # split an interval -- in: 1 interval, out: 2 intervals resulting from split
         p1L = []
         p1U = []
         p2L = []
@@ -24,7 +25,7 @@ class Interval:
                 p2L.append(pLv)
         return Interval(p1L, p1U), Interval(p2L, p2U)
 
-class InterSet:
+class AmplSet: # an ampl setup: ampl srcipt and feasible set of intervals
     def __init__(self, ampl_script, pLnames, pUnames, pLvalues, pUvalues):
         self.ampl_script = ampl_script
         self.pLnames = pLnames
@@ -33,7 +34,7 @@ class InterSet:
         self.pUvalues = pUvalues
         self.intervals = [Interval(pLvalues, pUvalues)]
 
-    def write_include_file(self, filename='intervalls.inc'):
+    def write_include_file(self, filename='intervalls.inc'): # write current intervallization data into ampl include file
         f = open(filename, 'w')
         nint = len(self.intervals)
         f.write('let nint := {};\n'.format(nint))
@@ -45,7 +46,7 @@ class InterSet:
                 f.write('let {}[{}] := {};\n'.format(nameU, k+1, pU))
         f.close()
 
-    def call_ampl(self):
+    def call_ampl(self): # one run of ampl: write inc file and run ampl with the specified setup
         self.write_include_file()
         try:
             subprocess.check_call(['ampl', self.ampl_script])
@@ -53,15 +54,18 @@ class InterSet:
             print e
             sys.exit(1)
 
-    def split(self, interval_idx, para_idx):
+    def split(self, interval_idx, para_idx): # split interval at interval_idx with respect to parameter para_idx
         split_interval = self.intervals.pop(interval_idx)
         interval1, interval2 = split_interval.split(para_idx)
         self.intervals.extend([interval1, interval2])
 
-    def optimize(self):
-        for i in range(3):
+    def randomize(self,nruns):
+        for ir in range(nruns):
             self.call_ampl()
-            self.split(i, 0)
+            nint = random.randint(0,(len(self.intervals)-1))
+            npar = random.randint(0,(len(self.pLnames)-1))
+            self.split(nint,npar)
+
 
 def run():
     ampl_script = 'autorandomintervals.run'
@@ -69,8 +73,8 @@ def run():
     pUnames = ['p1U', 'p2U']
     pLvalues = [0.9, 0.8]
     pUvalues = [1.1, 1.2]
-    info = InterSet(ampl_script, pLnames, pUnames, pLvalues, pUvalues)
-    info.optimize()
+    info = AmplSet(ampl_script, pLnames, pUnames, pLvalues, pUvalues)
+    info.randomize(3)
 
 if __name__=='__main__':
     run()
