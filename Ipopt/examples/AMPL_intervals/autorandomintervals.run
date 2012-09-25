@@ -1,4 +1,4 @@
-#automatic intervallization loop start .inc file 
+#automatic intervallization loop start .inc file
 #Ben Waldecker Sep 2012
 
 suffix parameter, IN;
@@ -15,21 +15,5 @@ data parameterfree.dat;
 option solver sipopt;
 
 option solver  sipopt, sipopt_auxfiles rc;
-
-include parameterresults.inc;
-
+#include parameterresults.inc;
 solve;
-
-display xAL,xAU,xBL,xBU;
-
-display time,xCU;
-
-include include1.inc;
-
-
-
-
-
-
-
-
