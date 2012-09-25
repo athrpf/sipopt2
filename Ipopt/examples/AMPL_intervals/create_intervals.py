@@ -61,7 +61,7 @@ class AmplSet:
         f.write('\n\n#end of file');
         f.close()
 
-    def call_ampl(self):
+    def call_ampl(self, output_file_handle=None):
         """"
         one run of ampl
 
@@ -69,7 +69,7 @@ class AmplSet:
         """
         self.write_include_file()
         try:
-            subprocess.check_call(['ampl', self.ampl_script])
+            subprocess.check_call(['ampl', self.ampl_script], stdout=output_file_handle)
         except subprocess.CalledProcessError as e:
             print e
             sys.exit(1)
@@ -82,11 +82,13 @@ class AmplSet:
 
     def randomize(self,nruns):
         for ir in range(nruns):
-            self.call_ampl()
+            output_f = open('output'+str(ir)+'.txt', 'w')
+            self.call_ampl(output_file_handle=output_f)
+            output_f.close()
             nint = random.randint(0,(len(self.intervals)-1))
             npar = random.randint(0,(len(self.pLnames)-1))
             self.split(nint,npar)
-            print '\n\nIn Durchgang {} wurde Intervall {} und dort Parameter {} gesplittet!\n\n'.format(ir+1,nint+1,npar+1)
+            print 'In Durchgang {} wurde Intervall {} und dort Parameter {} gesplittet!'.format(ir+1,nint+1,npar+1)
 
 
 def run():
