@@ -41,10 +41,10 @@
 using namespace Ipopt;
 SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app);
 SmartPtr<Vector> getDirectionalDerivative(SmartPtr<IpoptApplication> app,
-					                      SmartPtr<Matrix> sens_matrix);
-// bewa01 starting to do stuff
+					  SmartPtr<Matrix> sens_matrix);
+
 bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandler> suffix_handler,
-			            SmartPtr<ParaTNLP> ampl_tnlp);
+			SmartPtr<ParaTNLP> ampl_tnlp);
 
 int main(int argc, char**args)
 {
@@ -100,8 +100,8 @@ int main(int argc, char**args)
   // Add the suffix for include-order organization
 
   SmartPtr<ParaTNLP> ampl_tnlp = new AmplTNLP(ConstPtr(app->Jnlst()),
-                                          app->Options(),
-                                          args, suffix_handler);
+					      app->Options(),
+					      args, suffix_handler);
 
   // Call Initialize again to process output related options
   retval = app->Initialize();
@@ -115,17 +115,15 @@ int main(int argc, char**args)
     retval = app->OptimizeTNLP(ampl_tnlp);
   }
 
-  /*  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
-   SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
+  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
+  SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
   if (IsValid(delta_s)) {
     delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
-    } */
-  //bewa01
-  printf("\n AmplTNLP::doIntervallization started.\n");
-  doIntervallization(app, suffix_handler,ampl_tnlp);
-  printf("\n AmplTNLP::doIntervallization closed.\n");
+  }
 
- return 0;
+  doIntervallization(app, suffix_handler,ampl_tnlp);
+
+  return 0;
 }
 
 SmartPtr<Matrix> getSensitivityMatrix(SmartPtr<IpoptApplication> app)
@@ -241,49 +239,49 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
 
   // fill the vars with available ampl tnlp information
   info_status = ampl_tnlp->get_nlp_info(n, np, m, nnz_jac_g,
-                              nnz_h_lag, nnz_jac_g_p,
-  				       nnz_h_lag_,index_style);
+  nnz_h_lag, nnz_jac_g_p,
+  nnz_h_lag_,index_style);
   Index nn = n+np;
 
   // output of variable indexes with or without parameter and intervalID tags
   const Index* parameter = suffix_handler->GetIntegerSuffixValues("parameter",
-								 AmplSuffixHandler::Variable_Source);
+  AmplSuffixHandler::Variable_Source);
   std::vector<Index> parameter_vec(nn);
   std::vector<Index> par_index;
   if (!parameter) {
-    return 0;  // NO PARAMETERs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT PARAMETERs???
+  return 0;  // NO PARAMETERs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT PARAMETERs???
   }
   std::copy(parameter, parameter+nn, &parameter_vec[0]);
   //var_integer_md["parameter"] = parameter_vec;
   for (Index k_it=0;k_it<nn; k_it++){
-    if (parameter_vec[k_it]) {
-      // printf("Ipopt variable no %d ist ein Parameter.\n",k_it,parameter_vec[k_it]);
-      par_index.push_back(k_it);
-    }
+  if (parameter_vec[k_it]) {
+  // printf("Ipopt variable no %d ist ein Parameter.\n",k_it,parameter_vec[k_it]);
+  par_index.push_back(k_it);
+  }
   }
 
   const Index* intervalID = suffix_handler->GetIntegerSuffixValues("intervalID",
-								 AmplSuffixHandler::Variable_Source);
+  AmplSuffixHandler::Variable_Source);
   Index int_obj_idx = 0;
   std::vector<Index> intervalID_vec(nn);
   if (!intervalID) {
-    return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
+  return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
   }
   Index nint_tmp = 0;
   std::copy(intervalID, intervalID+nn, &intervalID_vec[0]);
   //var_integer_md["intervalID"] = intervalID_vec;
   for (Index k_it=0;k_it<nn; k_it++){
-    if (intervalID_vec[k_it]){
-      //      printf("IntervalID no %d is %d\n",k_it,intervalID_vec[k_it]);
-      if (parameter_vec[k_it]!=1 && !int_obj_idx)
-	int_obj_idx = k_it;
-      if (intervalID_vec[k_it]>nint_tmp)
-	nint_tmp = intervalID_vec[k_it];
-    }
+  if (intervalID_vec[k_it]){
+  //      printf("IntervalID no %d is %d\n",k_it,intervalID_vec[k_it]);
+  if (parameter_vec[k_it]!=1 && !int_obj_idx)
+  int_obj_idx = k_it;
+  if (intervalID_vec[k_it]>nint_tmp)
+  nint_tmp = intervalID_vec[k_it];
+  }
   }
   const Index nint = nint_tmp;
 
- // output of info variable content
+  // output of info variable content
   //  printf("\n\n The values of the infovariables are now:\n n = %d \n np = %d \n m = %d \n nnz_jac_g = %d \n nnz_h_lag = %d \n nnz_jac_g_p = %d \n nnz_h_lag_ = %d\n\n",n,np,m,nnz_jac_g,nnz_h_lag,nnz_jac_g_p,nnz_h_lag_);
 
   AmplTNLP::StringMetaDataMapType var_string_md;
@@ -298,9 +296,9 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
 
   bool var_con_metadata_status = 0;
   var_con_metadata_status = ampl_tnlp->get_var_con_metadata(n,var_string_md,var_integer_md,
-				var_numeric_md,np,para_string_md,para_integer_md,para_numeric_md,
-				m,con_string_md,con_integer_md,con_numeric_md);
-*/
+  var_numeric_md,np,para_string_md,para_integer_md,para_numeric_md,
+  m,con_string_md,con_integer_md,con_numeric_md);
+  */
 
   SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
   SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
@@ -311,8 +309,9 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
 
   // get parameter names
-  const std::vector<std::string> parnames = dynamic_cast<const DenseVectorSpace*>
-                       (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
+  const std::vector<std::string> parnames = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
+  const std::vector<Index> intervalflags = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
+  const std::vector<Index> parameterflags = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("parameter");
 
   const Index i_p = dp_space->Dim();
   printf("\nDer Parametervektor hat %d Einträge.\n\n", i_p);
@@ -325,53 +324,82 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   std::vector<Number> par_values(i_p);
   std::copy(p_val, p_val+i_p,&par_values[0]);
 
-  // output of gathered parameter information
-
-  /*  for (Index i=0; i<i_p;i++)
-    printf("Der %d. Parametereintrag schimpft sich %s. Sein Wert ist %f. Er hat im Ipopt Problem den Variablenplatz %d und die Intervalnummer %d.\n",i+1,parnames[i].c_str(), par_values[i], par_index[i], intervalID_vec[par_index[i]]);
-
-
-  SmartPtr<const Vector> x = curr->x();
-  std::vector<Number> var_values(nn);
-  */ //  printf("\n x hat %d Einträge. \n", x->Dim());
-
-
+  // ParameterSet is to contain all parameter/interval information
   // this would prefer to be a list
-  std::vector<IntervallInfo> ParameterSet;
+  std::vector<IntervallInfo> ParameterSets;
+
+
+  Number tmp_par = 0;
+  Number tmp_ID = 0;
+  bool tmp_upper = 0;
+  IntervallInfo IntInfo;
+
+  // search for parameterentries completing one set of parameters
+  /* for (int j =0; j< i_p; j++) {
+     tmp_par = parameterflags[j];
+     tmp_ID = intervalflags[j];
+     for (int k=j+1; k< i_p; k++) {
+     if (tmp_par == parameterflags[k] && tmp_ID == intervalflags[k]) {
+     // add set to list of parametersets
+     tmp_upper = (par_values[j]>par_values[k]);
+     IntInfo = IntervallInfo(tmp_par,tmp_ID,j,tmp_upper );
+     ParameterSets.push_back(IntInfo);
+     IntInfo = IntervallInfo(tmp_par,tmp_ID,k,!tmp_upper );
+     ParameterSets.push_back(IntInfo);
+     k = i_p;
+     printf("/n/nParameterwert mit Index %d wurde hinzugefügt. Er gehört zum Interval %d, Parameter %d, sein Wert ist %f und der Name %s.\n\n", j, tmp_ID,tmp_par,par_values[j],par_names[j].c_str() );
+     }
+     }
+     }*/
+
+
+
+
+
 
   // add single intervals to the parameter set
 
-  /* for (int i=0;i<parametercount;i++) {
-
-IntervallInfo IntInfo = IntervallInfo(paraID[i],intID[i],vec_idx[i],is_upper );
-  ParameterSet->push_back(IntInfo);
-  }*/
 
 
 
-  std::vector<std::string> * ipnames = new std::vector<std::string>;
-  std::vector<Number> * ipvalues = new std::vector<Number>;
-  /*
 
-  // int i=0;
-    if (ipnames)
-     for (int i=0;i<ipnames->size();i++)
+
+  // output of gathered parameter information
+
+  /*  for (Index i=0; i<i_p;i++)
+      printf("Der %d. Parametereintrag schimpft sich %s. Sein Wert ist %f. Er hat im Ipopt Problem den Variablenplatz %d und die Intervalnummer %d.\n",i+1,parnames[i].c_str(), par_values[i], par_index[i], intervalID_vec[par_index[i]]);
+
+
+      SmartPtr<const Vector> x = curr->x();
+      std::vector<Number> var_values(nn);
+      //  printf("\n x hat %d Einträge. \n", x->Dim());
+
+
+
+
+      std::vector<std::string> * ipnames = new std::vector<std::string>;
+      std::vector<Number> * ipvalues = new std::vector<Number>;
+
+
+      // int i=0;
+      if (ipnames)
+      for (int i=0;i<ipnames->size();i++)
       printf("\n Die gespeicherten Namen lauten: %s", ipnames->at(i).c_str());
 
-  if (ipvalues)
-         for (int i=0;i<ipvalues->size();i++)
+      if (ipvalues)
+      for (int i=0;i<ipvalues->size();i++)
       printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
   */
 
   /*   // int i=0;
-  if (ipnames)
-     for (int i=0;i<ipnames->size();i++)
-      printf("\n Die gespeicherten Namen lauten: %s", ipnames->at(i).c_str());
+       if (ipnames)
+       for (int i=0;i<ipnames->size();i++)
+       printf("\n Die gespeicherten Namen lauten: %s", ipnames->at(i).c_str());
 
-  if (ipvalues)
-         for (int i=0;i<ipvalues->size();i++)
-      printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
-*/
+       if (ipvalues)
+       for (int i=0;i<ipvalues->size();i++)
+       printf("\n Die gespeicherten Werte lauten: %f", ipvalues->at(i));
+  */
   //get the value of arbitrary objective variable at the solution point
   // Number * p_vv = NULL;
   // bool get_x_status = false;
@@ -388,8 +416,8 @@ IntervallInfo IntInfo = IntervallInfo(paraID[i],intID[i],vec_idx[i],is_upper );
   // const Number* v_values = x->Values();
 
   // const std::vector<std::string> varnames = x_space->GetStringMetaData("idx_names");
-    // dynamic_cast<const DenseVectorSpace*>
-    //                 (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
+  // dynamic_cast<const DenseVectorSpace*>
+  //                 (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
 
   //bewa01: this should be interchangable with n and hence deleted or edited someday
   //Index i_v = varnames.size();
@@ -404,21 +432,21 @@ IntervallInfo IntInfo = IntervallInfo(paraID[i],intID[i],vec_idx[i],is_upper );
 
   /*
 
-  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
-  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+    SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+    SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
 
 
 
 
     const std::vector<int> pariIDs = dynamic_
 
-cast<const DenseVectorSpace*>
-                       (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
+    cast<const DenseVectorSpace*>
+    (GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
 
- const std::vector<std::string> varnames = dynamic_cast<const DenseVectorSpace*>
-                       (GetRawPtr(orig_nlp->x()->OwnerSpace()))->GetStringMetaData("idx_names");
-  Index i_v = varnames.size();
-  for (Index i=0; i<i_v;i++)
+    const std::vector<std::string> varnames = dynamic_cast<const DenseVectorSpace*>
+    (GetRawPtr(orig_nlp->x()->OwnerSpace()))->GetStringMetaData("idx_names");
+    Index i_v = varnames.size();
+    for (Index i=0; i<i_v;i++)
     printf("\n Der %d. Variableneintrag schimpft sich %s.",i+1,varnames[i].c_str());
 
   */
