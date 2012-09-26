@@ -4,10 +4,10 @@ let {k in int} p1L[k].intervalID := k ;
 let {k in int} p1U[k].intervalID := k ;
 let {k in int} p2L[k].intervalID := k ;
 let {k in int} p2U[k].intervalID := k ;
-let {q in int} p1L[q].includeID :=  q;
-let {q in int} p1U[q].includeID :=  q;
-let {q in int} p2L[q].includeID :=  q;
-let {q in int} p2U[q].includeID :=  q;
+let {q in int} p1L[q].parameter :=  q;
+let {q in int} p1U[q].parameter :=  q;
+let {q in int} p2L[q].parameter :=  q;
+let {q in int} p2U[q].parameter :=  q;
 
 let p1L[1] := 0.9;
 let p1U[1] := 1.1;

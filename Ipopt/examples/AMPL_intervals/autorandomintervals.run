@@ -8,12 +8,17 @@ suffix includeID, IN;
 
 model parameterfree.mod;
 
-include interval.inc;
+include intervalls.inc;
 
 data parameterfree.dat;
 
 option solver sipopt;
+#option solver valipopt;
 
-option solver  sipopt, sipopt_auxfiles rc;
-#include parameterresults.inc;
+option sipopt_auxfiles rc;
+#option valipopt_auxfiles rc;
+
+include parameterresults.inc;
 solve;
+
+display time, xCU;

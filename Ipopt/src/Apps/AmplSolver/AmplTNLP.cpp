@@ -572,8 +572,35 @@ namespace Ipopt
       for (int k=0; k<paraCnt_; ++k) {
         perturbed_vec[k] = perturbed[para_x_[k]];
       }
-      para_numeric_md["perturbed"] = perturbed_vec;
+      para_numeric_md_["perturbed"] = perturbed_vec;
     }
+
+    const Index* para_intervalID = suffix_handler_->GetIntegerSuffixValues("intervalID", AmplSuffixHandler::Variable_Source);
+    if (np>0 && para_intervalID) {
+      std::vector<int> para_intervalID_vec(np);
+      for (int k=0; k<np;++k) {
+        para_intervalID_vec[k] = para_intervalID[para_x_[k]];
+      }
+      para_integer_md_["intervalID"] = para_intervalID_vec;
+    }
+
+    const Index* var_intervalID = suffix_handler_->GetIntegerSuffixValues("intervalID", AmplSuffixHandler::Variable_Source);
+    if (n>0 && var_intervalID) {
+      std::vector<int> var_intervalID_vec(n);
+      for (int k=0; k<n; ++k) {
+        var_intervalID_vec[k] = var_intervalID[var_x_[k]];
+      }
+      var_integer_md_["intervalID"] = var_intervalID_vec;
+    }
+
+    const Index* parameter = suffix_handler_->GetIntegerSuffixValues("parameter", AmplSuffixHandler::Variable_Source);
+    if (np>0 && parameter) {
+      std::vector<int> parameter_vec(np);
+      for (int k=0; k<np; ++k) {
+        parameter_vec[k] = parameter[para_x_[k]];
+      }
+      para_integer_md_["parameter"] = parameter_vec;
+      }
 
     if (var_string_md_.size() > 0 || var_integer_md_.size() > 0 || var_numeric_md_.size() > 0
         || para_string_md_.size() > 0 || para_integer_md_.size() > 0 || para_numeric_md_.size() > 0

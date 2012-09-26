@@ -314,7 +314,6 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   const std::vector<Index> parameterflags = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("parameter");
 
   const Index i_p = dp_space->Dim();
-  printf("\nDer Parametervektor hat %d Einträge.\n\n", i_p);
   std::vector<std::string> par_names_tmp;
   for (int i=0;i<i_p;i++)
     par_names_tmp.push_back(parnames[i].c_str());
@@ -323,6 +322,9 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   const Number* p_val = dp->Values();
   std::vector<Number> par_values(i_p);
   std::copy(p_val, p_val+i_p,&par_values[0]);
+
+  for (int i=0;i<i_p;i++)
+    // printf("\nParametereinträge: intervalID: %d.\n", intervalflags[i]);
 
   // ParameterSet is to contain all parameter/interval information
   // this would prefer to be a list
