@@ -31,7 +31,7 @@ let {kk in int, i in fe diff{1}, j in cp} xBL[kk,i,j].intervalID := kk;
 let {kk in int, i in fe diff{1}, j in cp} xBU[kk,i,j].intervalID := kk;
 
 # tag variables for interval assignment
-let {kk in int, i in 1..1,j in cp} x[kk,i,j].intervalID := kk;
+let {kk in int, i in 1..1,j in cp} xAL[kk,i,j].intervalID := kk;
 let {kk in int, i in 1..1,j in cp} xAU[kk,i,j].intervalID := kk;
 let {kk in int, i in 1..1,j in cp} xBL[kk,i,j].intervalID := kk;
 let {kk in int, i in 1..1,j in cp} xBU[kk,i,j].intervalID := kk;
