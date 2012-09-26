@@ -114,13 +114,13 @@ int main(int argc, char**args)
   for (Index i=0; i<n_loops; i++) {
     retval = app->OptimizeTNLP(ampl_tnlp);
   }
-
+  /*
   SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
   SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
   if (IsValid(delta_s)) {
     delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
   }
-
+*/
   doIntervallization(app, suffix_handler,ampl_tnlp);
 
   return 0;
@@ -224,81 +224,12 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   /////////////////////////////////////////////////////////////////////
   //bewa01 : trying to get a hold of the intervallisation suffix data//
   /////////////////////////////////////////////////////////////////////
-  /*
 
-  // set up vars to store ampl tnlp information
-  Index n = 0;
-  Index np = 0;
-  Index m = 0;
-  Index nnz_jac_g = 0;
-  Index nnz_h_lag = 0;
-  Index nnz_jac_g_p = 0;
-  Index nnz_h_lag_ = 0;
-  AmplTNLP::IndexStyleEnum index_style;
-  bool info_status = false;
-
-  // fill the vars with available ampl tnlp information
-  info_status = ampl_tnlp->get_nlp_info(n, np, m, nnz_jac_g,
-  nnz_h_lag, nnz_jac_g_p,
-  nnz_h_lag_,index_style);
-  Index nn = n+np;
-
-  // output of variable indexes with or without parameter and intervalID tags
-  const Index* parameter = suffix_handler->GetIntegerSuffixValues("parameter",
-  AmplSuffixHandler::Variable_Source);
-  std::vector<Index> parameter_vec(nn);
-  std::vector<Index> par_index;
-  if (!parameter) {
-  return 0;  // NO PARAMETERs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT PARAMETERs???
+  SmartPtr<Matrix> sens_matrix = getSensitivityMatrix(app);
+  SmartPtr<Vector> delta_s = getDirectionalDerivative(app, sens_matrix);
+  if (IsValid(delta_s)) {
+    delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
   }
-  std::copy(parameter, parameter+nn, &parameter_vec[0]);
-  //var_integer_md["parameter"] = parameter_vec;
-  for (Index k_it=0;k_it<nn; k_it++){
-  if (parameter_vec[k_it]) {
-  // printf("Ipopt variable no %d ist ein Parameter.\n",k_it,parameter_vec[k_it]);
-  par_index.push_back(k_it);
-  }
-  }
-
-  const Index* intervalID = suffix_handler->GetIntegerSuffixValues("intervalID",
-  AmplSuffixHandler::Variable_Source);
-  Index int_obj_idx = 0;
-  std::vector<Index> intervalID_vec(nn);
-  if (!intervalID) {
-  return 0;  // NO INTERVAL IDs???? HOW AM I SUPPOSED TO DO MY JOB WITHOUT INTERVAL IDs???
-  }
-  Index nint_tmp = 0;
-  std::copy(intervalID, intervalID+nn, &intervalID_vec[0]);
-  //var_integer_md["intervalID"] = intervalID_vec;
-  for (Index k_it=0;k_it<nn; k_it++){
-  if (intervalID_vec[k_it]){
-  //      printf("IntervalID no %d is %d\n",k_it,intervalID_vec[k_it]);
-  if (parameter_vec[k_it]!=1 && !int_obj_idx)
-  int_obj_idx = k_it;
-  if (intervalID_vec[k_it]>nint_tmp)
-  nint_tmp = intervalID_vec[k_it];
-  }
-  }
-  const Index nint = nint_tmp;
-
-  // output of info variable content
-  //  printf("\n\n The values of the infovariables are now:\n n = %d \n np = %d \n m = %d \n nnz_jac_g = %d \n nnz_h_lag = %d \n nnz_jac_g_p = %d \n nnz_h_lag_ = %d\n\n",n,np,m,nnz_jac_g,nnz_h_lag,nnz_jac_g_p,nnz_h_lag_);
-
-  AmplTNLP::StringMetaDataMapType var_string_md;
-  AmplTNLP::IntegerMetaDataMapType var_integer_md;
-  AmplTNLP::NumericMetaDataMapType var_numeric_md;
-  AmplTNLP::StringMetaDataMapType para_string_md;
-  AmplTNLP::IntegerMetaDataMapType para_integer_md;
-  AmplTNLP::NumericMetaDataMapType para_numeric_md;
-  AmplTNLP::StringMetaDataMapType con_string_md;
-  AmplTNLP::IntegerMetaDataMapType con_integer_md;
-  AmplTNLP::NumericMetaDataMapType con_numeric_md;
-
-  bool var_con_metadata_status = 0;
-  var_con_metadata_status = ampl_tnlp->get_var_con_metadata(n,var_string_md,var_integer_md,
-  var_numeric_md,np,para_string_md,para_integer_md,para_numeric_md,
-  m,con_string_md,con_integer_md,con_numeric_md);
-  */
 
   SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
   SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
@@ -323,13 +254,9 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   std::vector<Number> par_values(i_p);
   std::copy(p_val, p_val+i_p,&par_values[0]);
 
-  for (int i=0;i<i_p;i++)
-    // printf("\nParametereinträge: intervalID: %d.\n", intervalflags[i]);
-
   // ParameterSet is to contain all parameter/interval information
   // this would prefer to be a list
   std::vector<IntervallInfo> ParameterSets;
-
 
   Number tmp_par = 0;
   Number tmp_ID = 0;
@@ -337,29 +264,23 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   IntervallInfo IntInfo;
 
   // search for parameterentries completing one set of parameters
-  /* for (int j =0; j< i_p; j++) {
-     tmp_par = parameterflags[j];
-     tmp_ID = intervalflags[j];
-     for (int k=j+1; k< i_p; k++) {
-     if (tmp_par == parameterflags[k] && tmp_ID == intervalflags[k]) {
-     // add set to list of parametersets
-     tmp_upper = (par_values[j]>par_values[k]);
-     IntInfo = IntervallInfo(tmp_par,tmp_ID,j,tmp_upper );
-     ParameterSets.push_back(IntInfo);
-     IntInfo = IntervallInfo(tmp_par,tmp_ID,k,!tmp_upper );
-     ParameterSets.push_back(IntInfo);
-     k = i_p;
-     printf("/n/nParameterwert mit Index %d wurde hinzugefügt. Er gehört zum Interval %d, Parameter %d, sein Wert ist %f und der Name %s.\n\n", j, tmp_ID,tmp_par,par_values[j],par_names[j].c_str() );
-     }
-     }
-     }*/
-
-
-
-
-
-
-  // add single intervals to the parameter set
+  for (int j =0; j< i_p; j++) {
+    tmp_par = parameterflags[j];
+    tmp_ID = intervalflags[j];
+    for (int k=j+1;k<i_p;k++) {
+      if (parameterflags[k] && intervalflags[k]){
+	if (tmp_par == parameterflags[k] && tmp_ID == intervalflags[k]) {
+	  // add set to list of parametersets
+	  tmp_upper = (par_values[j]>par_values[k]);
+	  IntInfo = IntervallInfo(tmp_par,tmp_ID,j,tmp_upper );
+	  ParameterSets.push_back(IntInfo);
+	  IntInfo = IntervallInfo(tmp_par,tmp_ID,k,!tmp_upper );
+	  ParameterSets.push_back(IntInfo);
+	  k = i_p;
+	}
+      }
+    }
+  }
 
 
 

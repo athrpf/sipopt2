@@ -2053,6 +2053,10 @@ namespace Ipopt
 
   }
 
+  void IntervallInfo::PrintSet() {
+    printf("\n %d %d %d %d \n", parameterID_, intervalID_, index_, is_upper_);
+  }
+
   //////////////////////////END OF INTERVALL PART///////////////////////////////////
 
 } // namespace Ipopt

@@ -643,6 +643,7 @@ namespace Ipopt
     void GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues);
     void GetIntervals (Index * nint);
     void SetIntervals(const Index nint);
+    void PrintSet();
 
   private:
     Index parameterID_;
