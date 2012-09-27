@@ -240,7 +240,7 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   std::vector<Number> tmp_val;
   // decision variable to determine branching criterion:
   // 1 is strictly greater than, 2 is strictly smaller than, 0 is absolute value str.ly greater than
-  Index branchmode =0;
+  Index branchmode =1;
   // if s_space is only needed for this one MetaData evaluation, it need not be initialized and used anyway (single large dynamic_cast should do)
   SmartPtr<const DenseVectorSpace> s_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(mv_sens->ColVectorSpace()));
   const std::vector<Index> var_int_flags = s_space->GetIntegerMetaData("intervalID");
@@ -280,8 +280,7 @@ for (int i=0;i<nrows;i++){
 	 tmp_val.at(j) = abs(s_values[ctrl_rows.at(j)]);
 	 //printf("\ntmp_val Neuzuweisung (%f) aus Spalte %d.\n",tmp_val.at(j),i);
 	 tagged_cols.at(j) = i;
-       } else
-	 //printf("\n\nNicht zugewiesen wurde: %f \n\n",s_values[ctrl_rows.at(j)]);
+       }
      }
 
    }
