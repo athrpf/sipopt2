@@ -231,26 +231,73 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
     delta_s->Print(*app->Jnlst(), J_INSUPPRESSIBLE, J_DBG, "delta_s");
   }
 
+  SmartPtr<MultiVectorMatrix> mv_sens = dynamic_cast<MultiVectorMatrix*>(GetRawPtr(sens_matrix));
+
+  const Index row_cnt = mv_sens->NRows();
+  const Index col_cnt = mv_sens->NCols();
+  printf("\n\nDie Matrix mv_sens hat %d Reihen und %d Spalten.",row_cnt, col_cnt);
+
+  //cycle through sensitivity information and search for non-intervalized data (controls)
+  Index* tmp_col= new Index;
+  // some length assignment for the vector data would be more clean
+  std::vector<Index> tmp_row;
+  std::vector<Number> tmp_val;
+  // if s_space is only needed for this one MetaData evaluation, it need not be initialized and used anyway (single large dynamic_cast should do)
+  SmartPtr<const DenseVectorSpace> s_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(mv_sens->ColVectorSpace()));
+  const std::vector<Index> var_int_flags = s_space->GetIntegerMetaData("intervalID");
+  // cycle through vector space interval flags to identify and save control indexes
+for (int i=0;i<row_cnt;i++){
+  if (!var_int_flags[i])
+    tmp_row.push_back(i);
+  printf("\ndx/dp MetaData: intervalID an der Stelle %d hat den Wert %d.\n", i, var_int_flags[i]);
+ }
+ for (int i =0;i<col_cnt;i++){
+   *tmp_col = i;
+   printf("\n\n\n%d\n\n\n",tmp_row.size());
+   if (tmp_row.size()){
+     // get concrete sensitivity values
+     const Number* s_val = dynamic_cast<const DenseVector*>(GetRawPtr(mv_sens->GetVector(i)))->Values();
+     std::vector<Number> s_values(row_cnt);
+     std::copy(s_val, s_val+row_cnt,&s_values[0]);
+     for (int j=0;j<tmp_row.size();j++){
+       if (i==0){
+	 tmp_val.push_back(s_values[tmp_row.at(j)]);
+	 printf("\ntmp_val Erstzuweisung (%f).\n",tmp_val.at(j));
+       }
+       else if (s_values[tmp_row.at(j)]>tmp_val.at(j)){
+	 tmp_val.at(j) = s_values[tmp_row.at(j)];
+	 printf("\ntmp_val Neuzuweisung (%f).\n",tmp_val.at(j));
+       } else
+	 printf("\n\nNicht zugewiesen wurde: %f \n\n",s_values[tmp_row.at(j)]);
+     }
+
+   }
+ }
+
+
+
+
+
   SmartPtr<const IteratesVector> curr = app->IpoptDataObject()->curr();
   SmartPtr<IpoptNLP> ipopt_nlp = app->IpoptNLPObject();
   SmartPtr<OrigIpoptNLP> orig_nlp = dynamic_cast<OrigIpoptNLP*>(GetRawPtr(ipopt_nlp));
 
   // trying to determine parameter positions and intervalIDs in the NLP object
-  SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
-  SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+  SmartPtr<const DenseVector> p = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+  SmartPtr<const DenseVectorSpace> p_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(p->OwnerSpace()));
 
   // get parameter names
-  const std::vector<std::string> parnames = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetStringMetaData("idx_names");
-  const std::vector<Index> intervalflags = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("intervalID");
-  const std::vector<Index> parameterflags = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(orig_nlp->p()->OwnerSpace()))->GetIntegerMetaData("parameter");
+  const std::vector<std::string> parnames = p_space->GetStringMetaData("idx_names");
+  const std::vector<Index> intervalflags = p_space->GetIntegerMetaData("intervalID");
+  const std::vector<Index> parameterflags = p_space->GetIntegerMetaData("parameter");
 
-  const Index i_p = dp_space->Dim();
+  const Index i_p = p_space->Dim();
   std::vector<std::string> par_names_tmp;
   for (int i=0;i<i_p;i++)
     par_names_tmp.push_back(parnames[i].c_str());
   const std::vector<std::string> par_names = par_names_tmp;
   // get parameter values
-  const Number* p_val = dp->Values();
+  const Number* p_val = p->Values();
   std::vector<Number> par_values(i_p);
   std::copy(p_val, p_val+i_p,&par_values[0]);
 
@@ -348,15 +395,15 @@ bool doIntervallization(SmartPtr<IpoptApplication> app, SmartPtr<AmplSuffixHandl
   // std::copy(x,x+n,&var_values[0]);
   // std::copy(v_values,v_values+nn,&var_values[0]);
   // get parameter values
-  // const Number* p_val = dp->Values();
+  // const Number* p_val = p->Values();
   // std::vector<Number> par_values(i_p);
   // std::copy(p_val, p_val+i_p,&par_values[0]);
 
 
   /*
 
-    SmartPtr<const DenseVector> dp = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
-    SmartPtr<const DenseVectorSpace> dp_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(dp->OwnerSpace()));
+    SmartPtr<const DenseVector> p = dynamic_cast<const DenseVector*>(GetRawPtr(orig_nlp->p()));
+    SmartPtr<const DenseVectorSpace> p_space = dynamic_cast<const DenseVectorSpace*>(GetRawPtr(p->OwnerSpace()));
 
 
 
