@@ -8,7 +8,7 @@ suffix includeID, IN;
 
 model parameterfree.mod;
 
-include intervalls.inc;
+include intervals.inc;
 
 data parameterfree.dat;
 

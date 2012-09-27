@@ -11,7 +11,7 @@ class Interval:
 
     def split(self, idx):
         """
-        split an interval along the variable dimension idx (in which notation - 1based or 0based?)
+        split an interval along the variable dimension idx (in 0based notation)
 
         in: parameter index, which is split,
         out: 2 intervals resulting from split
@@ -42,7 +42,7 @@ class AmplSet:
         self.pUvalues = pUvalues
         self.intervals = [Interval(pLvalues, pUvalues)]
 
-    def write_include_file(self, filename='intervalls.inc'):
+    def write_include_file(self, filename='intervals.inc'):
         """write current intervallization data into ampl include file"""
         f = open(filename, 'w')
         nint = len(self.intervals)
@@ -81,6 +81,7 @@ class AmplSet:
         self.intervals.extend([interval1, interval2])
 
     def randomize(self,nruns):
+        """randomly split nruns times"""
         for ir in range(nruns):
             output_f = open('output'+str(ir)+'.txt', 'w')
             self.call_ampl(output_file_handle=output_f)
@@ -88,6 +89,36 @@ class AmplSet:
             nint = random.randint(0,(len(self.intervals)-1))
             npar = random.randint(0,(len(self.pLnames)-1))
             self.split(nint,npar)
+
+    def branch_controlwise(self,nruns):
+        """read control sensitivity data and split specified interval """
+        for ir in range(nruns):
+            output_f = open('output'+str(ir)+'.txt', 'w')
+            self.call_ampl(output_file_handle=output_f)
+            output_f.close()
+            branch_file_handle = 'branch_intervals.dat'
+            (nint,npar)=self.read_branch(branch_file_handle)
+            for (i,p) in zip(nint,npar):
+                self.split(i,p)
+
+    def read_branch(self,fhandle):
+        """
+        read interval data from specified file fhandle
+
+        in: fhandle, full name of to be read file
+        out: tuple of intervalID(s) and parameter index(es) to be split (0based notation)
+        """
+        pars = []
+        ints = []
+        input_f = open(fhandle)
+        for tmp_line in input_f:
+            if 'parameter' in tmp_line:
+                (int_part,dummy,npar) = tmp_line.partition('parameter: ')
+                (dummy1,dummy2,nint) = int_part.partition('intervalID: ')
+                pars.append(int(npar)-1)
+                ints.append(int(nint)-1)
+        input_f.close()
+        return (ints,pars)
 
 
 def run():
@@ -97,7 +128,8 @@ def run():
     pLvalues = [0.9, 0.8]
     pUvalues = [1.1, 1.2]
     info = AmplSet(ampl_script, pLnames, pUnames, pLvalues, pUvalues)
-    info.randomize(2)
+    #info.randomize(2)
+    info.branch_controlwise(3)
 
 if __name__=='__main__':
     run()

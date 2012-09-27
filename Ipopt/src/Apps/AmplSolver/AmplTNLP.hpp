@@ -640,8 +640,9 @@ namespace Ipopt
     ~IntervallInfo();
     void SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
     void AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues);
-    void GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues);
-    void GetIntervals (Index * nint);
+    void GetIndex(Index &pindex);
+    void GetIntervalID (Index &nint);
+    void GetParameterID (Index &paraID);
     void SetIntervals(const Index nint);
     void PrintSet();
 

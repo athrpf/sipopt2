@@ -2019,7 +2019,8 @@ namespace Ipopt
 
   IntervallInfo::IntervallInfo() {}
 
-  IntervallInfo::IntervallInfo(const Index parameterID, const Index intervalID, const Index vector_index, const bool is_upper) {
+  IntervallInfo::IntervallInfo(const Index parameterID, const Index intervalID, const Index vector_index, const bool is_upper)
+  {
 
     parameterID_ = parameterID;
     intervalID_ = intervalID;
@@ -2030,30 +2031,40 @@ namespace Ipopt
 
   IntervallInfo:: ~IntervallInfo() {}
 
-  void IntervallInfo::SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues) {
+  void IntervallInfo::SetParameters(const std::vector<std::string> pnames, const std::vector<Number> pvalues)
+  {
 
 
   }
 
-  void IntervallInfo::AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues) {
+  void IntervallInfo::AddParameter(const std::vector<std::string> pnames, const std::vector<Number> pvalues)
+  {
 
 
   }
 
-  void IntervallInfo::GetParameters(std::vector<std::string> * pnames, std::vector<Number> * pvalues) {
+  void IntervallInfo::GetIndex(Index &pindex)
+  {
+    pindex = index_;
+  }
 
+  void IntervallInfo::GetIntervalID(Index &nint)
+  {
+    nint = intervalID_;
+  }
+
+  void IntervallInfo::GetParameterID(Index &paraID)
+  {
+    paraID = parameterID_;
+  }
+
+  void IntervallInfo::SetIntervals(const Index nint)
+  {
 
   }
 
-  void IntervallInfo::GetIntervals(Index * nint) {
-
-  }
-
-  void IntervallInfo::SetIntervals(const Index nint) {
-
-  }
-
-  void IntervallInfo::PrintSet() {
+  void IntervallInfo::PrintSet()
+  {
     printf("\n %d %d %d %d \n", parameterID_, intervalID_, index_, is_upper_);
   }
 
