@@ -1,6 +1,8 @@
 import subprocess
 import sys
 import random
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 
 class Interval:
     """Representation of upper and lower bound"""
@@ -31,6 +33,22 @@ class Interval:
                 p1U.append(pUv)
                 p2L.append(pLv)
         return Interval(p1L, p1U), Interval(p2L, p2U)
+
+    def plot(self, dim):
+        n = dim[0]
+        m = dim[1]
+        print self.pL[n]
+        rect = Rectangle((self.pL[n], self.pL[m]), self.pU[n]-self.pL[n], self.pU[m]-self.pL[m])
+        plt.gca().add_artist(rect)
+
+    def __str__(self):
+        s = ''
+        for pl, pu in zip(self.pL, self.pU):
+            s += '{}, {}\n'.format(pl, pu)
+        return s
+
+    def __len__(self):
+        return len(self.pL)
 
 class AmplSet:
     """an ampl setup: ampl srcipt and feasible set of intervals"""
@@ -100,6 +118,7 @@ class AmplSet:
             (nint,npar)=self.read_branch(branch_file_handle)
             for (i,p) in zip(nint,npar):
                 self.split(i,p)
+            self.plot(dim=[0,1], filename='cbplot'+str(ir)+'.png')
 
     def read_branch(self,fhandle):
         """
@@ -120,6 +139,19 @@ class AmplSet:
         input_f.close()
         return (ints,pars)
 
+    def plot(self, dim=[0,1], filename=None):
+        plt.figure()
+        min0 = min([i.pL[dim[0]] for i in self.intervals])
+        min1 = min([i.pL[dim[1]] for i in self.intervals])
+        max0 = max([i.pU[dim[0]] for i in self.intervals])
+        max1 = max([i.pU[dim[1]] for i in self.intervals])
+        plt.gca().set_xlim(min0, max0)
+        plt.gca().set_ylim(min1, max1)
+        plt.hold(True)
+        for i in self.intervals:
+            i.plot(dim)
+        if filename is not None:
+            plt.savefig(filename)
 
 def run():
     ampl_script = 'autorandomintervals.run'
